@@ -1,0 +1,85 @@
+{
+	"geode": "4.3.1",
+	"gd": {
+		"win": "2.2074",
+		"android": "2.2074",
+		"mac": "2.2074",
+		"ios": "2.2074"
+	},
+	"settings": {
+		"trail-title":{
+			"type": "title",
+			"name:": "Legacy Trail",
+			"description": "The trail if it was still good."
+		},
+		"max-points":{
+			"type": "int",
+			"name": "Trail: Max Points",
+			"description": "The maximum amount of points the trail can have.",
+			"min": 2,
+			"max": 20,
+			"default": 15
+		},
+		"randomizer-title": {
+			"type": "title",
+			"name:": "Icon Randomizer",
+			"description": "Icon randomizer settings."
+		},
+		"ic-randomizer": {
+			"type": "bool",
+			"name": "Enable Icon Randomizer",
+			"description": "Enable the icon randomizer.",
+			"default": true
+		},
+		"randomizer-type": {
+			"type": "string",
+			"name": "Icon Randomizer Type",
+			"description": "The type of icon randomizer to use.",
+			"default": "every-gamemode",
+			"one-of": ["every-gamemode", "on-death"],
+			"enable-if": "ic-randomizer"
+		},
+		"randomize-color1": {
+			"type": "bool",
+			"name": "Randomize Color 1",
+			"description": "Randomize the first color of the icon.",
+			"enable-if": "ic-randomizer",
+			"default": true
+		},
+		"randomize-color2": {
+			"type": "bool",
+			"name": "Randomize Color 2",
+			"description": "Randomize the second color of the icon.",
+			"enable-if": "ic-randomizer",
+			"default": true
+		},
+		"randomize-glowcolor": {
+			"type": "bool",
+			"name": "Randomize Glow Color",
+			"description": "Randomize the glow color of the icon.",
+			"enable-if": "ic-randomizer",
+			"default": true
+		}
+	},
+	"resources": {
+		"files": [
+			"resources/*.ogg"
+		],
+		"spritesheets": {
+			"TotemSheet": [
+				"resources/totemFrames/*.png"
+			]
+		}
+	},
+	"dependencies": {
+		"hiimjustin000.icon_randomizer_api": {
+			"version": ">=v2.0.0",
+			"importance": "required"
+		}
+	},
+	"id": "saritahhh.personal_tweaks",
+	"name": "Personal Tweaks",
+	"version": "v1.0.0",
+	"developer": "Saritahhh",
+	"description": "Personal tweaks i need for the game"
+}
