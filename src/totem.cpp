@@ -75,6 +75,8 @@ class $modify(TotemPlayLayer, PlayLayer) {
         PlayLayer::destroyPlayer(player, obj);
 
         if (obj != m_anticheatSpike && !totemIsCooldowned) {
+            if (m_player1->m_isDead) return;
+
             totemIsCooldowned = true;
             this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTotem), 0.5f);
 
