@@ -59,6 +59,33 @@
 			"description": "Randomize the glow color of the icon.",
 			"enable-if": "ic-randomizer",
 			"default": true
+		},
+		"noclip-totem": {
+			"type": "title",
+			"name": "Totem of Undying animation",
+			"description": "Settings for the Totem animation when dying with noclip on."
+		},
+		"enable-totem": {
+			"type": "bool",
+			"name": "Enable Totem Animation",
+			"description": "Enable the totem animation when dying with noclip on.",
+			"default": true
+		},
+		"totem-cooldown": {
+			"type": "float",
+			"name": "Totem Cooldown",
+			"description": "The cooldown for how often can the totem animation be played. Higher cooldown means less totem animations, even if you're constantly dying.",
+			"default": 0.5,
+			"min": 0.1,
+			"max": 2.0
+		},
+		"totem-scale": {
+			"type": "float",
+			"name": "Totem Scale",
+			"description": "The scale of the totem animation on screen. Higher scale means bigger totem. Around 2.7 mimics the size of the Vanilla animation.",
+			"default": 1.0,
+			"min": 0.3,
+			"max": 4.0
 		}
 	},
 	"resources": {

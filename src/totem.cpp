@@ -5,7 +5,22 @@
 
 using namespace geode::prelude;
 
-static const std::set<int> sawblades = {88, 89, 98, 183, 184, 185, 186, 187, 188, 397, 398, 399, 678, 679, 680, 740, 741, 742, 1619, 1620, 1701, 1702, 1703, 1705, 1706, 1707, 1708, 1709, 1710, 1734, 1735, 1736};
+auto doTotemAnim = Mod::get()->getSettingValue<bool>("enable-totem");
+auto totemCooldown = Mod::get()->getSettingValue<float>("totem-cooldown");
+auto totemScale = Mod::get()->getSettingValue<float>("totem-scale");
+
+$on_mod(Loaded){
+    listenForSettingChanges("enable-totem", [](bool value) {
+        doTotemAnim = value;
+    });
+    listenForSettingChanges("totem-cooldown", [](float value) {
+        totemCooldown = value;
+    });
+    listenForSettingChanges("totem-scale", [](float value) {
+        totemScale = value;
+    });
+}
+
 bool totemIsCooldowned = false;
 
 void SarahsTweaks::cooldownTotem(float dt) {
@@ -64,7 +79,7 @@ class $modify(TotemPlayLayer, PlayLayer) {
 
         fields->totemAnimationSprite->setPosition({winSize.width / 2, winSize.height / 2});
         fields->totemAnimationSprite->setID("totem-animation"_spr);
-        fields->totemAnimationSprite->setScale(2.5f);
+        fields->totemAnimationSprite->setScale(totemScale);
 
         this->addChild(fields->totemAnimationSprite, 1000);
 
@@ -74,11 +89,11 @@ class $modify(TotemPlayLayer, PlayLayer) {
     void destroyPlayer(PlayerObject* player, GameObject* obj) {
         PlayLayer::destroyPlayer(player, obj);
 
-        if (obj != m_anticheatSpike && !totemIsCooldowned) {
+        if (obj != m_anticheatSpike && !totemIsCooldowned && doTotemAnim) {
             if (m_player1->m_isDead) return;
 
             totemIsCooldowned = true;
-            this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTotem), 0.5f);
+            this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTotem), totemCooldown);
 
             auto fmod = FMODAudioEngine::sharedEngine();
 
