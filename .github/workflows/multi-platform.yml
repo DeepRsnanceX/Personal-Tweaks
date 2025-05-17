@@ -15,8 +15,10 @@ jobs:
         - name: Windows
           os: windows-latest
 
-        - name: macOS
-          os: macos-latest
+# NO USO MAC ASI Q A LA CHINGADA
+# NI Q FUERA
+# NI Q FUERA
+# ya bueno ya
 
         - name: Android32
           os: ubuntu-latest
