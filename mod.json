@@ -36,7 +36,7 @@
 			"name": "Icon Randomizer Type",
 			"description": "The type of icon randomizer to use.",
 			"default": "every-gamemode",
-			"one-of": ["every-gamemode", "on-death"],
+			"one-of": ["every-gamemode", "on-death", "both"],
 			"enable-if": "ic-randomizer"
 		},
 		"randomize-color1": {

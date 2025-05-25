@@ -6,8 +6,8 @@
 using namespace geode::prelude;
 
 auto doTotemAnim = Mod::get()->getSettingValue<bool>("enable-totem");
-auto totemCooldown = Mod::get()->getSettingValue<float>("totem-cooldown");
-auto totemScale = Mod::get()->getSettingValue<float>("totem-scale");
+auto totemCooldown = Mod::get()->getSettingValue<double>("totem-cooldown");
+auto totemScale = Mod::get()->getSettingValue<double>("totem-scale");
 
 $on_mod(Loaded){
     listenForSettingChanges("enable-totem", [](bool value) {

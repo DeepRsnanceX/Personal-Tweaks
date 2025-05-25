@@ -91,9 +91,9 @@ class $modify(PlayerObject){
         PlayerObject::switchedToMode(p0);
 
         auto playLayer = PlayLayer::get();
-        if (!doRandomize || randomizerType != "every-gamemode") return;
+        bool validRandomModes = randomizerType == "every-gamemode" || randomizerType == "both";
 
-        if (playLayer){
+        if (playLayer && doRandomize && validRandomModes) {
             IconRandomizer::init();
             IconRandomizer::randomizeAll(ICON_RANDOMIZER_API_ALL_ICONS, true);
 
@@ -116,6 +116,27 @@ class $modify(PlayerObject){
 
 class $modify(PlayLayer) {
     void resetLevel() {
+
+        bool validRandModes = randomizerType == "on-death" || randomizerType == "both";
+
+        if (doRandomize && validRandModes) {
+            IconRandomizer::init();
+            IconRandomizer::randomizeAll(ICON_RANDOMIZER_API_ALL_ICONS, true);
+
+            if (randomizeCol1) {
+                IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_1, true); 
+            }
+            if (randomizeCol2) {
+                IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_2, true);
+            }
+            if (randomizeGlowCol) {
+                IconRandomizer::randomize(ICON_RANDOMIZER_API_GLOW_COLOR, true);
+            }     
+
+            updatePlayerColors(m_player1);
+            updatePlayerFrames(m_player1);
+        }
+
         PlayLayer::resetLevel();
     }
 };
