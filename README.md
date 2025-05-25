@@ -23,9 +23,15 @@ So, here's a breakdown!
 *stuff i DID make myself*
 
 - Wave Particles Fix: Fixes the issue where dragging particles show up on the Wave Gamemode sometimes.
-- Icon Randomizer: Randomizes icons either on death or on every gamemode switch in-game. Based on [Randomize Icon on Death](https://github.com/kittenchilly/Randomize-Icon-on-Death) and [MHv5's](https://github.com/absoIute/Mega-Hack-v5) Icon Randomizer.
-- Noclip Totem of Undying: Shows Minecraft's Totem of Undying anymation on every noclip death. Based on [Totem of Undying.](https://github.com/YellowCat98/TotemofUndying-gd)
+- Icon Randomizer: Randomizes icons either on death or on every gamemode switch in-game. Based on [Randomize Icon on Death](https://github.com/kittenchilly/Randomize-Icon-on-Death), Inspired by [MHv5's](https://github.com/absoIute/Mega-Hack-v5) Icon Randomizer.
+- Noclip Totem of Undying: Shows Minecraft's Totem of Undying anymation on every noclip death. Inspired by [Totem of Undying.](https://github.com/YellowCat98/TotemofUndying-gd)
 
 Will any of the original features ever see the light of day as a standalone mod?
 Probably lol idk
 <img src="logo.png" width="20" alt="luzojos"/>
+
+Also, if you're wondering why this is even on github if it has stuff i didn't make myself:
+
+Github Actions to build the mod for multiplatform. Basically.
+
+<img src="logo.png" width="5" alt="luzojos"/>
