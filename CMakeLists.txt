@@ -17,6 +17,7 @@ add_library(${PROJECT_NAME} SHARED
     src/realrandomizer.cpp
     src/totem.cpp
     src/legacypulse.cpp
+    src/pauselayer.cpp
     # Add any extra C++ source files here
 )
 

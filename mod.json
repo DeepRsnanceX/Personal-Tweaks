@@ -115,7 +115,10 @@
 			"TotemSheet": [
 				"resources/totemFrames/*.png"
 			]
-		}
+		},
+		"sprites": [
+			"resources/*.png"
+		]
 	},
 	"dependencies": {
 		"hiimjustin000.icon_randomizer_api": {
