@@ -16,6 +16,7 @@ add_library(${PROJECT_NAME} SHARED
     src/waveparticlesfix.cpp
     src/realrandomizer.cpp
     src/totem.cpp
+    src/legacypulse.cpp
     # Add any extra C++ source files here
 )
 

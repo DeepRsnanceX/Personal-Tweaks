@@ -20,6 +20,25 @@
 			"max": 20,
 			"default": 15
 		},
+		"pulse-title": {
+			"type": "title",
+			"name:": "Legacy Pulse",
+			"description": "The pulse if it was still good."
+		},
+		"legacy-pulse": {
+			"type": "bool",
+			"name": "Enable Legacy Pulse",
+			"description": "Enable the legacy pulse.",
+			"default": true
+		},
+		"pulse-fps": {
+			"type": "int",
+			"name": "Pulse: FPS",
+			"description": "The FPS the legacy pulse should emulate.",
+			"min": 60,
+			"max": 1080,
+			"default": 60
+		},
 		"randomizer-title": {
 			"type": "title",
 			"name:": "Icon Randomizer",
