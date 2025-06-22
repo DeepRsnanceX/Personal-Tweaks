@@ -1,5 +1,5 @@
 {
-	"geode": "4.3.1",
+	"geode": "4.5.0",
 	"gd": {
 		"win": "2.2074",
 		"android": "2.2074",
@@ -78,6 +78,53 @@
 			"description": "Randomize the glow color of the icon.",
 			"enable-if": "ic-randomizer",
 			"default": true
+		},
+		"icon-stuff-title": {
+			"type": "title",
+			"name": "Icon Stuff",
+			"description": "Settings for the icon stuff."
+		},
+		"enable-customcolors": {
+			"type": "bool",
+			"name": "Enable Custom Colors",
+			"description": "Enable custom colors for the icon.",
+			"default": false
+		},
+		"p1-primary": {
+			"type": "rgb",
+			"name": "Player 1 - Primary Color",
+			"default": "#ffffff"
+		},
+		"p1-secondary": {
+			"type": "rgb",
+			"name": "Player 1 - Secondary Color",
+			"default": "#ffffff"
+		},
+		"p1-wave": {
+			"type": "rgb",
+			"name": "Player 1 - Wave Color",
+			"default": "#ffffff"
+		},
+		"p2-primary": {
+			"type": "rgb",
+			"name": "Player 2 - Primary Color",
+			"default": "#ffffff"
+		},
+		"p2-secondary": {
+			"type": "rgb",
+			"name": "Player 2 - Secondary Color",
+			"default": "#ffffff"
+		},
+		"p2-wave": {
+			"type": "rgb",
+			"name": "Player 2 - Wave Color",
+			"default": "#ffffff"
+		},
+		"tint-trail": {
+			"type": "bool",
+			"name": "Tint Trail",
+			"description": "Defines if the trail will be tinted or nah. Easier to make this an option LOLLLL",
+			"default": false
 		},
 		"noclip-totem": {
 			"type": "title",

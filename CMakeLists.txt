@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} SHARED
     src/totem.cpp
     src/legacypulse.cpp
     src/pauselayer.cpp
+    src/customcolors.cpp
     # Add any extra C++ source files here
 )
 
