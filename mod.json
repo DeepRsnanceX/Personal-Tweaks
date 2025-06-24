@@ -7,37 +7,269 @@
 		"ios": "2.2074"
 	},
 	"settings": {
-		"trail-title":{
+		"icon-stuff-title": {
 			"type": "title",
-			"name:": "Legacy Trail",
-			"description": "The trail if it was still good."
+			"name": "Full Icon Customization",
+			"description": "Full customization of player icon colors."
 		},
-		"max-points":{
-			"type": "int",
-			"name": "Trail: Max Points",
-			"description": "The maximum amount of points the trail can have.",
-			"min": 2,
-			"max": 20,
-			"default": 15
-		},
-		"pulse-title": {
-			"type": "title",
-			"name:": "Legacy Pulse",
-			"description": "The pulse if it was still good."
-		},
-		"legacy-pulse": {
+		"enable-customcolors": {
 			"type": "bool",
-			"name": "Enable Legacy Pulse",
-			"description": "Enable the legacy pulse.",
-			"default": true
+			"name": "Enable Custom Colors",
+			"description": "Enable custom colors for the icon.",
+			"default": false
 		},
-		"pulse-fps": {
-			"type": "int",
-			"name": "Pulse: FPS",
-			"description": "The FPS the legacy pulse should emulate.",
-			"min": 60,
-			"max": 1080,
-			"default": 60
+		"p1-primary": {
+			"type": "rgb",
+			"name": "Player 1 - Primary Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
+		"p1-secondary": {
+			"type": "rgb",
+			"name": "Player 1 - Secondary Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
+		"p1-wave": {
+			"type": "rgb",
+			"name": "Player 1 - Wave Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
+		"p2-primary": {
+			"type": "rgb",
+			"name": "Player 2 - Primary Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
+		"p2-secondary": {
+			"type": "rgb",
+			"name": "Player 2 - Secondary Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
+		"p2-wave": {
+			"type": "rgb",
+			"name": "Player 2 - Wave Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
+		"tint-trail": {
+			"type": "bool",
+			"name": "Tint Trail",
+			"description": "Defines if the trail will be tinted or nah. Easier to make this an option LOLLLL",
+			"enable-if": "enable-customcolors",
+			"default": false
+		},
+		"p1-trail": {
+			"type": "rgb",
+			"name": "Player 1 - Trail Color",
+			"default": "#ffffff",
+			"enable-if": "tint-trail"
+		},
+		"p2-trail": {
+			"type": "rgb",
+			"name": "Player 2 - Trail Color",
+			"default": "#ffffff",
+			"enable-if": "tint-trail"
+		},
+		"tint-ghost-trail": {
+			"type": "bool",
+			"name": "Tint Ghost Trail",
+			"description": "Defines if the ghost trail will be tinted a different color from the primary color.",
+			"enable-if": "enable-customcolors",
+			"default": false
+		},
+		"p1-ghost-trail": {
+			"type": "rgb",
+			"name": "Player 1 - Ghost Trail Color",
+			"default": "#ffffff",
+			"enable-if": "tint-ghost-trail"
+		},
+		"p2-ghost-trail": {
+			"type": "rgb",
+			"name": "Player 2 - Ghost Trail Color",
+			"default": "#ffffff",
+			"enable-if": "tint-ghost-trail"
+		},
+		"tint-dashfire": {
+			"type": "bool",
+			"name": "Tint Dash Fire",
+			"description": "Defines if the dash fire will be tinted a different color from the primary color.",
+			"enable-if": "enable-customcolors",
+			"default": false
+		},
+		"p1-dashfire": {
+			"type": "rgb",
+			"name": "Player 1 - Dash Fire Color",
+			"default": "#ffffff",
+			"enable-if": "tint-dashfire"
+		},
+		"p2-dashfire": {
+			"type": "rgb",
+			"name": "Player 2 - Dash Fire Color",
+			"default": "#ffffff",
+			"enable-if": "tint-dashfire"
+		},
+		"custom-particles-title": {
+			"type": "title",
+			"name:": "Custom Particles",
+			"description": "Custom particles settings."
+		},
+		"override-all-variances": {
+			"type": "bool",
+			"name": "Override All Variances",
+			"description": "Overrides all particle variances with the ones defined below. This will only apply to RGB variances, alpha variances will remain the same.",
+			"default": false
+		},
+		"variances-override": {
+			"type": "rgba",
+			"name": "Override Variances Color",
+			"description": "The value to use for all variances when 'Override All Variances' is enabled. This setting is an RGB color, the higher each channel is, the more variance there will be for that channel.",
+			"default": [10, 10, 10, 10],
+			"enable-if": "override-all-variances"
+		},
+		"tint-mainparticles": {
+			"type": "bool",
+			"name": "Tint Main Particles",
+			"description": "Defines if the main particles will be tinted a different color from the icon's primary color.",
+			"default": false
+		},
+		"p1-main-particles-start": {
+			"type": "rgba",
+			"name": "Main Particles StartColor - P1",
+			"description": "The start color of the main particles.",
+			"enable-if": "tint-mainparticles",
+			"default": [255, 255, 255, 255]
+		},
+		"p1-main-particles-end": {
+			"type": "rgba",
+			"name": "Main Particles EndColor - P1",
+			"description": "The end color of the main particles.",
+			"enable-if": "tint-mainparticles",
+			"default": [255, 255, 255, 255]
+		},
+		"p2-main-particles-start": {
+			"type": "rgba",
+			"name": "Main Particles StartColor - P2",
+			"description": "The start color of the main particles.",
+			"enable-if": "tint-mainparticles",
+			"default": [255, 255, 255, 255]
+		},
+		"p2-main-particles-end": {
+			"type": "rgba",
+			"name": "Main Particles EndColor - P2",
+			"description": "The end color of the main particles.",
+			"enable-if": "tint-mainparticles",
+			"default": [255, 255, 255, 255]
+		},
+		"tint-fly-particles": {
+			"type": "bool",
+			"name": "Tint Fly Particles",
+			"description": "Defines if the fly particles will be tinted a different color.",
+			"default": false
+		},
+		"fly-particles-start": {
+			"type": "rgba",
+			"name": "Fly Particles StartColor",
+			"description": "The start color of the fly particles. Used in Ship and UFO modes.",
+			"enable-if": "tint-fly-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"fly-particles-end": {
+			"type": "rgba",
+			"name": "Fly Particles EndColor",
+			"description": "The end color of the fly particles. Used in Ship and UFO modes.",
+			"enable-if": "tint-fly-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"shipclick-particles-start": {
+			"type": "rgba",
+			"name": "Ship Click Particles StartColor",
+			"description": "The start color of the ship click particles.",
+			"enable-if": "tint-fly-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"shipclick-particles-end": {
+			"type": "rgba",
+			"name": "Ship Click Particles EndColor",
+			"description": "The end color of the ship click particles.",
+			"enable-if": "tint-fly-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"tint-ufo-click-particles": {
+			"type": "bool",
+			"name": "Tint UFO Click Particles",
+			"description": "Defines if the UFO click particles will be tinted a different color.",
+			"default": false
+		},
+		"p1-ufo-click-particles-start": {
+			"type": "rgba",
+			"name": "UFO Click Particles StartColor - P1",
+			"description": "The start color of the UFO click particles.",
+			"enable-if": "tint-ufo-click-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"p1-ufo-click-particles-end": {
+			"type": "rgba",
+			"name": "UFO Click Particles EndColor - P1",
+			"description": "The end color of the UFO click particles.",
+			"enable-if": "tint-ufo-click-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"p2-ufo-click-particles-start": {
+			"type": "rgba",
+			"name": "UFO Click Particles StartColor - P2",
+			"description": "The start color of the UFO click particles.",
+			"enable-if": "tint-ufo-click-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"p2-ufo-click-particles-end": {
+			"type": "rgba",
+			"name": "UFO Click Particles EndColor - P2",
+			"description": "The end color of the UFO click particles.",
+			"enable-if": "tint-ufo-click-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"tint-robot-jump-particles": {
+			"type": "bool",
+			"name": "Tint Robot Jump Particles",
+			"description": "Defines if the robot jump particles will be tinted a different color.",
+			"default": false
+		},
+		"robot-jump-particles-start": {
+			"type": "rgba",
+			"name": "Robot Jump Particles StartColor",
+			"description": "The start color of the robot jump particles.",
+			"enable-if": "tint-robot-jump-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"robot-jump-particles-end": {
+			"type": "rgba",
+			"name": "Robot Jump Particles EndColor",
+			"description": "The end color of the robot jump particles.",
+			"enable-if": "tint-robot-jump-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"tint-swing-burst-particles": {
+			"type": "bool",
+			"name": "Tint Swing Burst Particles",
+			"description": "Defines if the swing burst particles will be tinted a different color.",
+			"default": false
+		},
+		"swing-burst-particles-start": {
+			"type": "rgba",
+			"name": "Swing Burst Particles StartColor",
+			"description": "The start color of the swing burst particles.",
+			"enable-if": "tint-swing-burst-particles",
+			"default": [255, 255, 255, 255]
+		},
+		"swing-burst-particles-end": {
+			"type": "rgba",
+			"name": "Swing Burst Particles EndColor",
+			"description": "The end color of the swing burst particles.",
+			"enable-if": "tint-swing-burst-particles",
+			"default": [255, 255, 255, 255]
 		},
 		"randomizer-title": {
 			"type": "title",
@@ -79,53 +311,6 @@
 			"enable-if": "ic-randomizer",
 			"default": true
 		},
-		"icon-stuff-title": {
-			"type": "title",
-			"name": "Icon Stuff",
-			"description": "Settings for the icon stuff."
-		},
-		"enable-customcolors": {
-			"type": "bool",
-			"name": "Enable Custom Colors",
-			"description": "Enable custom colors for the icon.",
-			"default": false
-		},
-		"p1-primary": {
-			"type": "rgb",
-			"name": "Player 1 - Primary Color",
-			"default": "#ffffff"
-		},
-		"p1-secondary": {
-			"type": "rgb",
-			"name": "Player 1 - Secondary Color",
-			"default": "#ffffff"
-		},
-		"p1-wave": {
-			"type": "rgb",
-			"name": "Player 1 - Wave Color",
-			"default": "#ffffff"
-		},
-		"p2-primary": {
-			"type": "rgb",
-			"name": "Player 2 - Primary Color",
-			"default": "#ffffff"
-		},
-		"p2-secondary": {
-			"type": "rgb",
-			"name": "Player 2 - Secondary Color",
-			"default": "#ffffff"
-		},
-		"p2-wave": {
-			"type": "rgb",
-			"name": "Player 2 - Wave Color",
-			"default": "#ffffff"
-		},
-		"tint-trail": {
-			"type": "bool",
-			"name": "Tint Trail",
-			"description": "Defines if the trail will be tinted or nah. Easier to make this an option LOLLLL",
-			"default": false
-		},
 		"noclip-totem": {
 			"type": "title",
 			"name": "Totem of Undying animation",
@@ -152,6 +337,38 @@
 			"default": 1.0,
 			"min": 0.3,
 			"max": 4.0
+		},
+		"trail-title":{
+			"type": "title",
+			"name:": "Legacy Trail",
+			"description": "The trail if it was still good."
+		},
+		"max-points":{
+			"type": "int",
+			"name": "Trail: Max Points",
+			"description": "The maximum amount of points the trail can have.",
+			"min": 2,
+			"max": 20,
+			"default": 15
+		},
+		"pulse-title": {
+			"type": "title",
+			"name:": "Legacy Pulse",
+			"description": "The pulse if it was still good."
+		},
+		"legacy-pulse": {
+			"type": "bool",
+			"name": "Enable Legacy Pulse",
+			"description": "Enable the legacy pulse.",
+			"default": true
+		},
+		"pulse-fps": {
+			"type": "int",
+			"name": "Pulse: FPS",
+			"description": "The FPS the legacy pulse should emulate.",
+			"min": 60,
+			"max": 1080,
+			"default": 60
 		}
 	},
 	"resources": {
