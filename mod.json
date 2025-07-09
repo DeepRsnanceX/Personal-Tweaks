@@ -1,5 +1,5 @@
 {
-	"geode": "4.5.0",
+	"geode": "4.6.2",
 	"gd": {
 		"win": "2.2074",
 		"android": "2.2074",
@@ -163,40 +163,6 @@
 			"enable-if": "tint-mainparticles",
 			"default": [255, 255, 255, 255]
 		},
-		"tint-fly-particles": {
-			"type": "bool",
-			"name": "Tint Fly Particles",
-			"description": "Defines if the fly particles will be tinted a different color.",
-			"default": false
-		},
-		"fly-particles-start": {
-			"type": "rgba",
-			"name": "Fly Particles StartColor",
-			"description": "The start color of the fly particles. Used in Ship and UFO modes.",
-			"enable-if": "tint-fly-particles",
-			"default": [255, 255, 255, 255]
-		},
-		"fly-particles-end": {
-			"type": "rgba",
-			"name": "Fly Particles EndColor",
-			"description": "The end color of the fly particles. Used in Ship and UFO modes.",
-			"enable-if": "tint-fly-particles",
-			"default": [255, 255, 255, 255]
-		},
-		"shipclick-particles-start": {
-			"type": "rgba",
-			"name": "Ship Click Particles StartColor",
-			"description": "The start color of the ship click particles.",
-			"enable-if": "tint-fly-particles",
-			"default": [255, 255, 255, 255]
-		},
-		"shipclick-particles-end": {
-			"type": "rgba",
-			"name": "Ship Click Particles EndColor",
-			"description": "The end color of the ship click particles.",
-			"enable-if": "tint-fly-particles",
-			"default": [255, 255, 255, 255]
-		},
 		"tint-ufo-click-particles": {
 			"type": "bool",
 			"name": "Tint UFO Click Particles",
@@ -229,46 +195,6 @@
 			"name": "UFO Click Particles EndColor - P2",
 			"description": "The end color of the UFO click particles.",
 			"enable-if": "tint-ufo-click-particles",
-			"default": [255, 255, 255, 255]
-		},
-		"tint-robot-jump-particles": {
-			"type": "bool",
-			"name": "Tint Robot Jump Particles",
-			"description": "Defines if the robot jump particles will be tinted a different color.",
-			"default": false
-		},
-		"robot-jump-particles-start": {
-			"type": "rgba",
-			"name": "Robot Jump Particles StartColor",
-			"description": "The start color of the robot jump particles.",
-			"enable-if": "tint-robot-jump-particles",
-			"default": [255, 255, 255, 255]
-		},
-		"robot-jump-particles-end": {
-			"type": "rgba",
-			"name": "Robot Jump Particles EndColor",
-			"description": "The end color of the robot jump particles.",
-			"enable-if": "tint-robot-jump-particles",
-			"default": [255, 255, 255, 255]
-		},
-		"tint-swing-burst-particles": {
-			"type": "bool",
-			"name": "Tint Swing Burst Particles",
-			"description": "Defines if the swing burst particles will be tinted a different color.",
-			"default": false
-		},
-		"swing-burst-particles-start": {
-			"type": "rgba",
-			"name": "Swing Burst Particles StartColor",
-			"description": "The start color of the swing burst particles.",
-			"enable-if": "tint-swing-burst-particles",
-			"default": [255, 255, 255, 255]
-		},
-		"swing-burst-particles-end": {
-			"type": "rgba",
-			"name": "Swing Burst Particles EndColor",
-			"description": "The end color of the swing burst particles.",
-			"enable-if": "tint-swing-burst-particles",
 			"default": [255, 255, 255, 255]
 		},
 		"randomizer-title": {
@@ -388,7 +314,11 @@
 		"hiimjustin000.icon_randomizer_api": {
 			"version": ">=v2.0.0",
 			"importance": "required"
-		}
+		},
+		"hiimjustin000.more_icons": {
+            "version": ">=v1.14.0",
+            "importance": "required"
+        }
 	},
 	"id": "saritahhh.personal_tweaks",
 	"name": "Personal Tweaks",
