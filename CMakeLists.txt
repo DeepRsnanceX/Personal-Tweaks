@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME} SHARED
     src/pauselayer.cpp
     src/customcolors.cpp
     src/iconinfogetter.cpp
+    src/stupidassfeatures.cpp
     # Add any extra C++ source files here
 )
 
