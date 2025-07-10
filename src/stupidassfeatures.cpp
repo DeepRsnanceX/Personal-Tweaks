@@ -20,6 +20,8 @@ class $modify(StupidGarageLayer, GJGarageLayer){
 
         if (!doAnimation) return;
 
+        if (m_selectedIconType == IconType::Special) return;
+
         float defScale = 1.6f;
         float jetScale = 1.5f;
 
