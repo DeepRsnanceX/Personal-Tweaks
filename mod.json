@@ -88,7 +88,7 @@
         },
 		"randomize-robot": {
             "type": "bool",
-            "name": "Randomize Spider",
+            "name": "Randomize Robot",
             "description": "Randomize the robot icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
             "default": true

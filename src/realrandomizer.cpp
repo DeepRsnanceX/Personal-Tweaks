@@ -130,10 +130,13 @@ class $modify(RandomizerPlayer, PlayerObject){
     struct Fields {
         float timePassed = 0.0f;
         bool modeEnabled[8] = {false}; // cache for enabled randomizers
+        bool colorEnabled[3] = {false}; // cache for enabled colors
     };
 
     void updateRandomizerCache() {
         auto fields = m_fields.self();
+
+        // gamemodes
         fields->modeEnabled[0] = randomizeCube;
         fields->modeEnabled[1] = randomizeShip;
         fields->modeEnabled[2] = randomizeBall;
@@ -142,6 +145,11 @@ class $modify(RandomizerPlayer, PlayerObject){
         fields->modeEnabled[5] = randomizeRobot;
         fields->modeEnabled[6] = randomizeSpider;
         fields->modeEnabled[7] = randomizeSwing;
+
+        // colors
+        fields->colorEnabled[0] = randomizeCol1;
+        fields->colorEnabled[1] = randomizeCol2;
+        fields->colorEnabled[2] = randomizeGlowCol;
     }
 
     bool init(int player, int ship, GJBaseGameLayer* gameLayer, CCLayer* layer, bool playLayer) {
@@ -232,24 +240,13 @@ class $modify(RandomizerPlayer, PlayerObject){
         else if (m_isSpider) mode = ICON_RANDOMIZER_API_SPIDER;
         else mode = ICON_RANDOMIZER_API_CUBE;
 
-        bool modeEnabled[] = {
-            randomizeCube, 
-            randomizeShip, 
-            randomizeBall, 
-            randomizeUfo, 
-            randomizeWave, 
-            randomizeRobot, 
-            randomizeSpider, 
-            randomizeSwing
-        };
-
         if (mode >= 0 && mode < 8 && fields->modeEnabled[mode]) {
             IconRandomizer::randomize(static_cast<RandomizeType>(mode));
         }
 
-        if (randomizeCol1) IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_1);
-        if (randomizeCol2) IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_2);
-        if (randomizeGlowCol) IconRandomizer::randomize(ICON_RANDOMIZER_API_GLOW_COLOR);
+        if (fields->colorEnabled[0]) IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_1);
+        if (fields->colorEnabled[1]) IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_2);
+        if (fields->colorEnabled[2]) IconRandomizer::randomize(ICON_RANDOMIZER_API_GLOW_COLOR);
 
         updatePlayerColors(this);
         updatePlayerFrames(this);
