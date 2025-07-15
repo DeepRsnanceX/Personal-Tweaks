@@ -12,39 +12,120 @@
 			"name": "Icon Randomizer",
 			"description": "Icon randomizer settings."
 		},
-		"ic-randomizer": {
+		"cond-ic-randomizer": {
 			"type": "bool",
-			"name": "Enable Icon Randomizer",
-			"description": "Enable the icon randomizer.",
+			"name": "Enable Conditional Icon Randomizer",
+			"description": "Enables the Conditional Icon Randomizer - An icon randomizer mode that only gets activated on specific conditions, configured below.",
 			"default": true
 		},
-		"randomizer-type": {
+		"cond-randomizer-type": {
 			"type": "string",
 			"name": "Icon Randomizer Type",
 			"description": "The type of icon randomizer to use.",
 			"default": "every-gamemode",
 			"one-of": ["every-gamemode", "on-death", "both"],
-			"enable-if": "ic-randomizer"
+			"enable-if": "cond-ic-randomizer"
 		},
+		"live-ic-randomizer": {
+			"type": "bool",
+			"name": "Enable Live Icon Randomizer",
+			"description": "Enables the Live Icon Randomizer - An icon randomizer mode that randomizes icons each X amount of time, configured below.",
+			"enable-if": "!cond-ic-randomizer",
+			"default": false
+		},
+		"random-delay": {
+			"type": "float",
+			"name": "Randomize Delay",
+			"description": "Defines how long to wait in-between each icon randomization.",
+			"enable-if": "live-ic-randomizer",
+			"default": 4,
+			"min": 1,
+			"max": 20,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"big-arrows": true,
+				"big-arrow-step": 1,
+				"slider": true,
+				"slider-step": 0.1,
+				"input": true
+			}
+		},
+		"randomize-cube": {
+            "type": "bool",
+            "name": "Randomize Cube",
+            "description": "Randomize the cube icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
+        "randomize-ship": {
+            "type": "bool",
+            "name": "Randomize Ship",
+            "description": "Randomize the ship icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
+        "randomize-ball": {
+            "type": "bool",
+            "name": "Randomize Ball",
+            "description": "Randomize the ball icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
+        "randomize-ufo": {
+            "type": "bool",
+            "name": "Randomize UFO",
+            "description": "Randomize the UFO icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
+        "randomize-wave": {
+            "type": "bool",
+            "name": "Randomize Wave",
+            "description": "Randomize the wave icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
+		"randomize-robot": {
+            "type": "bool",
+            "name": "Randomize Spider",
+            "description": "Randomize the robot icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
+        "randomize-spider": {
+            "type": "bool",
+            "name": "Randomize Spider",
+            "description": "Randomize the spider icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
+        "randomize-swing": {
+            "type": "bool",
+            "name": "Randomize Swing",
+            "description": "Randomize the swing icon.",
+            "enable-if": "cond-ic-randomizer || live-ic-randomizer",
+            "default": true
+        },
 		"randomize-color1": {
 			"type": "bool",
 			"name": "Randomize Color 1",
 			"description": "Randomize the first color of the icon.",
-			"enable-if": "ic-randomizer",
+			"enable-if": "cond-ic-randomizer || live-ic-randomizer",
 			"default": true
 		},
 		"randomize-color2": {
 			"type": "bool",
 			"name": "Randomize Color 2",
 			"description": "Randomize the second color of the icon.",
-			"enable-if": "ic-randomizer",
+			"enable-if": "cond-ic-randomizer || live-ic-randomizer",
 			"default": true
 		},
 		"randomize-glowcolor": {
 			"type": "bool",
 			"name": "Randomize Glow Color",
 			"description": "Randomize the glow color of the icon.",
-			"enable-if": "ic-randomizer",
+			"enable-if": "cond-ic-randomizer || live-ic-randomizer",
 			"default": true
 		},
 		"noclip-totem": {

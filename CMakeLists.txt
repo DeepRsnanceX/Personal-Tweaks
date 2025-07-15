@@ -14,13 +14,13 @@ add_library(${PROJECT_NAME} SHARED
     src/legacytrail.cpp
     src/brb.cpp
     src/waveparticlesfix.cpp
-    src/realrandomizer.cpp
     src/totem.cpp
     src/legacypulse.cpp
     src/pauselayer.cpp
     src/customcolors.cpp
     src/iconinfogetter.cpp
     src/stupidassfeatures.cpp
+    src/realrandomizer.cpp
     # Add any extra C++ source files here
 )
 
