@@ -105,6 +105,8 @@ void updatePlayerFrames(PlayerObject* player) {
         player->updatePlayerSpiderFrame(gameManager->getPlayerSpider());
     } else if (cube) {
         player->updatePlayerFrame(gameManager->getPlayerFrame());
+    } else {
+        player->updatePlayerFrame(gameManager->getPlayerFrame()); // just makin sure
     }
 }
 
