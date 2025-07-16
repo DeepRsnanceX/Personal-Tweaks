@@ -38,16 +38,16 @@
 			"name": "Randomize Delay",
 			"description": "Defines how long to wait in-between each icon randomization.",
 			"enable-if": "live-ic-randomizer",
-			"default": 4,
+			"default": 25,
 			"min": 1,
-			"max": 20,
+			"max": 70,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
 				"big-arrows": true,
-				"big-arrow-step": 1,
+				"big-arrow-step": 5,
 				"slider": true,
-				"slider-step": 0.1,
+				"slider-step": 1,
 				"input": true
 			}
 		},

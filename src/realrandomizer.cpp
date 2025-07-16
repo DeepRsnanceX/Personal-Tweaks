@@ -1,4 +1,5 @@
 #include <hiimjustin000.icon_randomizer_api/include/IconRandomizer.hpp>
+#include <hiimjustin000.more_icons/include/MoreIcons.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/GJGarageLayer.hpp>
@@ -69,6 +70,22 @@ $on_mod(Loaded){
     });
 }
 
+static constexpr RandomizeType modeTypes[8] = {
+    ICON_RANDOMIZER_API_CUBE,
+    ICON_RANDOMIZER_API_SHIP,
+    ICON_RANDOMIZER_API_BALL,
+    ICON_RANDOMIZER_API_UFO,
+    ICON_RANDOMIZER_API_WAVE,
+    ICON_RANDOMIZER_API_ROBOT,
+    ICON_RANDOMIZER_API_SPIDER,
+    ICON_RANDOMIZER_API_SWING
+};
+static constexpr RandomizeType colorTypes[3] = {
+    ICON_RANDOMIZER_API_COLOR_1,
+    ICON_RANDOMIZER_API_COLOR_2,
+    ICON_RANDOMIZER_API_GLOW_COLOR
+};
+
 void updatePlayerFrames(PlayerObject* player) {
 
     auto gameManager = GameManager::sharedState();
@@ -100,14 +117,18 @@ void updatePlayerFrames(PlayerObject* player) {
     } else if (swing) {
         player->updatePlayerSwingFrame(gameManager->getPlayerSwing());
     } else if (robot) {
-        player->updatePlayerRobotFrame(gameManager->getPlayerRobot());
+        //player->updatePlayerRobotFrame(gameManager->getPlayerRobot());
+        MoreIcons::updatePlayerObject(player);
+        player->m_ghostTrail->m_playerObject = player;
     } else if (spider) {
-        player->updatePlayerSpiderFrame(gameManager->getPlayerSpider());
+        //player->updatePlayerSpiderFrame(gameManager->getPlayerSpider());
+        MoreIcons::updatePlayerObject(player);
     } else if (cube) {
         player->updatePlayerFrame(gameManager->getPlayerFrame());
     } else {
         player->updatePlayerFrame(gameManager->getPlayerFrame()); // just makin sure
     }
+
 }
 
 void updatePlayerColors(PlayerObject* pobj) {
@@ -212,7 +233,12 @@ class $modify(RandomizerPlayer, PlayerObject){
             updatePlayerColors(this);
             updatePlayerFrames(this);
         }
+    }
 
+    void toggleBirdMode(bool p0, bool p1) {
+        PlayerObject::toggleBirdMode(p0, p1);
+
+        log::debug("bir mod");
     }
 
     void update(float p0) {
@@ -232,23 +258,16 @@ class $modify(RandomizerPlayer, PlayerObject){
             initialized = true;
         }
 
-        int mode = -1;
-        if (m_isShip) mode = ICON_RANDOMIZER_API_SHIP;
-        else if (m_isBall) mode = ICON_RANDOMIZER_API_BALL;
-        else if (m_isBird) mode = ICON_RANDOMIZER_API_UFO;
-        else if (m_isDart) mode = ICON_RANDOMIZER_API_WAVE;
-        else if (m_isSwing) mode = ICON_RANDOMIZER_API_SWING;
-        else if (m_isRobot) mode = ICON_RANDOMIZER_API_ROBOT;
-        else if (m_isSpider) mode = ICON_RANDOMIZER_API_SPIDER;
-        else mode = ICON_RANDOMIZER_API_CUBE;
-
-        if (mode >= 0 && mode < 8 && fields->modeEnabled[mode]) {
-            IconRandomizer::randomize(static_cast<RandomizeType>(mode));
+        for (int i = 0; i < 8; ++i) {
+            if (fields->modeEnabled[i]) {
+                IconRandomizer::randomize(modeTypes[i]);
+            }
         }
-
-        if (fields->colorEnabled[0]) IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_1);
-        if (fields->colorEnabled[1]) IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_2);
-        if (fields->colorEnabled[2]) IconRandomizer::randomize(ICON_RANDOMIZER_API_GLOW_COLOR);
+        for (int i = 0; i < 3; ++i) {
+            if (fields->colorEnabled[i]) {
+                IconRandomizer::randomize(colorTypes[i]);
+            }
+        }
 
         updatePlayerColors(this);
         updatePlayerFrames(this);
