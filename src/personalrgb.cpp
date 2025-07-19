@@ -52,6 +52,7 @@ class $modify(RGBPlayerObject, PlayerObject) {
     void update(float p0) {
         PlayerObject::update(p0);
 
+        auto fld = m_fields.self();
         auto playLayer = PlayLayer::get();
         if (!playLayer) return;
 
@@ -67,7 +68,7 @@ class $modify(RGBPlayerObject, PlayerObject) {
             1.0f
         );
 
-        if (usingCol1) {
+        if (fld->usingCol1) {
             m_iconSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             m_vehicleSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             if (m_isRobot) {
@@ -92,17 +93,17 @@ class $modify(RGBPlayerObject, PlayerObject) {
             m_landParticles1->m_tEndColor = colorForParticle;
         }
         
-        if (usingCol2) {
+        if (fld->usingCol2) {
             log::debug("* You enabled RGB for color 2.");
             log::debug("* ... Nothing happened.");
         }
         
         if (m_isRobot) {
-            if (usingCol1 || usingCol2) {
+            if (fld->usingCol1 || fld->usingCol2) {
                 m_robotSprite->updateColors();
             }
         } else if (m_isSpider) {
-            if (usingCol1 || usingCol2) {
+            if (fld->usingCol1 || fld->usingCol2) {
                 m_spiderSprite->updateColors();
             }
         }
