@@ -117,17 +117,65 @@ void updatePlayerFrames(PlayerObject* player) {
     } else if (swing) {
         player->updatePlayerSwingFrame(gameManager->getPlayerSwing());
     } else if (robot) {
-        //player->updatePlayerRobotFrame(gameManager->getPlayerRobot());
-        MoreIcons::updatePlayerObject(player);
-        player->m_ghostTrail->m_playerObject = player;
+        player->updatePlayerRobotFrame(gameManager->getPlayerRobot());
     } else if (spider) {
-        //player->updatePlayerSpiderFrame(gameManager->getPlayerSpider());
+        player->updatePlayerSpiderFrame(gameManager->getPlayerSpider());
+    } else if (cube) {
+        player->updatePlayerFrame(gameManager->getPlayerFrame());
+    } else {
+        player->updatePlayerFrame(gameManager->getPlayerFrame()); // just makin sure
+    }
+
+}
+
+void updatePlayerFramesLive(PlayerObject* player) {
+
+    auto gameManager = GameManager::sharedState();
+    // for the sake of organization...
+    auto ship = player->m_isShip;
+    auto ball = player->m_isBall;
+    auto bird = player->m_isBird;
+    auto dart = player->m_isDart;
+    auto swing = player->m_isSwing;
+    auto robot = player->m_isRobot;
+    auto spider = player->m_isSpider;
+    auto cube = !player->m_isShip && !player->m_isBall && !player->m_isBird && !player->m_isDart && !player->m_isSwing && !player->m_isRobot && !player->m_isSpider;
+    auto platformer = player->m_isPlatformer;
+
+    if (ship) {
+        if (platformer) {
+            player->updatePlayerJetpackFrame(gameManager->getPlayerJetpack());
+        } else {
+            player->updatePlayerShipFrame(gameManager->getPlayerShip());
+        }
+        player->updatePlayerFrame(gameManager->getPlayerFrame());
+    } else if (ball) {
+        player->updatePlayerRollFrame(gameManager->getPlayerBall());
+    } else if (bird) {
+        player->updatePlayerBirdFrame(gameManager->getPlayerBird());
+        player->updatePlayerFrame(gameManager->getPlayerFrame());
+    } else if (dart) {
+        player->updatePlayerDartFrame(gameManager->getPlayerDart());
+    } else if (swing) {
+        player->updatePlayerSwingFrame(gameManager->getPlayerSwing());
+    } else if (robot) {
+        MoreIcons::updatePlayerObject(player);
+    } else if (spider) {
         MoreIcons::updatePlayerObject(player);
     } else if (cube) {
         player->updatePlayerFrame(gameManager->getPlayerFrame());
     } else {
         player->updatePlayerFrame(gameManager->getPlayerFrame()); // just makin sure
     }
+
+    /*
+    IF ANYONE EVEN CARES ABOUT THIS MOD AND WONDERS WHY THIS IS A DIFFERENT FUNCTION:
+    This uses the MoreIcons updatePlayerObject func for the LIVE Icon Randomizer bc using the game's
+    updatePlayerSpider/RobotFrame funcs causes the animations to freeze on icon change.
+    therefore, i have to use the funcs MoreIcons provides for a better experience in-game.
+
+    This unfortunately means (i think) that using this mode only picks More Icons added robots and spiders, so vanilla/trad pack icons won't be chosen.
+    */
 
 }
 
@@ -186,59 +234,61 @@ class $modify(RandomizerPlayer, PlayerObject){
     void switchedToMode(GameObjectType p0) {
         PlayerObject::switchedToMode(p0);
 
+        auto fields = m_fields.self();
         auto playLayer = PlayLayer::get();
-        if (!playLayer) return;
+        bool validRandomModes = randomizerType == "every-gamemode" || randomizerType == "both"; 
+        if (!playLayer || !doCondRandomize || !validRandomModes) return;
 
-        auto cube = !m_isShip && !m_isBall && !m_isBird && !m_isDart && !m_isSwing && !m_isRobot && !m_isSpider;
-        bool validRandomModes = randomizerType == "every-gamemode" || randomizerType == "both";
-
-        if (playLayer && doCondRandomize && validRandomModes) {
+        static bool initialized = false;
+        if (!initialized) {
             IconRandomizer::init();
-            
-            if (cube && randomizeCube) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_CUBE);
-            }
-            if (m_isShip && randomizeShip) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_SHIP);
-            }
-            if (m_isBall && randomizeBall) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_BALL);
-            }
-            if (m_isBird && randomizeUfo) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_UFO);
-            }
-            if (m_isDart && randomizeWave) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_WAVE);
-            }
-            if (m_isRobot && randomizeRobot) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_ROBOT);
-            }
-            if (m_isSpider && randomizeSpider) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_SPIDER);
-            }
-            if (m_isSwing && randomizeSwing) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_SWING);
-            }
-
-            if (randomizeCol1) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_1); 
-            }
-            if (randomizeCol2) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_COLOR_2);
-            }
-            if (randomizeGlowCol) {
-                IconRandomizer::randomize(ICON_RANDOMIZER_API_GLOW_COLOR);
-            }     
-
-            updatePlayerColors(this);
-            updatePlayerFrames(this);
+            initialized = true;
         }
+
+        for (int i = 0; i < 8; ++i) {
+            if (fields->modeEnabled[i]) {
+                IconRandomizer::randomize(modeTypes[i]);
+            }
+        }
+        for (int i = 0; i < 3; ++i) {
+            if (fields->colorEnabled[i]) {
+                IconRandomizer::randomize(colorTypes[i]);
+            }
+        }
+
+        updatePlayerColors(this);
+        updatePlayerFrames(this);
     }
 
-    void toggleBirdMode(bool p0, bool p1) {
-        PlayerObject::toggleBirdMode(p0, p1);
+    bool pushButton(PlayerButton p0) {
+        if (!PlayerObject::pushButton(p0)) return false;
+        
+        auto fields = m_fields.self();
+        auto playLayer = PlayLayer::get();
+        bool validRandomModes = randomizerType == "on-click";
+        if (!playLayer || !doCondRandomize || !validRandomModes) return true;
 
-        log::debug("bir mod");
+        static bool initialized = false;
+        if (!initialized) {
+            IconRandomizer::init();
+            initialized = true;
+        }
+
+        for (int i = 0; i < 8; ++i) {
+            if (fields->modeEnabled[i]) {
+                IconRandomizer::randomize(modeTypes[i]);
+            }
+        }
+        for (int i = 0; i < 3; ++i) {
+            if (fields->colorEnabled[i]) {
+                IconRandomizer::randomize(colorTypes[i]);
+            }
+        }
+
+        updatePlayerColors(this);
+        updatePlayerFrames(this);
+
+        return true;
     }
 
     void update(float p0) {
@@ -270,7 +320,7 @@ class $modify(RandomizerPlayer, PlayerObject){
         }
 
         updatePlayerColors(this);
-        updatePlayerFrames(this);
+        updatePlayerFramesLive(this);
     }
 };
 
