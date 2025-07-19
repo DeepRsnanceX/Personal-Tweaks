@@ -66,6 +66,8 @@ class $modify(RGBPlayerObject, PlayerObject) {
         if (doCol1) {
             m_iconSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             m_vehicleSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
+            m_robotSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+            m_spiderSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
             if (m_ghostTrail) {
                 m_ghostTrail->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
             }
@@ -80,6 +82,10 @@ class $modify(RGBPlayerObject, PlayerObject) {
             m_landParticles1->m_tStartColor = colorForParticle;
             m_landParticles1->m_tEndColor = colorForParticle;
         }
-
+        
+        if (doCol2) {
+            log::debug("* You enabled RGB for color 2.");
+            log::debug("* ... Nothing happened.");
+        }
     }
 };
