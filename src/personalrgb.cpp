@@ -22,10 +22,11 @@ $on_mod(Loaded){
 }
 
 class $modify(RGBPlayerObject, PlayerObject) {
-    struct Fields (
+    struct Fields {
         bool usingCol1 = doCol1;
         bool usingCol2 = doCol2;
-    );
+    };
+    
     std::tuple<int, int, int> hsvToRgbRaw(float h, float s, float v) {
         float r, g, b;
         int i = int(h * 6);
