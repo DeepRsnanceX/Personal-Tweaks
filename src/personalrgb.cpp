@@ -99,6 +99,13 @@ class $modify(RGBPlayerObject, PlayerObject) {
             log::debug("* ... Nothing happened.");
             log::debug("* ... It seems this part of the code is still unfinished.");
             log::debug(" ♡ FUCK            I'll wait!");
+            m_iconSpriteSecondary->setColor({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
+            m_vehicleSpriteSecondary->setColor({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
+            if (m_isRobot) {
+                m_robotSprite->m_secondColor = ccColor3B(static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2));
+            } else if (m_isSpider) {
+                m_spiderSprite->m_secondColor = ccColor3B(static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2));
+            }
         }
         
         if (m_isRobot) {
