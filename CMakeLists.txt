@@ -21,6 +21,7 @@ add_library(${PROJECT_NAME} SHARED
     src/iconinfogetter.cpp
     src/stupidassfeatures.cpp
     src/realrandomizer.cpp
+    src/personalrgb.cpp
     # Add any extra C++ source files here
 )
 
