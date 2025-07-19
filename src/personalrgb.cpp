@@ -58,9 +58,10 @@ class $modify(RGBPlayerObject, PlayerObject) {
         if (!playLayer) return;
 
         float counter = counter + 0.15f;
-        float hue = fmod(counter * 0.01f, 1.0f); // <- multiply speed here
+        float hue = fmod(counter * 0.01f, 1.f); // <- multiply speed here
 
-        auto [r, g, b] = hsvToRgbRaw(hue, sat, 1.0f);
+        auto [r, g, b] = hsvToRgbRaw(hue, sat, 1.f);
+        auto [r2, g2, b2] = hsvToRgbRaw(hue + 90, sat, 1.f);
 
         cocos2d::ccColor4F colorForParticle(
             r / 255.0f,
@@ -74,7 +75,6 @@ class $modify(RGBPlayerObject, PlayerObject) {
             m_vehicleSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             if (m_isRobot) {
                 m_robotSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
-                m_robotSprite->
             } else if (m_isSpider) {
                 m_spiderSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
             }
@@ -97,6 +97,8 @@ class $modify(RGBPlayerObject, PlayerObject) {
         if (fld->usingCol2) {
             log::debug("* You enabled RGB for color 2.");
             log::debug("* ... Nothing happened.");
+            log::debug("* ... It seems this part of the code is still unfinished.");
+            log::debug(" ♡ FUCK            I'll wait!");
         }
         
         if (m_isRobot) {
