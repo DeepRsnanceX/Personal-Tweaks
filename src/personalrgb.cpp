@@ -22,6 +22,10 @@ $on_mod(Loaded){
 }
 
 class $modify(RGBPlayerObject, PlayerObject) {
+    struct Fields (
+        bool usingCol1 = doCol1;
+        bool usingCol2 = doCol2;
+    );
     std::tuple<int, int, int> hsvToRgbRaw(float h, float s, float v) {
         float r, g, b;
         int i = int(h * 6);
@@ -51,8 +55,8 @@ class $modify(RGBPlayerObject, PlayerObject) {
         auto playLayer = PlayLayer::get();
         if (!playLayer) return;
 
-        float progress = playLayer->getCurrentPercent();
-        float hue = fmod(progress * 0.01f, 1.0f); // <- multiply speed here
+        float counter = counter + 0.15f;
+        float hue = fmod(counter * 0.01f, 1.0f); // <- multiply speed here
 
         auto [r, g, b] = hsvToRgbRaw(hue, sat, 1.0f);
 
@@ -63,11 +67,16 @@ class $modify(RGBPlayerObject, PlayerObject) {
             1.0f
         );
 
-        if (doCol1) {
+        if (usingCol1) {
             m_iconSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             m_vehicleSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
-            m_robotSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
-            m_spiderSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+            if (m_isRobot) {
+                m_robotSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+                m_robotSprite->
+            } else if (m_isSpider) {
+                m_spiderSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+            }
+            
             if (m_ghostTrail) {
                 m_ghostTrail->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
             }
@@ -83,9 +92,19 @@ class $modify(RGBPlayerObject, PlayerObject) {
             m_landParticles1->m_tEndColor = colorForParticle;
         }
         
-        if (doCol2) {
+        if (usingCol2) {
             log::debug("* You enabled RGB for color 2.");
             log::debug("* ... Nothing happened.");
+        }
+        
+        if (m_isRobot) {
+            if (usingCol1 || usingCol2) {
+                m_robotSprite->updateColors();
+            }
+        } else if (m_isSpider) {
+            if (usingCol1 || usingCol2) {
+                m_spiderSprite->updateColors();
+            }
         }
     }
 };
