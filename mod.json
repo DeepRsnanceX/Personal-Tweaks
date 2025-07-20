@@ -145,10 +145,29 @@
 			"description": "Enables RGB for Color 2.",
 			"default": false
 		},
+		"rgb-speed": {
+			"type": "float",
+			"name": "RGB Cycle Speed",
+			"description": "How fast you want the RGB to cycle.",
+			"default": 1.0,
+			"min": 0,
+			"max": 10.0,
+			"control": {
+				"input": true,
+				"arrows": true,
+				"big-arrows": true,
+				"slider": true,
+				"slider-step": 0.5,
+				"arrow-step": 0.01,
+				"big-arrow-step": 1.0
+			},
+			"enable-if": "rgb-col1 || rgb-col2",
+			"enable-if-description": "Enable the RGB effect first!"
+		},
 		"rgb-saturation": {
 			"type": "float",
-			"name": "Saturation",
-			"description": "Saturation setting for the RGB icons.",
+			"name": "Saturation - Color 1",
+			"description": "Saturation setting for Color 1's RGB mode.",
 			"default": 1.0,
 			"min": 0,
 			"max": 1.0,
@@ -158,7 +177,32 @@
 				"slider": true,
 				"slider-step": 0.1,
 				"arrow-step": 0.1
-			}
+			},
+			"enable-if": "rgb-col1",
+			"enable-if-description": "Enable RGB for color 1!"
+		},
+		"rgb-saturation2": {
+			"type": "float",
+			"name": "Saturation - Color 2",
+			"description": "Saturation setting for Color 2's RGB mode.",
+			"default": 1.0,
+			"min": 0,
+			"max": 1.0,
+			"control": {
+				"input": false,
+				"arrows": true,
+				"slider": true,
+				"slider-step": 0.1,
+				"arrow-step": 0.1
+			},
+			"enable-if": "rgb-col2",
+			"enable-if-description": "Enable RGB for color 2!"
+		},
+		"ignore-p2": {
+			"type": "bool",
+			"name": "Ignore Player 2",
+			"description": "Disables the RGB effect for Player 2.",
+			"default": false
 		},
 		"trail-title":{
 			"type": "title",

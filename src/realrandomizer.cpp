@@ -286,7 +286,7 @@ class $modify(RandomizerPlayer, PlayerObject){
         }
 
         updatePlayerColors(this);
-        updatePlayerFrames(this);
+        updatePlayerFramesLive(this);
 
         return true;
     }
