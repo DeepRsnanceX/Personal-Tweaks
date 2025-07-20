@@ -115,7 +115,10 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
             robotCount, spiderCount, swingCount, jetpackCount, total
         );
 
-        FLAlertLayer::create("Lumity Mix Info", infoData.c_str(), "ok")->show();
+        IconInfo* thing = MoreIcons::getIcon(m_selectedIconType);
+        std::string packInfoString = fmt::format("{} Info", thing->packName);
+
+        FLAlertLayer::create(packInfoString.c_str(), infoData.c_str(), "ok")->show();
     }
 
     bool init() {
