@@ -39,7 +39,7 @@
 			"description": "Defines how long to wait in-between each icon randomization.",
 			"enable-if": "live-ic-randomizer",
 			"default": 25,
-			"min": 1,
+			"min": 0.1,
 			"max": 70,
 			"control": {
 				"arrows": true,

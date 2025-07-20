@@ -101,6 +101,13 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
 
     bool init() {
         if (!GJGarageLayer::init()) return false;
+
+        float extraOffset = 0.f;
+        bool isSeparateLoaded = Loader::get()->isModLoaded("weebify.separate_dual_icons");
+
+        if (isSeparateLoaded) {
+            extraOffset = 90.f;
+        }
         
         auto buttonsMenu = CCMenu::create();
         buttonsMenu->setLayout(
@@ -111,7 +118,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
                 ->setCrossAxisOverflow(false)
         );
         buttonsMenu->setContentSize({80.f, 40.f});
-        buttonsMenu->setPosition({m_playerObject->getPositionX() + 90.f, m_playerObject->getPositionY()});
+        buttonsMenu->setPosition({m_playerObject->getPositionX() + 90.f + extraOffset, m_playerObject->getPositionY()});
         buttonsMenu->setID("pt-buttons-menu"_spr);
         this->addChild(buttonsMenu);
 
