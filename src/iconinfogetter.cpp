@@ -18,7 +18,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         IconInfo* selectedIcon = MoreIcons::getIcon(m_selectedIconType);
         std::string iconName = selectedIcon->shortName;
 
-        fields->m_iconList.push_back(iconName); 
+        fields->m_iconList.push_back(iconName);
 
         Notification::create("Icon " + iconName + " added!", addedSpr, 0.30f)->show();
     }
@@ -59,6 +59,25 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
             geode::log::debug("Icon list:\n{}", allIcons);
             Notification::create("Failed to save file! List printed to debug.", errSpr, 0.5f)->show();
         }
+    }
+
+    void checkListPopup(CCObject* sender) {
+        auto fields = m_fields.self();
+
+        std::string allIcons;
+        for (const auto& icon : fields->m_iconList) {
+            allIcons += "- " + icon + "\n";
+        }
+
+        std::string popupContent = fmt::format("# Your Current Icon List: \n\n{}", allIcons);
+
+        MDPopup::create(
+            "Chosen icons list",
+            popupContent,
+            "ok",
+            "thanks",
+            static_cast<std::function<void(bool)>>(nullptr)
+        )->show();
     }
 
     void removeLastIconFromList(CCObject* sender) {
@@ -117,14 +136,15 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
                 ->setAxisReverse(true)
                 ->setCrossAxisOverflow(false)
         );
-        buttonsMenu->setContentSize({80.f, 40.f});
+        buttonsMenu->setContentSize({100.f, 40.f});
         buttonsMenu->setPosition({m_playerObject->getPositionX() + 90.f + extraOffset, m_playerObject->getPositionY()});
         buttonsMenu->setID("pt-buttons-menu"_spr);
         this->addChild(buttonsMenu);
 
-        auto addSpr = CircleButtonSprite::createWithSprite("addToList.png"_spr, 1.0f, CircleBaseColor::Green, CircleBaseSize::Small);
-        auto printSpr = CircleButtonSprite::createWithSprite("printList.png"_spr, 1.0f, CircleBaseColor::Pink, CircleBaseSize::Small);
+        auto addSpr = CircleButtonSprite::createWithSprite("addToList.png"_spr, 1.0f, CircleBaseColor::Pink, CircleBaseSize::Small);
+        auto printSpr = CircleButtonSprite::createWithSprite("printList.png"_spr, 1.0f, CircleBaseColor::Cyan, CircleBaseSize::Small);
         auto removeLastSpr = CircleButtonSprite::createWithSprite("removeLast.png"_spr, 1.0f, CircleBaseColor::DarkAqua, CircleBaseSize::Small);
+        auto checkListSpr = CircleButtonSprite::createWithSprite("elPutisimoOjoDelBetterEditHermanoJajaj.png"_spr, 1.0f, CircleBaseColor::Green, CircleBaseSize::Small);
 
         auto addButton = CCMenuItemSpriteExtra::create(
             addSpr,
@@ -141,10 +161,16 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
             this,
             menu_selector(ImSoLazyGarageLayer::removeLastIconFromList)
         );
+        auto checkListButton = CCMenuItemSpriteExtra::create(
+            checkListSpr,
+            this,
+            menu_selector(ImSoLazyGarageLayer::checkListPopup)
+        );
 
         buttonsMenu->addChild(addButton);
         buttonsMenu->addChild(printButton);
         buttonsMenu->addChild(removeLastButton);
+        buttonsMenu->addChild(checkListButton);
 
         buttonsMenu->updateLayout();
 
