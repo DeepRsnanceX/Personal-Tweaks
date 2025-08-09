@@ -1,5 +1,6 @@
 #include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include <Geode/modify/PlayLayer.hpp>
 
 using namespace geode::prelude;
 
@@ -49,4 +50,3 @@ class $modify(StupidGarageLayer, GJGarageLayer){
 
     }
 };
-
