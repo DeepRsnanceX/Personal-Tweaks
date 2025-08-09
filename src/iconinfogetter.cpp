@@ -70,9 +70,10 @@ CCImage* getIconImage(SimplePlayer* player) {
 
     // adds margin so img isnt cut off
     auto iconSize = visitMe->getContentSize();
-    const int margin = 8;
+    const int margin = 6;
+    const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
     const int texWidth = static_cast<int>(iconSize.width) + margin * 2;
-    const int texHeight = static_cast<int>(iconSize.height) + margin * 2;
+    const int texHeight = static_cast<int>(iconSize.height) + margin * 2 + ufoExtraHeight;
 
     auto renderTex = CCRenderTexture::create(texWidth, texHeight, kCCTexture2DPixelFormat_RGBA8888);
     if (!renderTex) {
@@ -84,7 +85,12 @@ CCImage* getIconImage(SimplePlayer* player) {
 
     // center icon and make glow visible if it isnt
     // compat w/ icon preview lol
-    visitMe->setPosition({texWidth / 2.0f, texHeight / 2.0f});
+    float posX = texWidth / 2.0f;
+    float posY = (gm->m_playerIconType == IconType::Ufo) ? 
+                 (texHeight / 2.0f) - (ufoExtraHeight / 1.25f) : 
+                 (texHeight / 2.0f);
+    
+    visitMe->setPosition({posX, posY});
     player->m_outlineSprite->setVisible(gm->getPlayerGlow());
 
     renderTex->beginWithClear(0, 0, 0, 0);
@@ -103,8 +109,14 @@ CCImage* getIconImage(SimplePlayer* player) {
 class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
     struct Fields {
         std::vector<std::string> m_iconList;
-        std::vector<CCImage*> m_batchIcons; // Store icon images
-        std::vector<CCSize> m_batchIconSizes; // Store icon sizes for layout
+        // ola
+        // when eres un separador
+        // soy un separador
+        CCMenu* m_batchMenu = nullptr;
+        int m_batchIconCount = 0;
+        const int m_maxIconsPerRow = 8;
+        const int m_iconMargin = 6;
+        std::vector<CCSprite*> m_batchSprites;
     };
 
     void addIconToList(CCObject* sender) {
@@ -127,14 +139,12 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         std::string filePath = dir + "\\chosen_icons.txt";
         bool fileSaved = false;
 
-        // Try to create directory if it doesn't exist (C++17)
         try {
             std::filesystem::create_directories(dir);
         } catch (...) {
             geode::log::debug("Failed to create directory: {}", dir);
         }
 
-        // Try to write to file
         std::ofstream out(filePath);
         if (out.is_open()) {
             for (const auto& icon : fields->m_iconList) {
@@ -247,6 +257,8 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
 
         std::string resultingFileName = fmt::format("render-{}-clrs{}+{}_{}.png", filenameInfo, gm->getPlayerColor(), gm->getPlayerColor2(), glowInf);
 
+        // I PROMISE I'LL WORK ON MAKING THIS SAVE TO THE CONFIG DIR INSTEAD SOON
+        // HARDCODED FOR NOW CUZ I GOTTA GO WORK ON MY MINECRAFT SERVER LMFAOOO
         CCImage* image = getIconImage(m_playerObject);
         std::string filePath = fmt::format("C:\\Users\\PC\\Desktop\\renders\\{}", resultingFileName);
         bool saved = image->saveToFile(filePath.c_str(), false);
@@ -257,13 +269,253 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
     }
 
     void addIconToBatchRender(CCObject* sender) {
+        auto fields = m_fields.self();
+        auto gm = GameManager::sharedState();
         
+        auto visitMe = m_playerObject->m_firstLayer;
+        if (gm->m_playerIconType == IconType::Robot) {
+            visitMe = m_playerObject->m_robotSprite;
+        } else if (gm->m_playerIconType == IconType::Spider) {
+            visitMe = m_playerObject->m_spiderSprite;
+        }
+
+        auto iconSize = visitMe->getContentSize();
+        const int margin = fields->m_iconMargin;
+        const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
+        const int texWidth = static_cast<int>(iconSize.width) + margin * 2;
+        const int texHeight = static_cast<int>(iconSize.height) + margin * 2;
+
+        auto renderTex = CCRenderTexture::create(texWidth, texHeight, kCCTexture2DPixelFormat_RGBA8888);
+        if (!renderTex) {
+            geode::log::debug("Failed to create render texture for icon!");
+            return;
+        }
+
+        bool isGlowCurrentlyVisible = m_playerObject->m_outlineSprite->isVisible();
+        auto origPos = visitMe->getPosition();
+
+        float posX = texWidth / 2.0f;
+        float posY = (gm->m_playerIconType == IconType::Ufo) ? 
+                     (texHeight / 2.0f) - (ufoExtraHeight / 1.25f) : 
+                     (texHeight / 2.0f);
+        visitMe->setPosition({posX, posY});
+        m_playerObject->m_outlineSprite->setVisible(gm->getPlayerGlow());
+
+        renderTex->beginWithClear(0, 0, 0, 0);
+        visitMe->visit();
+        renderTex->end();
+
+        visitMe->setPosition(origPos);
+        m_playerObject->m_outlineSprite->setVisible(isGlowCurrentlyVisible);
+
+        auto iconSprite = CCSprite::createWithTexture(renderTex->getSprite()->getTexture());
+        iconSprite->setFlipY(true);
+        iconSprite->retain();
+        
+        fields->m_batchSprites.push_back(iconSprite);
+        
+        if (!fields->m_batchMenu) {
+            fields->m_batchMenu = CCMenu::create();
+            fields->m_batchMenu->retain();
+            
+            auto rowLayout = RowLayout::create()
+                ->setGap(0.f)
+                ->setAxisAlignment(AxisAlignment::Start)
+                ->setAutoScale(false)
+                ->setCrossAxisOverflow(false);
+            
+            fields->m_batchMenu->setLayout(rowLayout);
+            fields->m_batchMenu->setContentSize({iconSize.width + margin*2, iconSize.height + margin*2});
+            
+            geode::log::debug("Created batch menu with initial size {}x{}", texWidth, texHeight);
+        } else {
+            auto currentSize = fields->m_batchMenu->getContentSize();
+            int iconsInCurrentRow = (fields->m_batchIconCount % fields->m_maxIconsPerRow) + 1;
+            int currentRow = fields->m_batchIconCount / fields->m_maxIconsPerRow;
+            
+            float newWidth, newHeight;
+            
+            if (iconsInCurrentRow == 1) {
+                newWidth = std::max(currentSize.width, static_cast<float>(texWidth));
+                newHeight = currentSize.height + texHeight;
+            } else {
+                newWidth = currentSize.width + texWidth;
+                newHeight = currentSize.height;
+                
+                if (texHeight > (currentSize.height / (currentRow + 1))) {
+                    float rowHeight = currentSize.height / (currentRow + 1);
+                    newHeight = (currentRow * rowHeight) + texHeight;
+                }
+            }
+            
+            fields->m_batchMenu->setContentSize({newWidth, newHeight});
+            geode::log::debug("Updated menu size to {}x{} (icon {} in row {}, icon {} of row)", 
+                             newWidth, newHeight, fields->m_batchIconCount + 1, currentRow, iconsInCurrentRow);
+        }
+        
+        auto menuItem = CCMenuItemSpriteExtra::create(iconSprite, nullptr, nullptr);
+        fields->m_batchMenu->addChild(menuItem);
+        
+        fields->m_batchIconCount++;
+        
+        if (fields->m_batchIconCount % fields->m_maxIconsPerRow == 0) {
+            auto columnLayout = ColumnLayout::create()
+                ->setGap(0.f)
+                ->setAxisAlignment(AxisAlignment::Start)
+                ->setAutoScale(false)
+                ->setCrossAxisOverflow(false);
+            
+            auto newRowMenu = CCMenu::create();
+            auto rowLayout = RowLayout::create()
+                ->setGap(0.f)
+                ->setAxisAlignment(AxisAlignment::Start)
+                ->setAutoScale(false)
+                ->setCrossAxisOverflow(false);
+            
+            geode::log::debug("Completed row {}, preparing for next row", fields->m_batchIconCount / fields->m_maxIconsPerRow);
+        }
+        
+        fields->m_batchMenu->updateLayout();
+        
+        auto addedSpr = CCSprite::create("addToRenderBatch.png"_spr);
+        Notification::create(fmt::format("Icon {} added to batch!", fields->m_batchIconCount), addedSpr, 0.30f)->show();
+        
+        geode::log::debug("Added icon {} to batch menu", fields->m_batchIconCount);
     }
 
     void renderBatchIcons(CCObject* sender) {
-
+        auto fields = m_fields.self();
+        auto errSpr = CCSprite::createWithSpriteFrameName("exMark_001.png");
+        auto successSpr = CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png");
+        
+        if (!fields->m_batchMenu || fields->m_batchSprites.empty()) {
+            Notification::create("No icons in batch to render!", errSpr, 0.5f)->show();
+            return;
+        }
+        
+        auto children = CCArray::create();
+        auto menuChildren = fields->m_batchMenu->getChildren();
+        for (int i = 0; i < menuChildren->count(); i++) {
+            auto child = static_cast<CCMenuItemSpriteExtra*>(menuChildren->objectAtIndex(i));
+            children->addObject(child);
+        }
+        children->retain();
+        fields->m_batchMenu->removeAllChildren();
+        
+        std::vector<CCMenu*> rowMenus;
+        int totalIcons = children->count();
+        int rows = (totalIcons + fields->m_maxIconsPerRow - 1) / fields->m_maxIconsPerRow;
+        
+        float maxRowWidth = 0;
+        float totalHeight = 0;
+        
+        for (int row = 0; row < rows; row++) {
+            auto rowMenu = CCMenu::create();
+            auto rowLayout = RowLayout::create()
+                ->setGap(0.f)
+                ->setAxisAlignment(AxisAlignment::Start)
+                ->setAutoScale(false);
+            rowMenu->setLayout(rowLayout);
+            
+            int startIcon = row * fields->m_maxIconsPerRow;
+            int endIcon = std::min(startIcon + fields->m_maxIconsPerRow, totalIcons);
+            
+            float rowWidth = 0;
+            float rowHeight = 0;
+            
+            for (int i = startIcon; i < endIcon; i++) {
+                auto menuItem = static_cast<CCMenuItemSpriteExtra*>(children->objectAtIndex(i));
+                rowMenu->addChild(menuItem);
+                
+                auto spriteSize = menuItem->getContentSize();
+                rowWidth += spriteSize.width;
+                if (spriteSize.height > rowHeight) {
+                    rowHeight = spriteSize.height;
+                }
+            }
+            
+            rowMenu->setContentSize({rowWidth, rowHeight});
+            rowMenu->updateLayout();
+            
+            if (rowWidth > maxRowWidth) {
+                maxRowWidth = rowWidth;
+            }
+            totalHeight += rowHeight;
+            
+            rowMenus.push_back(rowMenu);
+            
+            geode::log::debug("Created row {} with {} icons, size: {}x{}", row, endIcon - startIcon, rowWidth, rowHeight);
+        }
+        
+        auto masterMenu = CCMenu::create();
+        auto columnLayout = ColumnLayout::create()
+            ->setGap(0.f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false);
+        masterMenu->setLayout(columnLayout);
+        masterMenu->setContentSize({maxRowWidth, totalHeight});
+        
+        for (auto rowMenu : rowMenus) {
+            masterMenu->addChild(rowMenu);
+        }
+        masterMenu->updateLayout();
+        
+        children->release();
+        
+        const int padding = 10;
+        int finalWidth = static_cast<int>(maxRowWidth) + padding * 2;
+        int finalHeight = static_cast<int>(totalHeight) + padding * 2;
+        
+        geode::log::debug("Creating final render texture: {}x{}", finalWidth, finalHeight);
+        
+        auto finalRenderTex = CCRenderTexture::create(finalWidth, finalHeight, kCCTexture2DPixelFormat_RGBA8888);
+        if (!finalRenderTex) {
+            Notification::create("Failed to create final render texture!", errSpr, 0.5f)->show();
+            return;
+        }
+        
+        masterMenu->setPosition({finalWidth / 2.0f, finalHeight / 2.0f});
+        
+        finalRenderTex->beginWithClear(0, 0, 0, 0);
+        masterMenu->visit();
+        finalRenderTex->end();
+        
+        std::string resultingFileName = fmt::format("batch-render-{}-icons-menu.png", fields->m_batchSprites.size());
+        
+        // I PROMISE I'LL WORK ON MAKING THIS SAVE TO THE CONFIG DIR INSTEAD SOON
+        // HARDCODED FOR NOW CUZ I GOTTA GO WORK ON MY MINECRAFT SERVER LMFAOOO
+        CCImage* image = finalRenderTex->newCCImage();
+        std::string dir = "C:\\Users\\PC\\Desktop\\renders";
+        std::string filePath = fmt::format("{}\\{}", dir, resultingFileName);
+        
+        try {
+            std::filesystem::create_directories(dir);
+        } catch (...) {
+            geode::log::debug("Failed to create directory: {}", dir);
+        }
+        
+        bool saved = image->saveToFile(filePath.c_str(), false);
+        delete image;
+        
+        if (saved) {
+            Notification::create(fmt::format("Batch of {} icons rendered!", fields->m_batchSprites.size()), successSpr, 0.5f)->show();
+            geode::log::debug("Batch rendered to: {}", filePath);
+        } else {
+            Notification::create("Failed to save batch render!", errSpr, 0.5f)->show();
+        }
+        
+        if (fields->m_batchMenu) {
+            fields->m_batchMenu->removeAllChildren();
+            fields->m_batchMenu->release();
+            fields->m_batchMenu = nullptr;
+        }
+        
+        for (auto sprite : fields->m_batchSprites) {
+            sprite->release();
+        }
+        fields->m_batchSprites.clear();
+        fields->m_batchIconCount = 0;
     }
-
 
     bool init() {
         if (!GJGarageLayer::init()) return false;
