@@ -8,9 +8,10 @@
 
 using namespace geode::prelude;
 
-bool enableRenderer = Mod::get()->getSettingValue<bool>("icon-renderer");
+bool enableRenderer = Mod::get()->getSettingValue<bool>("enable-renderer");
 auto renderPath = Mod::get()->getSettingValue<std::filesystem::path>("renders-path");
 int maxPerRow = Mod::get()->getSettingValue<int>("max-per-row");
+auto bgCol = Mod::get()->getSettingValue<ccColor4B>("bg-color");
 
 $on_mod(Loaded) {
     listenForSettingChanges("icon-renderer", [](bool value) {
@@ -21,6 +22,9 @@ $on_mod(Loaded) {
     });
     listenForSettingChanges("max-per-row", [](int value) {
         maxPerRow = value;
+    });
+    listenForSettingChanges("bg-color", [](ccColor4B value) {
+        bgCol = value;
     });
 }
 
@@ -98,9 +102,9 @@ CCImage* getIconImage(SimplePlayer* player) {
 
     // i hate this game
     if (gm->m_playerIconType == IconType::Robot) {
-        iconSize.width = player->m_robotSprite->m_headSprite->getContentSize().width;
+        iconSize.width = player->m_robotSprite->m_headSprite->getContentSize().width + 6;
     } else if (gm->m_playerIconType == IconType::Spider && iconSize.width < player->m_spiderSprite->m_headSprite->getContentSize().width) {
-        iconSize.width = player->m_spiderSprite->m_headSprite->getContentSize().width;
+        iconSize.width = player->m_spiderSprite->m_headSprite->getContentSize().width + 6;
     }
 
     int glowExtraSize = 0;
@@ -129,14 +133,14 @@ CCImage* getIconImage(SimplePlayer* player) {
 
     if (gm->m_playerIconType == IconType::Ufo) {
         posY -= (ufoExtraHeight / 1.25f);
-    } else if (gm->m_playerIconType == IconType::Robot) {
+    } else if (gm->m_playerIconType == IconType::Robot || gm->m_playerIconType == IconType::Spider) {
         posY -= (complexExtraHeight / 2.f);
     }
     
     visitMe->setPosition({posX, posY});
     player->m_outlineSprite->setVisible(gm->getPlayerGlow());
 
-    renderTex->beginWithClear(0, 0, 0, 0);
+    renderTex->beginWithClear(bgCol.r / 255.f, bgCol.g / 255.f, bgCol.b / 255.f, bgCol.a / 255.f);
     visitMe->visit();
     renderTex->end();
 
@@ -213,9 +217,9 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
 
         // i hate this game
         if (gm->m_playerIconType == IconType::Robot && m_playerObject->m_robotSprite->m_headSprite) {
-            iconSize.width = m_playerObject->m_robotSprite->m_headSprite->getContentSize().width;
+            iconSize.width = m_playerObject->m_robotSprite->m_headSprite->getContentSize().width + 4;
         } else if (gm->m_playerIconType == IconType::Spider && m_playerObject->m_spiderSprite->m_headSprite) {
-            iconSize.width = m_playerObject->m_spiderSprite->m_headSprite->getContentSize().width;
+            iconSize.width = m_playerObject->m_spiderSprite->m_headSprite->getContentSize().width + 4;
         }
 
         int glowExtraSize = 0;
@@ -243,7 +247,7 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
 
         if (gm->m_playerIconType == IconType::Ufo) {
             posY -= (ufoExtraHeight / 1.25f);
-        } else if (gm->m_playerIconType == IconType::Robot) {
+        } else if (gm->m_playerIconType == IconType::Robot || gm->m_playerIconType == IconType::Spider) {
             posY -= (complexExtraHeight / 2.f);
         }
 
@@ -426,7 +430,7 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
         
         masterMenu->setPosition({finalWidth / 2.0f, finalHeight / 2.0f});
         
-        finalRenderTex->beginWithClear(0, 0, 0, 0);
+        finalRenderTex->beginWithClear(bgCol.r / 255.f, bgCol.g / 255.f, bgCol.b / 255.f, bgCol.a / 255.f);
         masterMenu->visit();
         finalRenderTex->end();
 
