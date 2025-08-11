@@ -3,6 +3,9 @@
 #include "Geode/utils/cocos.hpp"
 #include <Geode/ui/BasedButtonSprite.hpp>
 #include <Geode/binding/FLAlertLayer.hpp>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 using namespace geode::prelude;
 
@@ -57,6 +60,14 @@ std::string getIconTypeName(IconType type) {
     }
 }
 
+std::string getCurrentTimeString() {
+    auto now = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&time_t), "%Y%m%d_%H%M%S");
+    return ss.str();
+}
+
 CCImage* getIconImage(SimplePlayer* player) {
     auto gm = GameManager::sharedState();
     bool isGlowCurrentlyVisible = player->m_outlineSprite->isVisible();
@@ -68,12 +79,12 @@ CCImage* getIconImage(SimplePlayer* player) {
         visitMe = player->m_spiderSprite;
     }
 
-    // adds margin so img isnt cut off
     auto iconSize = visitMe->getContentSize();
     const int margin = 6;
     const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
+    const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 20 : 0;
     const int texWidth = static_cast<int>(iconSize.width) + margin * 2;
-    const int texHeight = static_cast<int>(iconSize.height) + margin * 2 + ufoExtraHeight;
+    const int texHeight = static_cast<int>(iconSize.height) + margin * 2 + ufoExtraHeight + robotExtraHeight;
 
     auto renderTex = CCRenderTexture::create(texWidth, texHeight, kCCTexture2DPixelFormat_RGBA8888);
     if (!renderTex) {
@@ -86,9 +97,13 @@ CCImage* getIconImage(SimplePlayer* player) {
     // center icon and make glow visible if it isnt
     // compat w/ icon preview lol
     float posX = texWidth / 2.0f;
-    float posY = (gm->m_playerIconType == IconType::Ufo) ? 
-                 (texHeight / 2.0f) - (ufoExtraHeight / 1.25f) : 
-                 (texHeight / 2.0f);
+    float posY = texHeight / 2.0f;
+
+    if (gm->m_playerIconType == IconType::Ufo) {
+        posY -= (ufoExtraHeight / 1.25f);
+    } else if (gm->m_playerIconType == IconType::Robot) {
+        posY -= (robotExtraHeight / 1.6f);
+    }
     
     visitMe->setPosition({posX, posY});
     player->m_outlineSprite->setVisible(gm->getPlayerGlow());
@@ -117,6 +132,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         const int m_maxIconsPerRow = 8;
         const int m_iconMargin = 6;
         std::vector<CCSprite*> m_batchSprites;
+        std::vector<IconType> m_batchIconTypes;
     };
 
     void addIconToList(CCObject* sender) {
@@ -135,15 +151,10 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         auto fields = m_fields.self();
         auto errSpr = CCSprite::createWithSpriteFrameName("exMark_001.png");
         auto worked = CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png");
-        std::string dir = "C:\\Users\\PC\\Desktop\\MIX";
-        std::string filePath = dir + "\\chosen_icons.txt";
-        bool fileSaved = false;
 
-        try {
-            std::filesystem::create_directories(dir);
-        } catch (...) {
-            geode::log::debug("Failed to create directory: {}", dir);
-        }
+        auto configDir = Mod::get()->getConfigDir(true);
+        auto filePath = configDir / "chosen_icons.txt";
+        bool fileSaved = false;
 
         std::ofstream out(filePath);
         if (out.is_open()) {
@@ -257,11 +268,13 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
 
         std::string resultingFileName = fmt::format("render-{}-clrs{}+{}_{}.png", filenameInfo, gm->getPlayerColor(), gm->getPlayerColor2(), glowInf);
 
-        // I PROMISE I'LL WORK ON MAKING THIS SAVE TO THE CONFIG DIR INSTEAD SOON
-        // HARDCODED FOR NOW CUZ I GOTTA GO WORK ON MY MINECRAFT SERVER LMFAOOO
+        auto configDir = Mod::get()->getConfigDir(true);
+        auto rendersDir = configDir / "renders";
+        std::filesystem::create_directories(rendersDir);
+
         CCImage* image = getIconImage(m_playerObject);
-        std::string filePath = fmt::format("C:\\Users\\PC\\Desktop\\renders\\{}", resultingFileName);
-        bool saved = image->saveToFile(filePath.c_str(), false);
+        auto filePath = rendersDir / resultingFileName;
+        bool saved = image->saveToFile(filePath.string().c_str(), false);
         delete image;
 
         auto notifSprite = CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png");
@@ -282,8 +295,9 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         auto iconSize = visitMe->getContentSize();
         const int margin = fields->m_iconMargin;
         const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
+        const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 18 : 0;
         const int texWidth = static_cast<int>(iconSize.width) + margin * 2;
-        const int texHeight = static_cast<int>(iconSize.height) + margin * 2;
+        const int texHeight = static_cast<int>(iconSize.height) + margin * 2 + ufoExtraHeight + robotExtraHeight;
 
         auto renderTex = CCRenderTexture::create(texWidth, texHeight, kCCTexture2DPixelFormat_RGBA8888);
         if (!renderTex) {
@@ -295,9 +309,14 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         auto origPos = visitMe->getPosition();
 
         float posX = texWidth / 2.0f;
-        float posY = (gm->m_playerIconType == IconType::Ufo) ? 
-                     (texHeight / 2.0f) - (ufoExtraHeight / 1.25f) : 
-                     (texHeight / 2.0f);
+        float posY = texHeight / 2.0f;
+
+        if (gm->m_playerIconType == IconType::Ufo) {
+            posY -= (ufoExtraHeight / 1.25f);
+        } else if (gm->m_playerIconType == IconType::Robot) {
+            posY -= (robotExtraHeight / 1.15f);
+        }
+
         visitMe->setPosition({posX, posY});
         m_playerObject->m_outlineSprite->setVisible(gm->getPlayerGlow());
 
@@ -313,6 +332,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         iconSprite->retain();
         
         fields->m_batchSprites.push_back(iconSprite);
+        fields->m_batchIconTypes.push_back(gm->m_playerIconType);
         
         if (!fields->m_batchMenu) {
             fields->m_batchMenu = CCMenu::create();
@@ -479,22 +499,32 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         finalRenderTex->beginWithClear(0, 0, 0, 0);
         masterMenu->visit();
         finalRenderTex->end();
-        
-        std::string resultingFileName = fmt::format("batch-render-{}-icons-menu.png", fields->m_batchSprites.size());
-        
-        // I PROMISE I'LL WORK ON MAKING THIS SAVE TO THE CONFIG DIR INSTEAD SOON
-        // HARDCODED FOR NOW CUZ I GOTTA GO WORK ON MY MINECRAFT SERVER LMFAOOO
-        CCImage* image = finalRenderTex->newCCImage();
-        std::string dir = "C:\\Users\\PC\\Desktop\\renders";
-        std::string filePath = fmt::format("{}\\{}", dir, resultingFileName);
-        
-        try {
-            std::filesystem::create_directories(dir);
-        } catch (...) {
-            geode::log::debug("Failed to create directory: {}", dir);
+
+        std::set<std::string> uniqueGamemodes;
+        for (const auto& iconType : fields->m_batchIconTypes) {
+            uniqueGamemodes.insert(getIconTypeName(iconType));
         }
+        std::string gamemodeList;
+        bool first = true;
+        for (const auto& gamemode : uniqueGamemodes) {
+            if (!first) gamemodeList += "_";
+            gamemodeList += gamemode;
+            first = false;
+        }
+
+        // huge ass filename but it's so u don't overwrite renders
+        // unless you REALLY want to :sob:
+        std::string timeString = getCurrentTimeString();
+        std::string resultingFileName = fmt::format("batch-render-{}-icons-{}-{}.png", fields->m_batchSprites.size(), gamemodeList, timeString);
+
+        auto configDir = Mod::get()->getConfigDir(true);
+        auto rendersDir = configDir / "renders";
+        std::filesystem::create_directories(rendersDir);
         
-        bool saved = image->saveToFile(filePath.c_str(), false);
+        CCImage* image = finalRenderTex->newCCImage();
+        auto filePath = rendersDir / resultingFileName;
+        
+        bool saved = image->saveToFile(filePath.string().c_str(), false);
         delete image;
         
         if (saved) {
@@ -515,6 +545,17 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         }
         fields->m_batchSprites.clear();
         fields->m_batchIconCount = 0;
+    }
+
+    void openConfigFolder(CCObject* sender) {
+        auto configDir = Mod::get()->getConfigDir(true);
+        auto rendersDir = configDir / "renders";
+
+        if (!std::filesystem::exists(rendersDir)) {
+            std::filesystem::create_directories(rendersDir);
+        }
+
+        geode::utils::file::openFolder(rendersDir);
     }
 
     bool init() {
@@ -610,6 +651,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         auto renderIconSpr = CircleButtonSprite::createWithSprite("renderIcon.png"_spr, 1.0f, CircleBaseColor::Blue, CircleBaseSize::Small);
         auto addToBatchSpr = CircleButtonSprite::createWithSprite("addToRenderBatch.png"_spr, 1.0f, CircleBaseColor::Green, CircleBaseSize::Small);
         auto renderBatchSpr = CircleButtonSprite::createWithSprite("renderBatch.png"_spr, 1.0f, CircleBaseColor::Green, CircleBaseSize::Small);
+        auto openFolderSpr = CCSprite::createWithSpriteFrameName("folderIcon_001.png");
 
         auto renderIconButton = CCMenuItemSpriteExtra::create(
             renderIconSpr,
@@ -626,6 +668,11 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
             this,
             menu_selector(ImSoLazyGarageLayer::renderBatchIcons)
         );
+        auto openFolderButton = CCMenuItemSpriteExtra::create(
+            openFolderSpr,
+            this,
+            menu_selector(ImSoLazyGarageLayer::openConfigFolder)
+        );
 
         rendererButtonsMenu->setContentSize({40.f, 100.f});
         rendererButtonsMenu->setPosition({20.f, 90.f});
@@ -635,6 +682,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         rendererButtonsMenu->addChild(renderIconButton);
         rendererButtonsMenu->addChild(addToBatchButton);
         rendererButtonsMenu->addChild(renderBatchButton);
+        rendererButtonsMenu->addChild(openFolderButton);
         rendererButtonsMenu->updateLayout();
 
         return true;
