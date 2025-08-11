@@ -209,6 +209,12 @@
 			"name": "Legacy Trail",
 			"description": "The trail if it was still good."
 		},
+		"use-legacytrail": {
+			"type": "bool",
+			"name": "Enable Legacy Trail",
+			"description": "Enables the legacy trail function. This is the same as Eclipse, so if u have that disable this.",
+			"default": false
+		},
 		"max-points":{
 			"type": "int",
 			"name": "Trail: Max Points",
@@ -226,7 +232,7 @@
 			"type": "bool",
 			"name": "Enable Legacy Pulse",
 			"description": "Enable the legacy pulse. \nThis feature is taken from Eclipse.",
-			"default": true
+			"default": false
 		},
 		"pulse-fps": {
 			"type": "int",
@@ -253,6 +259,31 @@
 			"description": "Replicates the Ball Rotation Bug from older GD versions. \nThis feature is taken from QOLMod.",
 			"default": true
 		},
+		"iconlist-ft": {
+			"type": "bool",
+			"name": "Icon Listing Features",
+			"description": "Enables a set of buttons in the Icon Kit that allow you to create icon lists and export them to a file. ONLY WORKS WITH MOREICONS ICONS!!! \nPretty niche feature only for myself.",
+			"default": false
+		},
+		"icon-renderer": {
+			"type": "title",
+			"name": "Icon Renderer",
+			"description": "Settings for the Icon Renderer feature, which allows you to render icons as .png images directly in-game."
+		},
+		"renders-path": {
+			"type": "folder",
+			"name": "Renders Folder",
+			"description": "Where to save the Icon Renders to. Defaults to this mod's config directory.",
+			"default": "{mod_config_dir}/renders"
+		},
+		"max-per-row": {
+			"type": "int",
+			"name": "BATCH - Max Icons per Row",
+			"description": "Defines the max amount of icons per row when rendering a batch of multiple icons.",
+			"default": 8,
+			"min": 1,
+			"max": 50
+		},
 		"noclip-totem": {
 			"type": "title",
 			"name": "Totem of Undying animation",
@@ -262,7 +293,7 @@
 			"type": "bool",
 			"name": "Enable Totem Animation",
 			"description": "Enable the totem animation when dying with noclip on.",
-			"default": true
+			"default": false
 		},
 		"totem-cooldown": {
 			"type": "float",

@@ -3,16 +3,25 @@
 using namespace geode::prelude;
 
 float trailMaxPts = Mod::get()->getSettingValue<int64_t>("max-points");
+bool isLegacyTrailEnabled = Mod::get()->getSettingValue<bool>("use-legacytrail");
 
 $on_mod(Loaded){
 	listenForSettingChanges("max-points", [](int value) {
         trailMaxPts = value;
     });
+	listenForSettingChanges("use-legacytrail", [](bool value) {
+		isLegacyTrailEnabled = value;
+	});
 }
 
 class $modify(LegacyTrailCCMSHook, cocos2d::CCMotionStreak) {
 
 	bool initWithFade(float fade, float minSeg, float stroke, const cocos2d::ccColor3B& color, cocos2d::CCTexture2D* texture) {
+
+		if (!isLegacyTrailEnabled) {
+            return CCMotionStreak::initWithFade(fade, minSeg, stroke, color, texture);
+        }
+
 		this->setPosition({ .0f, .0f});
 		this->setAnchorPoint({ .0f, .0f});
 		this->ignoreAnchorPointForPosition(true);

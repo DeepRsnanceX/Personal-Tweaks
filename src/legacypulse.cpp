@@ -69,7 +69,6 @@ class $modify(LegacyPulseFMODHook, FMODAudioEngine) {
         FMODAudioEngine::update(deltaTime);
 
         bool forceFPS = legacyPulseEnabled;
-
         if (forceFPS) {
             float fixedTimestep = 1.0f / legacyFPS;
 
