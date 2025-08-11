@@ -82,7 +82,7 @@ CCImage* getIconImage(SimplePlayer* player) {
     auto iconSize = visitMe->getContentSize();
     const int margin = 6;
     const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
-    const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 20 : 0;
+    const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 16 : 0;
     const int texWidth = static_cast<int>(iconSize.width) + margin * 2;
     const int texHeight = static_cast<int>(iconSize.height) + margin * 2 + ufoExtraHeight + robotExtraHeight;
 
@@ -295,7 +295,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         auto iconSize = visitMe->getContentSize();
         const int margin = fields->m_iconMargin;
         const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
-        const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 18 : 0;
+        const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 16 : 0;
         const int texWidth = static_cast<int>(iconSize.width) + margin * 2;
         const int texHeight = static_cast<int>(iconSize.height) + margin * 2 + ufoExtraHeight + robotExtraHeight;
 
@@ -314,7 +314,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         if (gm->m_playerIconType == IconType::Ufo) {
             posY -= (ufoExtraHeight / 1.25f);
         } else if (gm->m_playerIconType == IconType::Robot) {
-            posY -= (robotExtraHeight / 1.15f);
+            posY -= (robotExtraHeight / 1.6f);
         }
 
         visitMe->setPosition({posX, posY});
