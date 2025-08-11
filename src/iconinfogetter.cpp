@@ -102,7 +102,7 @@ CCImage* getIconImage(SimplePlayer* player) {
     if (gm->m_playerIconType == IconType::Ufo) {
         posY -= (ufoExtraHeight / 1.25f);
     } else if (gm->m_playerIconType == IconType::Robot) {
-        posY -= (robotExtraHeight / 1.6f);
+        posY -= (robotExtraHeight / 2.f);
     }
     
     visitMe->setPosition({posX, posY});
@@ -314,7 +314,7 @@ class $modify(ImSoLazyGarageLayer, GJGarageLayer) {
         if (gm->m_playerIconType == IconType::Ufo) {
             posY -= (ufoExtraHeight / 1.25f);
         } else if (gm->m_playerIconType == IconType::Robot) {
-            posY -= (robotExtraHeight / 1.6f);
+            posY -= (robotExtraHeight / 2.f);
         }
 
         visitMe->setPosition({posX, posY});
