@@ -270,6 +270,12 @@
 			"name": "Icon Renderer",
 			"description": "Settings for the Icon Renderer feature, which allows you to render icons as .png images directly in-game."
 		},
+		"enable-renderer": {
+			"type": "bool",
+			"name": "Renderer Features",
+			"description": "Enables the Icon Renderer Features on the Icon Kit.",
+			"default": true
+		},
 		"renders-path": {
 			"type": "folder",
 			"name": "Renders Folder",
