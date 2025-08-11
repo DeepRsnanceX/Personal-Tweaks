@@ -403,9 +403,10 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
         
         auto masterMenu = CCMenu::create();
         auto columnLayout = ColumnLayout::create()
-            ->setGap(0.f)
+            ->setGap(1.f)
             ->setAxisAlignment(AxisAlignment::Start)
-            ->setAutoScale(false);
+            ->setAutoScale(false)
+            ->setAxisReverse(false);
         masterMenu->setLayout(columnLayout);
         masterMenu->setContentSize({maxRowWidth, totalHeight});
         
