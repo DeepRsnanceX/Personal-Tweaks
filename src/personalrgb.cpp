@@ -81,33 +81,33 @@ class $modify(RGBPlayerObject, PlayerObject) {
         auto [r, g, b] = hsvToRgbRaw(hue1, sat, 1.f);
         auto [r2, g2, b2] = hsvToRgbRaw(hue2, sat2, 1.f);
 
-        cocos2d::ccColor4F colorForParticle(
+        cocos2d::ccColor4F colorForParticle({
             r / 255.0f,
             g / 255.0f,
             b / 255.0f,
             1.0f
-        );
+        });
 
-        cocos2d::ccColor4F colorForParticle2(
+        cocos2d::ccColor4F colorForParticle2({
             r2 / 255.0f,
             g2 / 255.0f,
             b2 / 255.0f,
             1.0f
-        );
+        });
 
         if (fld->usingCol1) {
-            m_playerColor1 = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+            m_playerColor1 = ccColor3B({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
 
             m_iconSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             m_vehicleSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             if (m_isRobot) {
-                m_robotSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+                m_robotSprite->m_color = ccColor3B({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             } else if (m_isSpider) {
-                m_spiderSprite->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+                m_spiderSprite->m_color = ccColor3B({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             }
             
             if (m_ghostTrail) {
-                m_ghostTrail->m_color = ccColor3B(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b));
+                m_ghostTrail->m_color = ccColor3B({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             }
             if (m_waveTrail) {
                 m_waveTrail->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
@@ -133,14 +133,14 @@ class $modify(RGBPlayerObject, PlayerObject) {
         }
         
         if (fld->usingCol2) {
-            m_playerColor2 = ccColor3B(static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2));
+            m_playerColor2 = ccColor3B({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2));
 
             m_iconSpriteSecondary->setColor({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
             m_vehicleSpriteSecondary->setColor({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
             if (m_isRobot) {
-                m_robotSprite->m_secondColor = ccColor3B(static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2));
+                m_robotSprite->m_secondColor = ccColor3B({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
             } else if (m_isSpider) {
-                m_spiderSprite->m_secondColor = ccColor3B(static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2));
+                m_spiderSprite->m_secondColor = ccColor3B({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
             } else if (m_isBird) {
                 m_trailingParticles->m_tStartColor = colorForParticle2;
                 m_trailingParticles->m_tEndColor = colorForParticle2;
