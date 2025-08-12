@@ -140,61 +140,61 @@ $on_mod(Loaded) {
 class $modify(ColorsPlayer, PlayerObject) {
     struct Fields{
         // our settings use cocos2d::ccColor3B and 4B, but we need to convert them to ccColor4F for particles
-        cocos2d::ccColor4F p1PrimaryParticleStart = cocos2d::ccColor4F(p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 255.f);
-        cocos2d::ccColor4F p1PrimaryParticleEnd = cocos2d::ccColor4F(p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 0.f);
-        cocos2d::ccColor4F p1SecondaryParticleStart = cocos2d::ccColor4F(p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 255.f);
-        cocos2d::ccColor4F p1SecondaryParticleEnd = cocos2d::ccColor4F(p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 0.f);
-        cocos2d::ccColor4F p1DashFireParticleStart = cocos2d::ccColor4F(p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 255.f);
-        cocos2d::ccColor4F p1DashFireParticleEnd = cocos2d::ccColor4F(p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 0.f);
+        cocos2d::ccColor4F p1PrimaryParticleStart = cocos2d::ccColor4F({p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 255.f});
+        cocos2d::ccColor4F p1PrimaryParticleEnd = cocos2d::ccColor4F({p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 0.f});
+        cocos2d::ccColor4F p1SecondaryParticleStart = cocos2d::ccColor4F({p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 255.f});
+        cocos2d::ccColor4F p1SecondaryParticleEnd = cocos2d::ccColor4F({p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 0.f});
+        cocos2d::ccColor4F p1DashFireParticleStart = cocos2d::ccColor4F({p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 255.f});
+        cocos2d::ccColor4F p1DashFireParticleEnd = cocos2d::ccColor4F({p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 0.f});
 
-        cocos2d::ccColor4F p2PrimaryParticleStart = cocos2d::ccColor4F(p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 255.f);
-        cocos2d::ccColor4F p2PrimaryParticleEnd = cocos2d::ccColor4F(p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 0.f);
-        cocos2d::ccColor4F p2SecondaryParticleStart = cocos2d::ccColor4F(p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 255.f);
-        cocos2d::ccColor4F p2SecondaryParticleEnd = cocos2d::ccColor4F(p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 0.f);
-        cocos2d::ccColor4F p2DashFireParticleStart = cocos2d::ccColor4F(p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 255.f);
-        cocos2d::ccColor4F p2DashFireParticleEnd = cocos2d::ccColor4F(p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 0.f);
+        cocos2d::ccColor4F p2PrimaryParticleStart = cocos2d::ccColor4F({p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 255.f});
+        cocos2d::ccColor4F p2PrimaryParticleEnd = cocos2d::ccColor4F({p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 0.f});
+        cocos2d::ccColor4F p2SecondaryParticleStart = cocos2d::ccColor4F({p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 255.f});
+        cocos2d::ccColor4F p2SecondaryParticleEnd = cocos2d::ccColor4F({p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 0.f});
+        cocos2d::ccColor4F p2DashFireParticleStart = cocos2d::ccColor4F({p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 255.f});
+        cocos2d::ccColor4F p2DashFireParticleEnd = cocos2d::ccColor4F({p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 0.f});
 
         // particle colors
-        cocos2d::ccColor4F p1MainParticleStart = cocos2d::ccColor4F(p1MainParticlesStart.r / 255.0f, p1MainParticlesStart.g / 255.0f, p1MainParticlesStart.b / 255.0f, p1MainParticlesStart.a / 255.0f);
-        cocos2d::ccColor4F p1MainParticleEnd = cocos2d::ccColor4F(p1MainParticlesEnd.r / 255.0f, p1MainParticlesEnd.g / 255.0f, p1MainParticlesEnd.b / 255.0f, p1MainParticlesEnd.a / 255.0f);
-        cocos2d::ccColor4F p2MainParticleStart = cocos2d::ccColor4F(p2MainParticlesStart.r / 255.0f, p2MainParticlesStart.g / 255.0f, p2MainParticlesStart.b / 255.0f, p2MainParticlesStart.a / 255.0f);
-        cocos2d::ccColor4F p2MainParticleEnd = cocos2d::ccColor4F(p2MainParticlesEnd.r / 255.0f, p2MainParticlesEnd.g / 255.0f, p2MainParticlesEnd.b / 255.0f, p2MainParticlesEnd.a / 255.0f);
-        cocos2d::ccColor4F p1UfoClickParticleStart = cocos2d::ccColor4F(p1UfoClickParticlesStart.r / 255.0f, p1UfoClickParticlesStart.g / 255.0f, p1UfoClickParticlesStart.b / 255.0f, p1UfoClickParticlesStart.a / 255.0f);
-        cocos2d::ccColor4F p1UfoClickParticleEnd = cocos2d::ccColor4F(p1UfoClickParticlesEnd.r / 255.0f, p1UfoClickParticlesEnd.g / 255.0f, p1UfoClickParticlesEnd.b / 255.0f, p1UfoClickParticlesEnd.a / 255.0f);
-        cocos2d::ccColor4F p2UfoClickParticleStart = cocos2d::ccColor4F(p2UfoClickParticlesStart.r / 255.0f, p2UfoClickParticlesStart.g / 255.0f, p2UfoClickParticlesStart.b / 255.0f, p2UfoClickParticlesStart.a / 255.0f);
-        cocos2d::ccColor4F p2UfoClickParticleEnd = cocos2d::ccColor4F(p2UfoClickParticlesEnd.r / 255.0f, p2UfoClickParticlesEnd.g / 255.0f, p2UfoClickParticlesEnd.b / 255.0f, p2UfoClickParticlesEnd.a / 255.0f);
+        cocos2d::ccColor4F p1MainParticleStart = cocos2d::ccColor4F({p1MainParticlesStart.r / 255.0f, p1MainParticlesStart.g / 255.0f, p1MainParticlesStart.b / 255.0f, p1MainParticlesStart.a / 255.0f});
+        cocos2d::ccColor4F p1MainParticleEnd = cocos2d::ccColor4F({p1MainParticlesEnd.r / 255.0f, p1MainParticlesEnd.g / 255.0f, p1MainParticlesEnd.b / 255.0f, p1MainParticlesEnd.a / 255.0f});
+        cocos2d::ccColor4F p2MainParticleStart = cocos2d::ccColor4F({p2MainParticlesStart.r / 255.0f, p2MainParticlesStart.g / 255.0f, p2MainParticlesStart.b / 255.0f, p2MainParticlesStart.a / 255.0f});
+        cocos2d::ccColor4F p2MainParticleEnd = cocos2d::ccColor4F({p2MainParticlesEnd.r / 255.0f, p2MainParticlesEnd.g / 255.0f, p2MainParticlesEnd.b / 255.0f, p2MainParticlesEnd.a / 255.0f});
+        cocos2d::ccColor4F p1UfoClickParticleStart = cocos2d::ccColor4F({p1UfoClickParticlesStart.r / 255.0f, p1UfoClickParticlesStart.g / 255.0f, p1UfoClickParticlesStart.b / 255.0f, p1UfoClickParticlesStart.a / 255.0f});
+        cocos2d::ccColor4F p1UfoClickParticleEnd = cocos2d::ccColor4F({p1UfoClickParticlesEnd.r / 255.0f, p1UfoClickParticlesEnd.g / 255.0f, p1UfoClickParticlesEnd.b / 255.0f, p1UfoClickParticlesEnd.a / 255.0f});
+        cocos2d::ccColor4F p2UfoClickParticleStart = cocos2d::ccColor4F({p2UfoClickParticlesStart.r / 255.0f, p2UfoClickParticlesStart.g / 255.0f, p2UfoClickParticlesStart.b / 255.0f, p2UfoClickParticlesStart.a / 255.0f});
+        cocos2d::ccColor4F p2UfoClickParticleEnd = cocos2d::ccColor4F({p2UfoClickParticlesEnd.r / 255.0f, p2UfoClickParticlesEnd.g / 255.0f, p2UfoClickParticlesEnd.b / 255.0f, p2UfoClickParticlesEnd.a / 255.0f});
         // uh
-        cocos2d::ccColor4F varianceOverrider = cocos2d::ccColor4F(variancesOverride.r / 255.0f, variancesOverride.g / 255.0f, variancesOverride.b / 255.0f, variancesOverride.a / 255.0f);
+        cocos2d::ccColor4F varianceOverrider = cocos2d::ccColor4F({variancesOverride.r / 255.0f, variancesOverride.g / 255.0f, variancesOverride.b / 255.0f, variancesOverride.a / 255.0f});
     };
 
     void updateMyParticleColors() {
         auto fields = m_fields.self();
 
-        fields->p1PrimaryParticleStart = cocos2d::ccColor4F(p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 255.f);
-        fields->p1PrimaryParticleEnd = cocos2d::ccColor4F(p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 0.f);
-        fields->p1SecondaryParticleStart = cocos2d::ccColor4F(p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 255.f);
-        fields->p1SecondaryParticleEnd = cocos2d::ccColor4F(p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 0.f);
-        fields->p1DashFireParticleStart = cocos2d::ccColor4F(p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 255.f);
-        fields->p1DashFireParticleEnd = cocos2d::ccColor4F(p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 0.f);
+        fields->p1PrimaryParticleStart = cocos2d::ccColor4F({p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 255.f});
+        fields->p1PrimaryParticleEnd = cocos2d::ccColor4F({p1PrimaryColor.r / 255.0f, p1PrimaryColor.g / 255.0f, p1PrimaryColor.b / 255.0f, 0.f});
+        fields->p1SecondaryParticleStart = cocos2d::ccColor4F({p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 255.f});
+        fields->p1SecondaryParticleEnd = cocos2d::ccColor4F({p1SecondaryColor.r / 255.0f, p1SecondaryColor.g / 255.0f, p1SecondaryColor.b / 255.0f, 0.f});
+        fields->p1DashFireParticleStart = cocos2d::ccColor4F({p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 255.f});
+        fields->p1DashFireParticleEnd = cocos2d::ccColor4F({p1DashFireColor.r / 255.0f, p1DashFireColor.g / 255.0f, p1DashFireColor.b / 255.0f, 0.f});
 
-        fields->p2PrimaryParticleStart = cocos2d::ccColor4F(p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 255.f);
-        fields->p2PrimaryParticleEnd = cocos2d::ccColor4F(p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 0.f);
-        fields->p2SecondaryParticleStart = cocos2d::ccColor4F(p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 255.f);
-        fields->p2SecondaryParticleEnd = cocos2d::ccColor4F(p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 0.f);
-        fields->p2DashFireParticleStart = cocos2d::ccColor4F(p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 255.f);
-        fields->p2DashFireParticleEnd = cocos2d::ccColor4F(p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 0.f);
+        fields->p2PrimaryParticleStart = cocos2d::ccColor4F({p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 255.f});
+        fields->p2PrimaryParticleEnd = cocos2d::ccColor4F({p2PrimaryColor.r / 255.0f, p2PrimaryColor.g / 255.0f, p2PrimaryColor.b / 255.0f, 0.f});
+        fields->p2SecondaryParticleStart = cocos2d::ccColor4F({p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 255.f});
+        fields->p2SecondaryParticleEnd = cocos2d::ccColor4F({p2SecondaryColor.r / 255.0f, p2SecondaryColor.g / 255.0f, p2SecondaryColor.b / 255.0f, 0.f});
+        fields->p2DashFireParticleStart = cocos2d::ccColor4F({p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 255.f});
+        fields->p2DashFireParticleEnd = cocos2d::ccColor4F({p2DashFireColor.r / 255.0f, p2DashFireColor.g / 255.0f, p2DashFireColor.b / 255.0f, 0.f});
 
         // particle colors
-        fields->p1MainParticleStart = cocos2d::ccColor4F(p1MainParticlesStart.r / 255.0f, p1MainParticlesStart.g / 255.0f, p1MainParticlesStart.b / 255.0f, p1MainParticlesStart.a / 255.0f);
-        fields->p1MainParticleEnd = cocos2d::ccColor4F(p1MainParticlesEnd.r / 255.0f, p1MainParticlesEnd.g / 255.0f, p1MainParticlesEnd.b / 255.0f, p1MainParticlesEnd.a / 255.0f);
-        fields->p2MainParticleStart = cocos2d::ccColor4F(p2MainParticlesStart.r / 255.0f, p2MainParticlesStart.g / 255.0f, p2MainParticlesStart.b / 255.0f, p2MainParticlesStart.a / 255.0f);
-        fields->p2MainParticleEnd = cocos2d::ccColor4F(p2MainParticlesEnd.r / 255.0f, p2MainParticlesEnd.g / 255.0f, p2MainParticlesEnd.b / 255.0f, p2MainParticlesEnd.a / 255.0f);
-        fields->p1UfoClickParticleStart = cocos2d::ccColor4F(p1UfoClickParticlesStart.r / 255.0f, p1UfoClickParticlesStart.g / 255.0f, p1UfoClickParticlesStart.b / 255.0f, p1UfoClickParticlesStart.a / 255.0f);
-        fields->p1UfoClickParticleEnd = cocos2d::ccColor4F(p1UfoClickParticlesEnd.r / 255.0f, p1UfoClickParticlesEnd.g / 255.0f, p1UfoClickParticlesEnd.b / 255.0f, p1UfoClickParticlesEnd.a / 255.0f);
-        fields->p2UfoClickParticleStart = cocos2d::ccColor4F(p2UfoClickParticlesStart.r / 255.0f, p2UfoClickParticlesStart.g / 255.0f, p2UfoClickParticlesStart.b / 255.0f, p2UfoClickParticlesStart.a / 255.0f);
-        fields->p2UfoClickParticleEnd = cocos2d::ccColor4F(p2UfoClickParticlesEnd.r / 255.0f, p2UfoClickParticlesEnd.g / 255.0f, p2UfoClickParticlesEnd.b / 255.0f, p2UfoClickParticlesEnd.a / 255.0f);
+        fields->p1MainParticleStart = cocos2d::ccColor4F({p1MainParticlesStart.r / 255.0f, p1MainParticlesStart.g / 255.0f, p1MainParticlesStart.b / 255.0f, p1MainParticlesStart.a / 255.0f});
+        fields->p1MainParticleEnd = cocos2d::ccColor4F({p1MainParticlesEnd.r / 255.0f, p1MainParticlesEnd.g / 255.0f, p1MainParticlesEnd.b / 255.0f, p1MainParticlesEnd.a / 255.0f});
+        fields->p2MainParticleStart = cocos2d::ccColor4F({p2MainParticlesStart.r / 255.0f, p2MainParticlesStart.g / 255.0f, p2MainParticlesStart.b / 255.0f, p2MainParticlesStart.a / 255.0f});
+        fields->p2MainParticleEnd = cocos2d::ccColor4F({p2MainParticlesEnd.r / 255.0f, p2MainParticlesEnd.g / 255.0f, p2MainParticlesEnd.b / 255.0f, p2MainParticlesEnd.a / 255.0f});
+        fields->p1UfoClickParticleStart = cocos2d::ccColor4F({p1UfoClickParticlesStart.r / 255.0f, p1UfoClickParticlesStart.g / 255.0f, p1UfoClickParticlesStart.b / 255.0f, p1UfoClickParticlesStart.a / 255.0f});
+        fields->p1UfoClickParticleEnd = cocos2d::ccColor4F({p1UfoClickParticlesEnd.r / 255.0f, p1UfoClickParticlesEnd.g / 255.0f, p1UfoClickParticlesEnd.b / 255.0f, p1UfoClickParticlesEnd.a / 255.0f});
+        fields->p2UfoClickParticleStart = cocos2d::ccColor4F({p2UfoClickParticlesStart.r / 255.0f, p2UfoClickParticlesStart.g / 255.0f, p2UfoClickParticlesStart.b / 255.0f, p2UfoClickParticlesStart.a / 255.0f});
+        fields->p2UfoClickParticleEnd = cocos2d::ccColor4F({p2UfoClickParticlesEnd.r / 255.0f, p2UfoClickParticlesEnd.g / 255.0f, p2UfoClickParticlesEnd.b / 255.0f, p2UfoClickParticlesEnd.a / 255.0f});
         // uh
-        fields->varianceOverrider = cocos2d::ccColor4F(variancesOverride.r / 255.0f, variancesOverride.g / 255.0f, variancesOverride.b / 255.0f, variancesOverride.a / 255.0f);
+        fields->varianceOverrider = cocos2d::ccColor4F({variancesOverride.r / 255.0f, variancesOverride.g / 255.0f, variancesOverride.b / 255.0f, variancesOverride.a / 255.0f});
     }
 
     void update(float p0) {
