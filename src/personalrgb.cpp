@@ -133,7 +133,7 @@ class $modify(RGBPlayerObject, PlayerObject) {
         }
         
         if (fld->usingCol2) {
-            m_playerColor2 = ccColor3B({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2));
+            m_playerColor2 = ccColor3B({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
 
             m_iconSpriteSecondary->setColor({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
             m_vehicleSpriteSecondary->setColor({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
