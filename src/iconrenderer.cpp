@@ -10,7 +10,7 @@ using namespace geode::prelude;
 
 bool enableRenderer = Mod::get()->getSettingValue<bool>("enable-renderer");
 auto renderPath = Mod::get()->getSettingValue<std::filesystem::path>("renders-path");
-int maxPerRow = Mod::get()->getSettingValue<int>("max-per-row");
+int maxPerRow = Mod::get()->getSettingValue<int64_t>("max-per-row");
 auto bgCol = Mod::get()->getSettingValue<ccColor4B>("bg-color");
 
 $on_mod(Loaded) {
