@@ -103,20 +103,21 @@ CCImage* getIconImage(SimplePlayer* player) {
     // i hate this game
     if (gm->m_playerIconType == IconType::Robot) {
         iconSize.width = player->m_robotSprite->m_headSprite->getContentSize().width + 6;
-    } else if (gm->m_playerIconType == IconType::Spider && iconSize.width < player->m_spiderSprite->m_headSprite->getContentSize().width) {
-        iconSize.width = player->m_spiderSprite->m_headSprite->getContentSize().width + 6;
+    } else if (gm->m_playerIconType == IconType::Spider) {
+        iconSize.width = iconSize.width + 10;
     }
 
     int glowExtraSize = 0;
     if (gm->getPlayerGlow()) {
-        glowExtraSize = 8; // glow width
+        glowExtraSize = 6;
     }
 
     const int margin = 6;
     const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
-    const int complexExtraHeight = (gm->m_playerIconType == IconType::Robot || gm->m_playerIconType == IconType::Spider) ? 16 : 0;
+    const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 8 : 0;
+    const int spiderExtraHeight = (gm->m_playerIconType == IconType::Spider) ? 6 : 0;
     const int texWidth = static_cast<int>(iconSize.width) + glowExtraSize + margin * 2;
-    const int texHeight = static_cast<int>(iconSize.height) + glowExtraSize + ufoExtraHeight + complexExtraHeight + margin * 2;
+    const int texHeight = static_cast<int>(iconSize.height) + glowExtraSize + ufoExtraHeight + robotExtraHeight + spiderExtraHeight + margin * 2;
 
     auto renderTex = CCRenderTexture::create(texWidth, texHeight, kCCTexture2DPixelFormat_RGBA8888);
     if (!renderTex) {
@@ -133,8 +134,10 @@ CCImage* getIconImage(SimplePlayer* player) {
 
     if (gm->m_playerIconType == IconType::Ufo) {
         posY -= (ufoExtraHeight / 1.25f);
-    } else if (gm->m_playerIconType == IconType::Robot || gm->m_playerIconType == IconType::Spider) {
-        posY -= (complexExtraHeight / 2.f);
+    } else if (gm->m_playerIconType == IconType::Robot) {
+        posY -= (robotExtraHeight / 2.f);
+    } else if (gm->m_playerIconType == IconType::Spider) {
+        posY -= (spiderExtraHeight / 1.9f);
     }
     
     visitMe->setPosition({posX, posY});
@@ -167,10 +170,10 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
         auto gm = GameManager::sharedState();
         bool isGlowCurrentlyVisible = m_playerObject->m_outlineSprite->isVisible();
 
-        IconInfo* iconToRender = MoreIcons::getIcon(m_selectedIconType);
+        IconInfo* iconToRender = MoreIcons::getIcon(gm->m_playerIconType);
 
-        int icID = getIconId(m_selectedIconType);
-        std::string icTypeName = getIconTypeName(m_selectedIconType);
+        int icID = getIconId(gm->m_playerIconType);
+        std::string icTypeName = getIconTypeName(gm->m_playerIconType);
         std::string filenameInfo = "unknown";
 
         if (iconToRender) {
@@ -216,22 +219,23 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
         auto iconSize = visitMe->getContentSize();
 
         // i hate this game
-        if (gm->m_playerIconType == IconType::Robot && m_playerObject->m_robotSprite->m_headSprite) {
-            iconSize.width = m_playerObject->m_robotSprite->m_headSprite->getContentSize().width + 4;
-        } else if (gm->m_playerIconType == IconType::Spider && m_playerObject->m_spiderSprite->m_headSprite) {
-            iconSize.width = m_playerObject->m_spiderSprite->m_headSprite->getContentSize().width + 4;
+        if (gm->m_playerIconType == IconType::Robot) {
+            iconSize.width = m_playerObject->m_robotSprite->m_headSprite->getContentSize().width + 6;
+        } else if (gm->m_playerIconType == IconType::Spider) {
+            iconSize.width = iconSize.width + 10;
         }
 
         int glowExtraSize = 0;
         if (gm->getPlayerGlow()) {
-            glowExtraSize = 8; // glow width
+            glowExtraSize = 6; // glow width
         }
 
         const int margin = fields->m_iconMargin;
         const int ufoExtraHeight = (gm->m_playerIconType == IconType::Ufo) ? 12 : 0;
-        const int complexExtraHeight = (gm->m_playerIconType == IconType::Robot || gm->m_playerIconType == IconType::Spider) ? 16 : 0;
+        const int robotExtraHeight = (gm->m_playerIconType == IconType::Robot) ? 8 : 0;
+        const int spiderExtraHeight = (gm->m_playerIconType == IconType::Spider) ? 6 : 0;
         const int texWidth = static_cast<int>(iconSize.width) + glowExtraSize + margin * 2;
-        const int texHeight = static_cast<int>(iconSize.height) + glowExtraSize + ufoExtraHeight + complexExtraHeight + margin * 2;
+        const int texHeight = static_cast<int>(iconSize.height) + glowExtraSize + ufoExtraHeight + robotExtraHeight + spiderExtraHeight + margin * 2;
 
         auto renderTex = CCRenderTexture::create(texWidth, texHeight, kCCTexture2DPixelFormat_RGBA8888);
         if (!renderTex) {
@@ -245,10 +249,22 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
         float posX = texWidth / 2.0f;
         float posY = texHeight / 2.0f;
 
+        // pongo esto nomas pa saber donde tengo q cambiar cosas
+
+        bool hasRobotBeenAdded = std::find(fields->m_batchIconTypes.begin(), fields->m_batchIconTypes.end(), IconType::Robot) != fields->m_batchIconTypes.end();
+        bool hasSpiderBeenAdded = std::find(fields->m_batchIconTypes.begin(), fields->m_batchIconTypes.end(), IconType::Spider) != fields->m_batchIconTypes.end();
+
+        bool lowerForRobot = hasRobotBeenAdded && !hasSpiderBeenAdded;
+        bool lowerForSpider = hasSpiderBeenAdded && !hasRobotBeenAdded;
+
         if (gm->m_playerIconType == IconType::Ufo) {
-            posY -= (ufoExtraHeight / 1.25f);
-        } else if (gm->m_playerIconType == IconType::Robot || gm->m_playerIconType == IconType::Spider) {
-            posY -= (complexExtraHeight / 2.f);
+            posY -= (ufoExtraHeight / 2.1f);
+        } else if (gm->m_playerIconType == IconType::Robot) {
+            //posY -= (robotExtraHeight / 4.5f);
+            posY = posY; // LMAO
+        } else if (gm->m_playerIconType == IconType::Spider) {
+            //posY -= (spiderExtraHeight / 3.f);
+            posY = posY - 1.5f;
         }
 
         visitMe->setPosition({posX, posY});
@@ -406,7 +422,7 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
             ->setGap(1.f)
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAutoScale(false)
-            ->setAxisReverse(false);
+            ->setAxisReverse(true);
         masterMenu->setLayout(columnLayout);
         masterMenu->setContentSize({maxRowWidth, totalHeight});
         
