@@ -1,676 +1,428 @@
-#include <Geode/Geode.hpp>
-#include <Geode/ui/BasedButtonSprite.hpp>
-#include <Geode/ui/ScrollLayer.hpp>
-#include <Geode/ui/GeodeUI.hpp>
+#include "CustomSettingsPopup.hpp"
 #include <Geode/modify/MenuLayer.hpp>
-#include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/modify/PauseLayer.hpp>
+#include <Geode/modify/GJGarageLayer.hpp>
 
 using namespace geode::prelude;
 
-enum class SettingsTab {
-    RANDOMIZER,
-    RGB,
-    COLORS,
-    PARTICLES,
-    LEGACY,
-    RENDERER,
-    MISC,
-    TOTEM
-};
+CustomSettingsPopup* CustomSettingsPopup::create() {
+    auto ret = new CustomSettingsPopup();
+    // use requested background and make popup slightly smaller so the ScrollLayer better covers it
+    if (ret->initAnchored(420.0f, 280.0f, "geode.loader/GE_square03.png")) {
+        ret->autorelease();
+        return ret;
+    }
+    delete ret;
+    return nullptr;
+}
 
-class CustomSettingsPopup : public Popup<> {
-protected:
-    SettingsTab m_currentTab = SettingsTab::RANDOMIZER;
-    CCMenu* m_tabMenu;
-    CCMenu* m_contentMenu;
-    ScrollLayer* m_scrollLayer;
-    CCNode* m_contentNode;
+bool CustomSettingsPopup::setup() {
+    this->setTitle("Personal Tweaks Settings");
     
-    std::map<SettingsTab, CCMenuItemSpriteExtra*> m_tabButtons;
+    auto winSize = CCDirector::sharedDirector()->getWinSize();
+    auto contentSize = this->m_mainLayer->getContentSize();
+    
+    // Create main scroll layer
+    float contentW = contentSize.width - 40.0f;
+    // reduce vertical padding so scroll area is larger
+    float contentH = contentSize.height - 40.0f;
+    auto scrollLayer = ScrollLayer::create({contentW, contentH});
+    // center the scroll within the main layer padding
+    scrollLayer->setPosition({20.0f, 20.0f});
+    
+    // Create content node for all sections
+    auto contentNode = CCNode::create();
+    // Start from top inside the scroll area (leave a small top padding)
+    float currentY = contentH - 10.0f;
+    float startY = currentY;
 
-    bool setup() override {
-        this->setTitle("Personal Tweaks Settings");
+    // Add sections with spacing
+    const float spacing = 10.0f;
+
+    auto randomizerSection = createRandomizerSection();
+    // center horizontally: sections assume 0 is center in their internals
+    randomizerSection->setPosition({contentW / 2.0f, currentY});
+    contentNode->addChild(randomizerSection);
+    currentY -= 180.0f + spacing;
+    
+    auto rgbSection = createRGBSection();
+    rgbSection->setPosition({contentW / 2.0f, currentY});
+    contentNode->addChild(rgbSection);
+    currentY -= 140.0f + spacing;
+    
+    auto customColorsSection = createCustomColorsSection();
+    customColorsSection->setPosition({contentW / 2.0f, currentY});
+    contentNode->addChild(customColorsSection);
+    currentY -= 60.0f + spacing;
+    
+    // Compute total content height (ensure at least scroll area height so content isn't smaller)
+    float totalHeight = startY - currentY + 10.0f;
+    if (totalHeight < contentH) totalHeight = contentH;
+    
+    // Set content size and add to scroll layer
+    contentNode->setContentSize({contentW, totalHeight});
+    scrollLayer->m_contentLayer->addChild(contentNode);
+    scrollLayer->m_contentLayer->setContentSize({contentW, totalHeight});
+
+    this->m_mainLayer->addChild(scrollLayer);
+    
+    return true;
+}
+
+CCNode* CustomSettingsPopup::createRandomizerSection() {
+    auto section = CCNode::create();
+    auto menu = CCMenu::create();
+    menu->setPosition(CCPointZero);
+    section->addChild(menu);
+    
+    // Section title
+    auto title = CCLabelBMFont::create("Randomizer", "bigFont.fnt");
+    title->setPosition({0.0f, 150.0f});
+    title->setScale(0.7f);
+    section->addChild(title);
+    
+    // Randomizer type toggles
+    auto condLabel = CCLabelBMFont::create("Conditional", "chatFont.fnt");
+    condLabel->setPosition({-150.0f, 120.0f});
+    condLabel->setScale(0.6f);
+    section->addChild(condLabel);
+    
+    auto condToggler = createToggler("cond-ic-randomizer", {-50.0f, 120.0f});
+    menu->addChild(condToggler);
+    
+    auto liveLabel = CCLabelBMFont::create("Live", "chatFont.fnt");
+    liveLabel->setPosition({50.0f, 120.0f});
+    liveLabel->setScale(0.6f);
+    section->addChild(liveLabel);
+    
+    auto liveToggler = createToggler("live-ic-randomizer", {120.0f, 120.0f});
+    menu->addChild(liveToggler);
+    
+    // Delay slider
+    auto delayLabel = CCLabelBMFont::create("Delay", "chatFont.fnt");
+    delayLabel->setPosition({-180.0f, 90.0f});
+    delayLabel->setScale(0.5f);
+    section->addChild(delayLabel);
+    
+    auto delaySlider = createSlider("random-delay", {0.0f, 90.0f}, 150.0f);
+    // ADD slider to the menu so touches reach it (CCMenu otherwise swallows touches)
+    menu->addChild(delaySlider);
+    
+    // Icon type toggles (arranged in rows)
+    std::vector<std::pair<std::string, std::string>> iconTypes = {
+        {"randomize-cube", "Cube"}, {"randomize-ship", "Ship"},
+        {"randomize-ball", "Ball"}, {"randomize-ufo", "UFO"},
+        {"randomize-wave", "Wave"}, {"randomize-robot", "Robot"},
+        {"randomize-spider", "Spider"}, {"randomize-swing", "Swing"}
+    };
+    
+    for (int i = 0; i < (int)iconTypes.size(); i++) {
+        int row = i / 4;
+        int col = i % 4;
+        float x = -150.0f + col * 100.0f;
+        float y = 50.0f - row * 35.0f;
         
-        auto winSize = this->m_mainLayer->getContentSize();
+        auto label = CCLabelBMFont::create(iconTypes[i].second.c_str(), "chatFont.fnt");
+        label->setPosition({x, y + 15.0f});
+        label->setScale(0.4f);
+        section->addChild(label);
         
-        // Create tab menu
-        m_tabMenu = CCMenu::create();
-        m_tabMenu->setLayout(RowLayout::create()->setGap(8.f)->setAxisAlignment(AxisAlignment::Center));
-        m_tabMenu->setContentSize({winSize.width - 40, 35});
-        m_tabMenu->setPosition({winSize.width / 2, winSize.height - 50});
-        this->m_mainLayer->addChild(m_tabMenu);
-        
-        // Create tabs
-        createTabs();
-        
-        // Create scroll layer for content
-        auto scrollSize = CCSize{winSize.width - 60, winSize.height - 120};
-        m_scrollLayer = ScrollLayer::create(scrollSize);
-        m_scrollLayer->setPosition({30, 20});
-        this->m_mainLayer->addChild(m_scrollLayer);
-        
-        // Create content node
-        m_contentNode = CCNode::create();
-        m_scrollLayer->m_contentLayer->addChild(m_contentNode);
-        
-        // Show initial tab
-        showTab(SettingsTab::RANDOMIZER);
-        
-        return true;
+        auto toggler = createToggler(iconTypes[i].first, {x, y - 5.0f});
+        menu->addChild(toggler);
     }
     
-    void createTabs() {
-        struct TabInfo {
-            SettingsTab tab;
-            const char* name;
-        };
+    // Color toggles
+    std::vector<std::pair<std::string, std::string>> colorTypes = {
+        {"randomize-color1", "Color 1"}, {"randomize-color2", "Color 2"}, {"randomize-glowcolor", "Glow"}
+    };
+    
+    for (int i = 0; i < (int)colorTypes.size(); i++) {
+        float x = -100.0f + i * 100.0f;
+        float y = -30.0f;
         
-        std::vector<TabInfo> tabs = {
-            {SettingsTab::RANDOMIZER, "Randomizer"},
-            {SettingsTab::RGB, "RGB"},
-            {SettingsTab::COLORS, "Colors"},
-            {SettingsTab::PARTICLES, "Particles"},
-            {SettingsTab::LEGACY, "Legacy"},
-            {SettingsTab::RENDERER, "Renderer"},
-            {SettingsTab::MISC, "Misc"},
-            {SettingsTab::TOTEM, "Totem"}
-        };
+        auto label = CCLabelBMFont::create(colorTypes[i].second.c_str(), "chatFont.fnt");
+        label->setPosition({x, y + 15.0f});
+        label->setScale(0.4f);
+        section->addChild(label);
         
-        for (auto& info : tabs) {
-            auto buttonSprite = ButtonSprite::create(info.name, "goldFont.fnt", "GJ_button_01.png", 0.7f);
-            
-            auto button = CCMenuItemSpriteExtra::create(
-                buttonSprite,
-                this,
-                menu_selector(CustomSettingsPopup::onTabClicked)
-            );
-            button->setTag(static_cast<int>(info.tab));
-            
-            m_tabButtons[info.tab] = button;
-            m_tabMenu->addChild(button);
-        }
-        
-        m_tabMenu->updateLayout();
+        auto toggler = createToggler(colorTypes[i].first, {x, y - 5.0f});
+        menu->addChild(toggler);
     }
     
-    void onTabClicked(CCObject* sender) {
-        auto button = static_cast<CCMenuItemSpriteExtra*>(sender);
-        auto tab = static_cast<SettingsTab>(button->getTag());
-        showTab(tab);
+    return section;
+}
+
+CCNode* CustomSettingsPopup::createRGBSection() {
+    auto section = CCNode::create();
+    auto menu = CCMenu::create();
+    menu->setPosition(CCPointZero);
+    section->addChild(menu);
+    
+    // Section title
+    auto title = CCLabelBMFont::create("RGB Icons", "bigFont.fnt");
+    title->setPosition({0.0f, 110.0f});
+    title->setScale(0.7f);
+    section->addChild(title);
+    
+    // RGB toggles
+    auto col1Label = CCLabelBMFont::create("Color 1 RGB", "chatFont.fnt");
+    col1Label->setPosition({-120.0f, 80.0f});
+    col1Label->setScale(0.5f);
+    section->addChild(col1Label);
+    
+    auto col1Toggler = createToggler("rgb-col1", {-20.0f, 80.0f});
+    menu->addChild(col1Toggler);
+    
+    auto col2Label = CCLabelBMFont::create("Color 2 RGB", "chatFont.fnt");
+    col2Label->setPosition({80.0f, 80.0f});
+    col2Label->setScale(0.5f);
+    section->addChild(col2Label);
+    
+    auto col2Toggler = createToggler("rgb-col2", {180.0f, 80.0f});
+    menu->addChild(col2Toggler);
+    
+    // RGB Speed slider
+    auto speedLabel = CCLabelBMFont::create("Speed", "chatFont.fnt");
+    speedLabel->setPosition({-180.0f, 50.0f});
+    speedLabel->setScale(0.5f);
+    section->addChild(speedLabel);
+    
+    auto speedSlider = createSlider("rgb-speed", {0.0f, 50.0f});
+    menu->addChild(speedSlider);
+    
+    // Saturation sliders
+    auto sat1Label = CCLabelBMFont::create("Sat 1", "chatFont.fnt");
+    sat1Label->setPosition({-150.0f, 20.0f});
+    sat1Label->setScale(0.45f);
+    section->addChild(sat1Label);
+    
+    auto sat1Slider = createSlider("rgb-saturation", {-50.0f, 20.0f}, 120.0f);
+    menu->addChild(sat1Slider);
+    
+    auto sat2Label = CCLabelBMFont::create("Sat 2", "chatFont.fnt");
+    sat2Label->setPosition({50.0f, 20.0f});
+    sat2Label->setScale(0.45f);
+    section->addChild(sat2Label);
+    
+    auto sat2Slider = createSlider("rgb-saturation2", {130.0f, 20.0f}, 120.0f);
+    menu->addChild(sat2Slider);
+    
+    // Ignore P2 toggle
+    auto ignoreLabel = CCLabelBMFont::create("Ignore P2", "chatFont.fnt");
+    ignoreLabel->setPosition({-60.0f, -10.0f});
+    ignoreLabel->setScale(0.5f);
+    section->addChild(ignoreLabel);
+    
+    auto ignoreToggler = createToggler("ignore-p2", {40.0f, -10.0f});
+    menu->addChild(ignoreToggler);
+    
+    return section;
+}
+
+CCNode* CustomSettingsPopup::createCustomColorsSection() {
+    auto section = CCNode::create();
+    auto menu = CCMenu::create();
+    menu->setPosition(CCPointZero);
+    section->addChild(menu);
+    
+    // Section title
+    auto title = CCLabelBMFont::create("Custom Colors", "bigFont.fnt");
+    title->setPosition({0.0f, 30.0f});
+    title->setScale(0.7f);
+    section->addChild(title);
+    
+    // Enable custom colors toggle
+    auto enableLabel = CCLabelBMFont::create("Enable Custom Colors", "chatFont.fnt");
+    enableLabel->setPosition({-80.0f, 0.0f});
+    enableLabel->setScale(0.5f);
+    section->addChild(enableLabel);
+    
+    auto enableToggler = createToggler("enable-customcolors", {80.0f, 0.0f});
+    menu->addChild(enableToggler);
+    
+    return section;
+}
+
+CCMenuItemToggler* CustomSettingsPopup::createToggler(std::string settingId, CCPoint position) {
+    auto offSprite = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
+    auto onSprite = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
+    
+    offSprite->setScale(0.8f);
+    onSprite->setScale(0.8f);
+    
+    auto toggler = CCMenuItemToggler::create(offSprite, onSprite, this, menu_selector(CustomSettingsPopup::onRandomizerToggle));
+    toggler->setPosition(position);
+
+    // use stable hash-based tag (match original working approach)
+    int tag = static_cast<int>(std::hash<std::string>{}(settingId));
+    toggler->setTag(tag);
+    this->m_tagToSetting[tag] = settingId;
+
+    // set visual initial state from the mod
+    bool initial = Mod::get()->getSettingValue<bool>(settingId);
+    toggler->toggle(initial);
+
+    // store id as user object too (fallback)
+    toggler->setUserObject(CCString::create(settingId));
+    
+    return toggler;
+}
+
+Slider* CustomSettingsPopup::createSlider(std::string settingId, CCPoint position, float width) {
+    auto slider = Slider::create(this, menu_selector(CustomSettingsPopup::onDelaySlider), 0.8f);
+    auto m_thumb = slider->getThumb();
+    slider->setPosition(position);
+    slider->m_sliderBar->setContentSize({width, slider->m_sliderBar->getContentSize().height});
+    slider->setUserObject(CCString::create(settingId));
+    
+    // tag/map using hashed id (fallback uses userObject)
+    int tag = static_cast<int>(std::hash<std::string>{}(settingId));
+    slider->setTag(tag);
+    this->m_tagToSetting[tag] = settingId;
+
+    // Also apply the same tag/userObject to the thumb so callbacks coming from the thumb still carry the id
+    if (m_thumb) {
+        m_thumb->setUserObject(CCString::create(settingId));
+        m_thumb->setTag(tag);
     }
     
-    void showTab(SettingsTab tab) {
-        m_currentTab = tab;
-        
-        // Update tab button states
-        for (auto& [tabType, button] : m_tabButtons) {
-            button->setEnabled(tabType != tab);
-        }
-        
-        // Clear current content
-        m_contentNode->removeAllChildren();
-        
-        // Create content based on tab
-        switch (tab) {
-            case SettingsTab::RANDOMIZER:
-                createRandomizerContent();
-                break;
-            case SettingsTab::RGB:
-                createRGBContent();
-                break;
-            case SettingsTab::COLORS:
-                createColorsContent();
-                break;
-            case SettingsTab::PARTICLES:
-                createParticlesContent();
-                break;
-            case SettingsTab::LEGACY:
-                createLegacyContent();
-                break;
-            case SettingsTab::RENDERER:
-                createRendererContent();
-                break;
-            case SettingsTab::MISC:
-                createMiscContent();
-                break;
-            case SettingsTab::TOTEM:
-                createTotemContent();
-                break;
-        }
-        
-        m_scrollLayer->moveToTop();
+    // Set initial value based on setting type
+    if (settingId == "random-delay") {
+        float value = Mod::get()->getSettingValue<double>(settingId);
+        slider->setValue((value - 0.1f) / (70.0f - 0.1f));
+    } else if (settingId == "rgb-speed") {
+        float value = Mod::get()->getSettingValue<double>(settingId);
+        slider->setValue(value / 10.0f);
+    } else if (settingId == "rgb-saturation" || settingId == "rgb-saturation2") {
+        float value = Mod::get()->getSettingValue<double>(settingId);
+        slider->setValue(value);
     }
     
-    void createRandomizerContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        // Main toggles
-        content->addChild(createToggle("Enable Conditional Icon Randomizer", "cond-ic-randomizer"));
-        content->addChild(createToggle("Enable Live Icon Randomizer", "live-ic-randomizer"));
-        
-        // Randomizer type selector
-        content->addChild(createLabel("Randomizer Type:"));
-        content->addChild(createStringSelector("cond-randomizer-type", {
-            {"every-gamemode", "Every Gamemode"},
-            {"on-death", "On Death"},
-            {"both", "Both"},
-            {"on-click", "On Click"}
-        }));
-        
-        // Delay slider
-        content->addChild(createLabel("Randomize Delay:"));
-        content->addChild(createSlider("random-delay", 0.1f, 70.0f, "%.1fs"));
-        
-        // Gamemode toggles
-        content->addChild(createLabel("Randomize Gamemodes:"));
-        content->addChild(createToggle("Randomize Cube", "randomize-cube"));
-        content->addChild(createToggle("Randomize Ship", "randomize-ship"));
-        content->addChild(createToggle("Randomize Ball", "randomize-ball"));
-        content->addChild(createToggle("Randomize UFO", "randomize-ufo"));
-        content->addChild(createToggle("Randomize Wave", "randomize-wave"));
-        content->addChild(createToggle("Randomize Robot", "randomize-robot"));
-        content->addChild(createToggle("Randomize Spider", "randomize-spider"));
-        content->addChild(createToggle("Randomize Swing", "randomize-swing"));
-        
-        // Color toggles
-        content->addChild(createLabel("Randomize Colors:"));
-        content->addChild(createToggle("Randomize Color 1", "randomize-color1"));
-        content->addChild(createToggle("Randomize Color 2", "randomize-color2"));
-        content->addChild(createToggle("Randomize Glow Color", "randomize-glowcolor"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    void createRGBContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        content->addChild(createToggle("Color 1 - RGB", "rgb-col1"));
-        content->addChild(createToggle("Color 2 - RGB", "rgb-col2"));
-        content->addChild(createToggle("Ignore Player 2", "ignore-p2"));
-        
-        content->addChild(createLabel("RGB Cycle Speed:"));
-        content->addChild(createSlider("rgb-speed", 0.0f, 10.0f, "%.1f"));
-        
-        content->addChild(createLabel("Saturation - Color 1:"));
-        content->addChild(createSlider("rgb-saturation", 0.0f, 1.0f, "%.2f"));
-        
-        content->addChild(createLabel("Saturation - Color 2:"));
-        content->addChild(createSlider("rgb-saturation2", 0.0f, 1.0f, "%.2f"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    void createColorsContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        content->addChild(createToggle("Enable Custom Colors", "enable-customcolors"));
-        
-        content->addChild(createLabel("Player 1 Colors:"));
-        content->addChild(createColorPicker("Primary Color", "p1-primary"));
-        content->addChild(createColorPicker("Secondary Color", "p1-secondary"));
-        content->addChild(createColorPicker("Wave Color", "p1-wave"));
-        
-        content->addChild(createLabel("Player 2 Colors:"));
-        content->addChild(createColorPicker("Primary Color", "p2-primary"));
-        content->addChild(createColorPicker("Secondary Color", "p2-secondary"));
-        content->addChild(createColorPicker("Wave Color", "p2-wave"));
-        
-        content->addChild(createToggle("Tint Trail", "tint-trail"));
-        content->addChild(createColorPicker("P1 Trail Color", "p1-trail"));
-        content->addChild(createColorPicker("P2 Trail Color", "p2-trail"));
-        
-        content->addChild(createToggle("Tint Ghost Trail", "tint-ghost-trail"));
-        content->addChild(createColorPicker("P1 Ghost Trail", "p1-ghost-trail"));
-        content->addChild(createColorPicker("P2 Ghost Trail", "p2-ghost-trail"));
-        
-        content->addChild(createToggle("Tint Dash Fire", "tint-dashfire"));
-        content->addChild(createColorPicker("P1 Dash Fire", "p1-dashfire"));
-        content->addChild(createColorPicker("P2 Dash Fire", "p2-dashfire"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    void createParticlesContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        content->addChild(createToggle("Override All Variances", "override-all-variances"));
-        content->addChild(createToggle("Tint Main Particles", "tint-mainparticles"));
-        content->addChild(createToggle("Tint UFO Click Particles", "tint-ufo-click-particles"));
-        
-        content->addChild(createLabel("Main Particles - P1:"));
-        content->addChild(createColorPicker("Start Color", "p1-main-particles-start"));
-        content->addChild(createColorPicker("End Color", "p1-main-particles-end"));
-        
-        content->addChild(createLabel("Main Particles - P2:"));
-        content->addChild(createColorPicker("Start Color", "p2-main-particles-start"));
-        content->addChild(createColorPicker("End Color", "p2-main-particles-end"));
-        
-        content->addChild(createLabel("UFO Click Particles - P1:"));
-        content->addChild(createColorPicker("Start Color", "p1-ufo-click-particles-start"));
-        content->addChild(createColorPicker("End Color", "p1-ufo-click-particles-end"));
-        
-        content->addChild(createLabel("UFO Click Particles - P2:"));
-        content->addChild(createColorPicker("Start Color", "p2-ufo-click-particles-start"));
-        content->addChild(createColorPicker("End Color", "p2-ufo-click-particles-end"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    void createLegacyContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        content->addChild(createToggle("Enable Legacy Trail", "use-legacytrail"));
-        content->addChild(createLabel("Trail: Max Points"));
-        content->addChild(createSlider("max-points", 2, 20, "%.0f"));
-        
-        content->addChild(createToggle("Enable Legacy Pulse", "legacy-pulse"));
-        content->addChild(createLabel("Pulse: FPS"));
-        content->addChild(createSlider("pulse-fps", 60, 1080, "%.0f"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    void createRendererContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        content->addChild(createToggle("Renderer Features", "enable-renderer"));
-        
-        content->addChild(createLabel("Max Icons per Row:"));
-        content->addChild(createSlider("max-per-row", 1, 50, "%.0f"));
-        
-        content->addChild(createLabel("Render Background Color:"));
-        content->addChild(createColorPicker("Background", "bg-color"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    void createMiscContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        content->addChild(createToggle("Garage: Icon Select Animation", "garage-select-anim"));
-        content->addChild(createToggle("Gameplay: Ball Rotation Bug", "ballrot-bug"));
-        content->addChild(createToggle("Icon Listing Features", "iconlist-ft"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    void createTotemContent() {
-        auto content = CCMenu::create();
-        content->setLayout(ColumnLayout::create()->setGap(5.f)->setAxisReverse(true)->setAxisAlignment(AxisAlignment::Start));
-        
-        content->addChild(createToggle("Enable Totem Animation", "enable-totem"));
-        
-        content->addChild(createLabel("Totem Cooldown:"));
-        content->addChild(createSlider("totem-cooldown", 0.1f, 2.0f, "%.1fs"));
-        
-        content->addChild(createLabel("Totem Scale:"));
-        content->addChild(createSlider("totem-scale", 0.3f, 4.0f, "%.1f"));
-        
-        float contentHeight = static_cast<float>(content->getChildrenCount()) * 28.0f;
-        content->setContentSize({360, contentHeight});
-        content->setPosition({0, 0});
-        content->updateLayout();
-        
-        m_contentNode->addChild(content);
-        m_scrollLayer->m_contentLayer->setContentSize({360, std::max(contentHeight, m_scrollLayer->getContentSize().height)});
-    }
-    
-    CCNode* createToggle(const char* label, const char* settingKey) {
-        auto container = CCNode::create();
-        container->setContentSize({350, 25});
-        
-        auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
-        labelNode->setScale(0.35f);
-        labelNode->setPosition({5, 12});
-        labelNode->setAnchorPoint({0, 0.5f});
-        container->addChild(labelNode);
-        
-        auto toggle = CCMenuItemToggler::create(
-            CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png"),
-            CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png"),
-            this,
-            menu_selector(CustomSettingsPopup::onToggleChanged)
-        );
-        toggle->setScale(0.8f);
-        
-        bool currentValue = Mod::get()->getSettingValue<bool>(settingKey);
-        toggle->toggle(currentValue);
-        toggle->setUserObject(CCString::create(settingKey));
-        
-        auto toggleMenu = CCMenu::create();
-        toggleMenu->addChild(toggle);
-        toggleMenu->setPosition({320, 12});
-        container->addChild(toggleMenu);
-        
-        return container;
-    }
-    
-    CCNode* createSlider(const char* settingKey, float min, float max, const char* format) {
-        auto container = CCNode::create();
-        container->setContentSize({350, 25});
-        
-        auto slider = Slider::create(this, menu_selector(CustomSettingsPopup::onSliderChanged));
-        slider->setScale(0.7f);
-        slider->setPosition({175, 12});
-        slider->setUserObject(CCString::create(settingKey));
-        
-        // Get current value and set slider
-        float currentValue;
-        if (settingKey == std::string("random-delay") || settingKey == std::string("rgb-speed") || 
-            settingKey == std::string("rgb-saturation") || settingKey == std::string("rgb-saturation2") ||
-            settingKey == std::string("totem-cooldown") || settingKey == std::string("totem-scale")) {
-            currentValue = static_cast<float>(Mod::get()->getSettingValue<double>(settingKey));
+    return slider;
+}
+
+void CustomSettingsPopup::onRandomizerToggle(CCObject* sender) {
+    auto toggler = static_cast<CCMenuItemToggler*>(sender);
+    if (!toggler) return;
+
+    std::string settingIdStr;
+
+    // prefer our mapping by tag
+    int tag = toggler->getTag();
+    auto it = this->m_tagToSetting.find(tag);
+    if (it != this->m_tagToSetting.end()) {
+        settingIdStr = it->second;
+    } else {
+        // fallback to userObject (old behavior)
+        auto obj = toggler->getUserObject();
+        if (!obj) return;
+        if (auto cs = dynamic_cast<CCString*>(obj)) {
+            settingIdStr = std::string(cs->getCString());
         } else {
-            currentValue = static_cast<float>(Mod::get()->getSettingValue<int64_t>(settingKey));
-        }
-        slider->setValue((currentValue - min) / (max - min));
-        
-        auto valueLabel = CCLabelBMFont::create("", "bigFont.fnt");
-        valueLabel->setScale(0.3f);
-        valueLabel->setPosition({290, 12});
-        valueLabel->setTag(1001);
-        container->addChild(valueLabel);
-        
-        // Update label with initial value
-        std::string key = settingKey;
-        float actualMin, actualMax;
-        const char* actualFormat;
-        getSliderParams(key, actualMin, actualMax, actualFormat);
-        valueLabel->setString(CCString::createWithFormat(actualFormat, currentValue)->getCString());
-        
-        container->addChild(slider);
-        
-        return container;
-    }
-    
-    CCNode* createLabel(const char* text) {
-        auto label = CCLabelBMFont::create(text, "goldFont.fnt");
-        label->setScale(0.5f);
-        return label;
-    }
-    
-    CCNode* createStringSelector(const char* settingKey, std::vector<std::pair<std::string, std::string>> options) {
-        auto container = CCNode::create();
-        container->setContentSize({350, 25});
-        
-        std::string currentValue = Mod::get()->getSettingValue<std::string>(settingKey);
-        std::string displayText = currentValue;
-        
-        // Find display text for current value
-        for (auto& option : options) {
-            if (option.first == currentValue) {
-                displayText = option.second;
-                break;
-            }
-        }
-        
-        auto buttonSprite = ButtonSprite::create(displayText.c_str(), "bigFont.fnt", "GJ_button_01.png", 0.5f);
-        auto button = CCMenuItemSpriteExtra::create(
-            buttonSprite,
-            this,
-            menu_selector(CustomSettingsPopup::onStringOptionClicked)
-        );
-        button->setUserObject(CCString::create(settingKey));
-        
-        auto menu = CCMenu::create();
-        menu->addChild(button);
-        menu->setPosition({175, 12});
-        container->addChild(menu);
-        
-        return container;
-    }
-    
-    CCNode* createColorPicker(const char* label, const char* settingKey) {
-        auto container = CCNode::create();
-        container->setContentSize({350, 25});
-        
-        auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
-        labelNode->setScale(0.35f);
-        labelNode->setPosition({5, 12});
-        labelNode->setAnchorPoint({0, 0.5f});
-        container->addChild(labelNode);
-        
-        // Create color display sprite
-        auto colorSprite = CCSprite::create("whiteSquare60_001.png");
-        colorSprite->setScale(0.4f);
-        
-        // Get current color value
-        ccColor3B currentColor = Mod::get()->getSettingValue<ccColor3B>(settingKey);
-        colorSprite->setColor(currentColor);
-        
-        auto button = CCMenuItemSpriteExtra::create(
-            colorSprite,
-            this,
-            menu_selector(CustomSettingsPopup::onColorClicked)
-        );
-        button->setUserObject(CCString::create(settingKey));
-        
-        auto menu = CCMenu::create();
-        menu->addChild(button);
-        menu->setPosition({320, 12});
-        container->addChild(menu);
-        
-        return container;
-    }
-    
-    void onToggleChanged(CCObject* sender) {
-        auto toggle = static_cast<CCMenuItemToggler*>(sender);
-        auto settingKey = static_cast<CCString*>(toggle->getUserObject())->getCString();
-        
-        Mod::get()->setSettingValue<bool>(settingKey, !toggle->isToggled());
-    }
-    
-    void onSliderChanged(CCObject* sender) {
-        auto slider = static_cast<Slider*>(sender);
-        auto settingKeyObj = slider->getUserObject();
-        
-        if (!settingKeyObj) {
-            geode::log::error("Slider has no user object!");
             return;
         }
-        
-        auto settingKey = static_cast<CCString*>(settingKeyObj)->getCString();
-        
-        // Update the appropriate setting based on type
-        std::string key = settingKey;
-        if (key == "random-delay" || key == "rgb-speed" || key == "rgb-saturation" || 
-            key == "rgb-saturation2" || key == "totem-cooldown" || key == "totem-scale") {
-            float min, max;
-            const char* format;
-            getSliderParams(key, min, max, format);
-            float value = min + slider->getValue() * (max - min);
-            Mod::get()->setSettingValue<double>(settingKey, value);
-        } else {
-            float min, max;
-            const char* format;
-            getSliderParams(key, min, max, format);
-            int64_t value = static_cast<int64_t>(min + slider->getValue() * (max - min));
-            Mod::get()->setSettingValue<int64_t>(settingKey, value);
-        }
-        
-        updateSliderLabel(slider, 0, 0, "");
     }
     
-    void onStringOptionClicked(CCObject* sender) {
-        auto button = static_cast<CCMenuItemSpriteExtra*>(sender);
-        auto settingKey = static_cast<CCString*>(button->getUserObject())->getCString();
-        
-        // Get current options for randomizer type
-        if (std::string(settingKey) == "cond-randomizer-type") {
-            std::vector<std::pair<std::string, std::string>> options = {
-                {"every-gamemode", "Every Gamemode"},
-                {"on-death", "On Death"},
-                {"both", "Both"},
-                {"on-click", "On Click"}
-            };
-            
-            std::string currentValue = Mod::get()->getSettingValue<std::string>(settingKey);
-            
-            // Find current index and cycle to next
-            for (size_t i = 0; i < options.size(); i++) {
-                if (options[i].first == currentValue) {
-                    size_t nextIndex = (i + 1) % options.size();
-                    std::string newValue = options[nextIndex].first;
-                    std::string newDisplay = options[nextIndex].second;
-                    
-                    Mod::get()->setSettingValue<std::string>(settingKey, newValue);
-                    
-                    // Update button text
-                    auto buttonSprite = ButtonSprite::create(newDisplay.c_str(), "bigFont.fnt", "GJ_button_01.png", 0.5f);
-                    button->setNormalImage(buttonSprite);
-                    break;
+    // Note: original working code saved !isToggled() — replicate that behavior
+    bool newValue = !toggler->isToggled();
+    Mod::get()->setSettingValue<bool>(settingIdStr, newValue);
+
+    // debug log
+    geode::log::debug("PersonalTweaks: toggled {} -> {}", settingIdStr, newValue ? "true" : "false");
+}
+
+void CustomSettingsPopup::onDelaySlider(CCObject* sender) {
+    // Support being called from either the Slider or its Thumb
+    auto slider = dynamic_cast<Slider*>(sender);
+    CCObject* userObj = nullptr;
+    int tag = 0;
+    float value = 0.0f;
+
+    if (slider) {
+        userObj = slider->getUserObject();
+        tag = slider->getTag();
+        value = slider->getValue();
+    } else {
+        // maybe it's the thumb that triggered the callback
+        auto thumb = dynamic_cast<SliderThumb*>(sender);
+        if (thumb) {
+            userObj = thumb->getUserObject();
+            tag = thumb->getTag();
+            // thumb might expose getValue() directly
+            value = thumb->getValue();
+            // try to find parent Slider for completeness (some implementations keep the slider as parent)
+            if (!slider) {
+                if (auto parentNode = dynamic_cast<CCNode*>(thumb->getParent())) {
+                    slider = dynamic_cast<Slider*>(parentNode);
                 }
             }
-        }
-    }
-    
-    void onColorClicked(CCObject* sender) {
-        auto button = static_cast<CCMenuItemSpriteExtra*>(sender);
-        auto settingKey = static_cast<CCString*>(button->getUserObject())->getCString();
-        
-        // Simple color cycling for demonstration - you could implement a proper color picker
-        ccColor3B currentColor = Mod::get()->getSettingValue<ccColor3B>(settingKey);
-        
-        // Create a simple color selection array
-        std::vector<ccColor3B> colors = {
-            {255, 255, 255}, // White
-            {255, 0, 0},     // Red
-            {0, 255, 0},     // Green
-            {0, 0, 255},     // Blue
-            {255, 255, 0},   // Yellow
-            {255, 0, 255},   // Magenta
-            {0, 255, 255},   // Cyan
-            {128, 128, 128}, // Gray
-            {0, 0, 0}        // Black
-        };
-        
-        // Find current color and cycle to next
-        for (size_t i = 0; i < colors.size(); i++) {
-            if (colors[i].r == currentColor.r && colors[i].g == currentColor.g && colors[i].b == currentColor.b) {
-                size_t nextIndex = (i + 1) % colors.size();
-                ccColor3B newColor = colors[nextIndex];
-                
-                Mod::get()->setSettingValue<ccColor3B>(settingKey, newColor);
-                
-                // Update button color
-                auto colorSprite = static_cast<CCSprite*>(button->getNormalImage());
-                colorSprite->setColor(newColor);
-                break;
-            }
-        }
-    }
-    
-    void getSliderParams(const std::string& key, float& min, float& max, const char*& format) {
-        if (key == "random-delay") { min = 0.1f; max = 70.0f; format = "%.1fs"; }
-        else if (key == "rgb-speed") { min = 0.0f; max = 10.0f; format = "%.1f"; }
-        else if (key == "rgb-saturation" || key == "rgb-saturation2") { min = 0.0f; max = 1.0f; format = "%.2f"; }
-        else if (key == "totem-cooldown") { min = 0.1f; max = 2.0f; format = "%.1fs"; }
-        else if (key == "totem-scale") { min = 0.3f; max = 4.0f; format = "%.1f"; }
-        else if (key == "max-points") { min = 2; max = 20; format = "%.0f"; }
-        else if (key == "pulse-fps") { min = 60; max = 1080; format = "%.0f"; }
-        else if (key == "max-per-row") { min = 1; max = 50; format = "%.0f"; }
-        else { min = 0; max = 100; format = "%.0f"; }
-    }
-    
-    void updateSliderLabel(Slider* slider, float min, float max, const char* format) {
-        auto container = slider->getParent(); // This is the container node
-        auto label = static_cast<CCLabelBMFont*>(container->getChildByTag(1001));
-        
-        if (label) {
-            std::string key = static_cast<CCString*>(slider->getUserObject())->getCString();
-            float actualMin, actualMax;
-            const char* actualFormat;
-            getSliderParams(key, actualMin, actualMax, actualFormat);
-            
-            float value = actualMin + slider->getValue() * (actualMax - actualMin);
-            label->setString(CCString::createWithFormat(actualFormat, value)->getCString());
+        } else {
+            return; // unknown sender
         }
     }
 
-public:
-    static CustomSettingsPopup* create() {
-        auto ret = new CustomSettingsPopup();
-        if (ret && ret->initAnchored(400, 280)) {
-            ret->autorelease();
-            return ret;
+    std::string settingIdStr;
+    auto it = this->m_tagToSetting.find(tag);
+    if (it != this->m_tagToSetting.end()) {
+        settingIdStr = it->second;
+    } else if (userObj) {
+        if (auto cs = dynamic_cast<CCString*>(userObj)) {
+            settingIdStr = std::string(cs->getCString());
+        } else {
+            return;
         }
-        CC_SAFE_DELETE(ret);
-        return nullptr;
+    } else {
+        return;
     }
-};
 
-// MenuLayer modification
-class $modify(SettingsMenuLayer, MenuLayer) {
+    // Use the computed 'value' (0..1 slider range) and map it per-setting
+    if (settingIdStr == "random-delay") {
+        float mapped = 0.1f + value * (70.0f - 0.1f);
+        Mod::get()->setSettingValue<double>(settingIdStr, mapped);
+        geode::log::debug("PersonalTweaks: {} = {}", settingIdStr, mapped);
+    } else if (settingIdStr == "rgb-speed") {
+        float mapped = value * 10.0f;
+        Mod::get()->setSettingValue<double>(settingIdStr, mapped);
+        geode::log::debug("PersonalTweaks: {} = {}", settingIdStr, mapped);
+    } else if (settingIdStr == "rgb-saturation" || settingIdStr == "rgb-saturation2") {
+        Mod::get()->setSettingValue<double>(settingIdStr, value);
+        geode::log::debug("PersonalTweaks: {} = {}", settingIdStr, value);
+    }
+}
+
+void CustomSettingsPopup::onRGBToggle(CCObject* sender) {
+    onRandomizerToggle(sender); // Same implementation
+}
+
+void CustomSettingsPopup::onRGBSpeedSlider(CCObject* sender) {
+    onDelaySlider(sender); // Same implementation
+}
+
+void CustomSettingsPopup::onRGBSaturationSlider(CCObject* sender) {
+    onDelaySlider(sender); // Same implementation
+}
+
+// Add button to MenuLayer
+class $modify(CustomMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
         
+        auto settingsSprite = CCSprite::create("PTMenuAccess.png"_spr);
+        settingsSprite->setScale(0.8f);
+        
+        auto settingsBtn = CCMenuItemSpriteExtra::create(
+            settingsSprite,
+            this,
+            menu_selector(CustomMenuLayer::onOpenSettings)
+        );
+        
         auto menu = this->getChildByID("bottom-menu");
-        if (!menu) {
-            menu = CCMenu::create();
-            menu->setPosition({20, 20});
-            this->addChild(menu);
+        if (menu) {
+            settingsBtn->setID("personal-tweaks-btn"_spr);
+            menu->addChild(settingsBtn);
+            menu->updateLayout();
         }
         
-        auto sprite = CircleButtonSprite::createWithSprite("LaVerdadMeDaMuchaPutaHuevaAprenderAUsarElCosoQueHaceUnBotonConDosCapasLanfao.png"_spr, 1.0f, CircleBaseColor::Green, CircleBaseSize::Medium);
-        auto button = CCMenuItemSpriteExtra::create(
-            sprite,
-            this,
-            menu_selector(SettingsMenuLayer::onOpenSettings)
-        );
-        button->setPosition({30, 30});
-        
-        menu->addChild(button);
-        
         return true;
     }
     
@@ -679,60 +431,56 @@ class $modify(SettingsMenuLayer, MenuLayer) {
     }
 };
 
-// GJGarageLayer modification  
-class $modify(SettingsGarageLayer, GJGarageLayer) {
-    bool init() {
-        if (!GJGarageLayer::init()) return false;
-        
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-        auto menu = CCMenu::create();
-        
-        auto sprite = CircleButtonSprite::createWithSprite("LaVerdadMeDaMuchaPutaHuevaAprenderAUsarElCosoQueHaceUnBotonConDosCapasLanfao.png"_spr, 1.0f, CircleBaseColor::Green, CircleBaseSize::Small);
-        auto button = CCMenuItemSpriteExtra::create(
-            sprite,
-            this,
-            menu_selector(SettingsGarageLayer::onOpenSettings)
-        );
-        
-        menu->addChild(button);
-        menu->setPosition({winSize.width - 30, winSize.height - 30});
-        this->addChild(menu);
-        
-        return true;
-    }
-    
-    void onOpenSettings(CCObject*) {
-        CustomSettingsPopup::create()->show();
-    }
-};
-
-// PauseLayer modification
-class $modify(SettingsPauseLayer, PauseLayer) {
+// Add button to PauseLayer
+class $modify(CustomPauseLayer, PauseLayer) {
     void customSetup() {
         PauseLayer::customSetup();
         
-        auto menu = this->getChildByID("left-button-menu");
-        if (!menu) {
-            auto winSize = CCDirector::sharedDirector()->getWinSize();
-            menu = CCMenu::create();
-            menu->setLayout(ColumnLayout::create()->setGap(4.f)->setAxisAlignment(AxisAlignment::End)->setAxisReverse(true));
-            menu->setPosition({36.f, winSize.height / 2});
-            menu->setContentSize({40, winSize.height - 40.f});
-            menu->setZOrder(10);
-            this->addChild(menu);
-        }
+        auto settingsSprite = CCSprite::create("PTMenuAccess.png"_spr);
+        settingsSprite->setScale(0.7f);
         
-        auto sprite = CCSprite::create("LaVerdadMeDaMuchaPutaHuevaAprenderAUsarElCosoQueHaceUnBotonConDosCapasLanfao.png"_spr);
-        sprite->setScale(0.7f);
-        auto button = CCMenuItemSpriteExtra::create(
-            sprite,
+        auto settingsBtn = CCMenuItemSpriteExtra::create(
+            settingsSprite,
             this,
-            menu_selector(SettingsPauseLayer::onOpenSettings)
+            menu_selector(CustomPauseLayer::onOpenSettings)
         );
-        button->setID("personaltweaks-settings-shortcut"_spr);
         
-        menu->addChild(button);
-        menu->updateLayout();
+        settingsBtn->setPosition({-150.0f, -65.0f});
+        
+        auto menu = this->getChildByID("left-button-menu");
+        if (menu) {
+            settingsBtn->setID("personal-tweaks-btn"_spr);
+            menu->addChild(settingsBtn);
+        }
+    }
+    
+    void onOpenSettings(CCObject*) {
+        CustomSettingsPopup::create()->show();
+    }
+};
+
+// Add button to GJGarageLayer
+class $modify(CustomGarageLayer, GJGarageLayer) {
+    bool init() {
+        if (!GJGarageLayer::init()) return false;
+        
+        auto settingsSprite = CCSprite::create("PTMenuAccess.png"_spr);
+        settingsSprite->setScale(0.7f);
+        
+        auto settingsBtn = CCMenuItemSpriteExtra::create(
+            settingsSprite,
+            this,
+            menu_selector(CustomGarageLayer::onOpenSettings)
+        );
+        
+        settingsBtn->setPosition({-200.0f, 100.0f});
+        
+        auto menu = CCMenu::create();
+        menu->addChild(settingsBtn);
+        menu->setPosition(CCDirector::sharedDirector()->getWinSize() / 2);
+        this->addChild(menu);
+        
+        return true;
     }
     
     void onOpenSettings(CCObject*) {
