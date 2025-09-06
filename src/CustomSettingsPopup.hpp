@@ -6,13 +6,16 @@
 
 using namespace geode::prelude;
 
+// Forward declarations for sub-popups
+class ConditionalRandomizerPopup;
+class LiveRandomizerPopup;
+
 class CustomSettingsPopup : public Popup<> {
 protected:
     bool setup() override;
     
     // Randomizer callbacks
     void onRandomizerToggle(CCObject* sender);
-    void onRandomizerModeToggle(CCObject* sender);
     void onDelaySlider(CCObject* sender);
 
     // open sub-popups
@@ -39,4 +42,33 @@ protected:
     
 public:
     static CustomSettingsPopup* create();
+};
+
+// Conditional Randomizer Sub-Popup
+class ConditionalRandomizerPopup : public Popup<> {
+protected:
+    bool setup() override;
+    void onToggle(CCObject* sender);
+    CCMenuItemToggler* createToggler(std::string settingId, CCPoint position);
+    
+    std::unordered_map<int, std::string> m_tagToSetting;
+    
+public:
+    static ConditionalRandomizerPopup* create();
+};
+
+// Live Randomizer Sub-Popup
+class LiveRandomizerPopup : public Popup<> {
+protected:
+    bool setup() override;
+    void onToggle(CCObject* sender);
+    void onDelaySlider(CCObject* sender);
+    CCMenuItemToggler* createToggler(std::string settingId, CCPoint position);
+    Slider* createSlider(std::string settingId, CCPoint position, float width = 200.0f);
+    
+    std::unordered_map<int, std::string> m_tagToSetting;
+    CCLabelBMFont* m_delayValueLabel = nullptr;
+    
+public:
+    static LiveRandomizerPopup* create();
 };
