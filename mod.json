@@ -18,12 +18,25 @@
 			"description": "Enables the Conditional Icon Randomizer - An icon randomizer mode that only gets activated on specific conditions, configured below.",
 			"default": false
 		},
-		"cond-randomizer-type": {
-			"type": "string",
-			"name": "Icon Randomizer Type",
-			"description": "The type of icon randomizer to use.",
-			"default": "every-gamemode",
-			"one-of": ["every-gamemode", "on-death", "both", "on-click"],
+		"cond-ongamemodechange": {
+			"type": "bool",
+			"name": "Conditional - On Gamemode Change",
+			"description": "Enables randomizing icons on each gamemode change in-level.",
+			"default": true,
+			"enable-if": "cond-ic-randomizer"
+		},
+		"cond-ondeath": {
+			"type": "bool",
+			"name": "Conditional - On Death/Reset",
+			"description": "Enables randomizing icons on each death.",
+			"default": false,
+			"enable-if": "cond-ic-randomizer"
+		},
+		"cond-onclick": {
+			"type": "bool",
+			"name": "Conditional - On Click",
+			"description": "Enables randomizing icons on each click in-level.",
+			"default": false,
 			"enable-if": "cond-ic-randomizer"
 		},
 		"live-ic-randomizer": {
