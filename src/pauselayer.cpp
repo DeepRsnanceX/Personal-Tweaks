@@ -6,7 +6,7 @@
 using namespace geode::prelude;
 
 class $modify(MyPauseLayer, PauseLayer) {
-    void openModSettings(CCObject*) {
+    void openModSettings(CCObject* sender) {
         geode::openSettingsPopup(Mod::get());
     }
 

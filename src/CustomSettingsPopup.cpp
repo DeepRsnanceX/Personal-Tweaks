@@ -36,12 +36,12 @@ bool CustomSettingsPopup::setup() {
 
     // RGB Icons section (left title + two buttons to the right)
     auto rgbSection = createRGBSection();
-    rgbSection->setPosition({centerX, topY - 80.f});
+    rgbSection->setPosition({centerX, topY - 95.f});
     this->m_mainLayer->addChild(rgbSection);
 
     // Custom Colors section stays below RGB (if needed)
     auto customColorsSection = createCustomColorsSection();
-    customColorsSection->setPosition({centerX, topY - 100.0f});
+    customColorsSection->setPosition({centerX, topY - 130.0f});
     this->m_mainLayer->addChild(customColorsSection);
      
     return true;
