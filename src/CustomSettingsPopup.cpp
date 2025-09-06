@@ -122,7 +122,7 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     auto menu = CCMenu::create();
     menu->setContentSize(section->getContentSize());
     menu->setAnchorPoint({1.0f, 0.5f});
-    menu->setPosition({contentSize.width - 10.0f, 0.0f});
+    menu->setPosition({contentSize.width - 10.0f, sectionH / 2.0f});
     menu->setScale(0.7f);
     menu->setID("rgb-menu"_spr);
     menu->setLayout(
@@ -170,7 +170,7 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     auto menu = CCMenu::create();
     menu->setContentSize(section->getContentSize());
     menu->setAnchorPoint({1.0f, 0.5f});
-    menu->setPosition({contentSize.width - 10.0f, 0.0f});
+    menu->setPosition({contentSize.width - 10.0f, sectionH / 2.0f});
     menu->setScale(0.7f);
     menu->setID("customcolors-menu"_spr);
     menu->setLayout(
