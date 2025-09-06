@@ -26,23 +26,22 @@ bool CustomSettingsPopup::setup() {
     
     // No ScrollLayer: create discrete section nodes and place them in the popup
     auto size = contentSize;
-    const float topY = size.height * 0.65f;
-    const float midY = size.height * 0.35f;
+    const float topY = size.height;
     const float centerX = size.width / 2.0f;
 
     // Randomizer section (left title + three buttons to the right)
     auto randomizerSection = createRandomizerSection();
-    randomizerSection->setPosition({centerX, topY});
+    randomizerSection->setPosition({centerX, topY - 60.f});
     this->m_mainLayer->addChild(randomizerSection);
 
     // RGB Icons section (left title + two buttons to the right)
     auto rgbSection = createRGBSection();
-    rgbSection->setPosition({centerX, midY});
+    rgbSection->setPosition({centerX, topY - 80.f});
     this->m_mainLayer->addChild(rgbSection);
 
     // Custom Colors section stays below RGB (if needed)
     auto customColorsSection = createCustomColorsSection();
-    customColorsSection->setPosition({centerX, midY - 70.0f});
+    customColorsSection->setPosition({centerX, topY - 100.0f});
     this->m_mainLayer->addChild(customColorsSection);
      
     return true;
@@ -164,7 +163,7 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     auto title = CCLabelBMFont::create("Custom Colors", "bigFont.fnt");
     title->setAnchorPoint({0.f, 0.5f});
     title->setPosition({10.0f, sectionH / 2.0f});
-    title->setScale(0.5f);
+    title->setScale(0.6f);
     section->addChild(title);
 
     auto menu = CCMenu::create();
