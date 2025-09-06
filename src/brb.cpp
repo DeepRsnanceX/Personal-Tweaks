@@ -26,3 +26,5 @@ class $modify (PlayerObject)
         }
     }
 };
+
+// Also set their content size to 240, 40.

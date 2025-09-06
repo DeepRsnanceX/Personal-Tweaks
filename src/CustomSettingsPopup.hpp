@@ -9,6 +9,10 @@ using namespace geode::prelude;
 // Forward declarations for sub-popups
 class ConditionalRandomizerPopup;
 class LiveRandomizerPopup;
+class ModesPopup;
+class RGBMainPopup;
+class RGBExtrasPopup;
+class CustomColorsPopup;
 
 class CustomSettingsPopup : public Popup<> {
 protected:
@@ -21,6 +25,11 @@ protected:
     // open sub-popups
     void onOpenConditional(CCObject* sender);
     void onOpenLive(CCObject* sender);
+    void onOpenModes(CCObject* sender);
+    void onOpenRGBMain(CCObject* sender);
+    void onOpenRGBExtras(CCObject* sender);
+    void onOpenColors(CCObject* sender);
+    void onOpenParticles(CCObject* sender);
     
     // RGB callbacks
     void onRGBToggle(CCObject* sender);
@@ -42,6 +51,14 @@ protected:
     
 public:
     static CustomSettingsPopup* create();
+};
+
+// Custom Colors popup (Colors / Particles)
+class CustomColorsPopup : public Popup<> {
+protected:
+    bool setup() override;
+public:
+    static CustomColorsPopup* create();
 };
 
 // Conditional Randomizer Sub-Popup
@@ -71,4 +88,41 @@ protected:
     
 public:
     static LiveRandomizerPopup* create();
+};
+
+// Modes popup (holds moved toggles from main Randomizer)
+class ModesPopup : public Popup<> {
+protected:
+    bool setup() override;
+    void onToggle(CCObject* sender);
+    CCMenuItemToggler* createToggler(std::string settingId, CCPoint position);
+
+    std::unordered_map<int, std::string> m_tagToSetting;
+
+public:
+    static ModesPopup* create();
+};
+
+// RGB Main / Extras popups
+class RGBMainPopup : public Popup<> {
+protected:
+    bool setup() override;
+    void onToggle(CCObject* sender);
+    void onSlider(CCObject* sender);
+    CCMenuItemToggler* createToggler(std::string settingId, CCPoint position);
+    Slider* createSlider(std::string settingId, CCPoint position, float width = 200.0f);
+
+    std::unordered_map<int, std::string> m_tagToSetting;
+    CCLabelBMFont* m_valueLabel = nullptr;
+
+public:
+    static RGBMainPopup* create();
+};
+
+class RGBExtrasPopup : public Popup<> {
+protected:
+    bool setup() override;
+
+public:
+    static RGBExtrasPopup* create();
 };
