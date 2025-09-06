@@ -14,6 +14,10 @@ protected:
     void onRandomizerToggle(CCObject* sender);
     void onRandomizerModeToggle(CCObject* sender);
     void onDelaySlider(CCObject* sender);
+
+    // open sub-popups
+    void onOpenConditional(CCObject* sender);
+    void onOpenLive(CCObject* sender);
     
     // RGB callbacks
     void onRGBToggle(CCObject* sender);
