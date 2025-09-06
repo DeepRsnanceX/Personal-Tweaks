@@ -398,7 +398,7 @@ void CustomSettingsPopup::onRGBSaturationSlider(CCObject* sender) {
 
 ConditionalRandomizerPopup* ConditionalRandomizerPopup::create() {
     auto ret = new ConditionalRandomizerPopup();
-    if (ret->initAnchored(320.0f, 200.0f, "SquareThing01.png"_spr)) {
+    if (ret->initAnchored(360.0f, 240.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
     }
@@ -409,45 +409,62 @@ ConditionalRandomizerPopup* ConditionalRandomizerPopup::create() {
 bool ConditionalRandomizerPopup::setup() {
     this->setTitle("Conditional Randomizer");
     
+    auto size = this->m_mainLayer->getContentSize();
+
+    // Menu for interactive elements: give it the popup content size and position its origin
     auto menu = CCMenu::create();
-    // center menu relative to main layer for simpler positioning
-    menu->setPosition(CCPointZero);
+    menu->setContentSize(size);
+    // place menu so its bottom-left aligns relative to the popup center,
+    // this makes child positions computed as (size.width/2 + offset, size.height/2 + offset)
+    menu->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(menu);
     
-    // Main enable toggle (centered)
+    // Node for labels / non-interactive elements
+    auto labelNode = CCNode::create();
+    labelNode->setContentSize(size);
+    labelNode->setPosition({-size.width / 2.0f, -size.height / 2.0f});
+    this->m_mainLayer->addChild(labelNode);
+    
+    // Main enable toggle (label) -- replicate previous offsets but based on container center
     auto enableLabel = CCLabelBMFont::create("Enable Conditional Randomizer", "bigFont.fnt");
-    enableLabel->setPosition({0.0f, 40.0f});
+    enableLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 40.0f});
     enableLabel->setScale(0.6f);
-    this->m_mainLayer->addChild(enableLabel);
+    labelNode->addChild(enableLabel);
     
     auto enableToggler = createToggler("cond-ic-randomizer", {0.0f, 10.0f});
+    // place toggler relative to container center
+    enableToggler->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 10.0f});
     menu->addChild(enableToggler);
     
     // Mode toggles
     std::vector<std::pair<std::string, std::string>> modes = {
-        {"every-gamemode", "Every Gamemode"},
-        {"on-death", "On Death"}, 
-        {"on-click", "On Click"}
+        {"cond-ongamemodechange", "Every Gamemode"},
+        {"cond-ondeath", "On Death"}, 
+        {"cond-onclick", "On Click"}
     };
     
-    // Create labels and note about the string setting
+    // Mode label
     auto modeLabel = CCLabelBMFont::create("Randomizer Modes:", "bigFont.fnt");
-    modeLabel->setPosition({0.0f, -20.0f});
+    modeLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 20.0f});
     modeLabel->setScale(0.6f);
-    this->m_mainLayer->addChild(modeLabel);
+    labelNode->addChild(modeLabel);
     
-    // For now, independent toggles for each mode (centered)
+    // Add each mode: labels in labelNode, toggles in menu (positions replicate prior layout)
     for (int i = 0; i < (int)modes.size(); i++) {
         float y = -50.0f - i * 28.0f;
         
         auto label = CCLabelBMFont::create(modes[i].second.c_str(), "bigFont.fnt");
-        label->setPosition({-60.0f, y});
+        label->setPosition({size.width / 2.0f - 60.0f, size.height / 2.0f + y});
         label->setScale(0.45f);
-        this->m_mainLayer->addChild(label);
+        labelNode->addChild(label);
         
         auto toggler = createToggler(modes[i].first, {60.0f, y});
+        toggler->setPosition({size.width / 2.0f + 60.0f, size.height / 2.0f + y});
         menu->addChild(toggler);
     }
+
+    labelNode->setPosition({0, 9});
+    menu->setPosition({0, 9});
     
     return true;
 }
@@ -528,35 +545,50 @@ LiveRandomizerPopup* LiveRandomizerPopup::create() {
 bool LiveRandomizerPopup::setup() {
     this->setTitle("Live Randomizer");
     
+    auto size = this->m_mainLayer->getContentSize();
+
+    // Menu for interactive elements: sized to popup and positioned so children can use center offsets
     auto menu = CCMenu::create();
-    menu->setPosition(CCPointZero);
+    menu->setContentSize(size);
+    menu->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(menu);
     
-    // Main enable toggle (centered)
+    // Node for labels / non-interactive elements
+    auto labelNode = CCNode::create();
+    labelNode->setContentSize(size);
+    labelNode->setPosition({-size.width / 2.0f, -size.height / 2.0f});
+    this->m_mainLayer->addChild(labelNode);
+    
+    // Main enable toggle (label)
     auto enableLabel = CCLabelBMFont::create("Enable Live Randomizer", "bigFont.fnt");
-    enableLabel->setPosition({0.0f, 40.0f});
+    enableLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 40.0f});
     enableLabel->setScale(0.6f);
-    this->m_mainLayer->addChild(enableLabel);
+    labelNode->addChild(enableLabel);
     
     auto enableToggler = createToggler("live-ic-randomizer", {0.0f, 10.0f});
+    enableToggler->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 10.0f});
     menu->addChild(enableToggler);
     
-    // Delay slider
+    // Delay slider (label in labelNode, slider in menu)
     auto delayLabel = CCLabelBMFont::create("Randomize Delay:", "bigFont.fnt");
-    delayLabel->setPosition({0.0f, -20.0f});
+    delayLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 20.0f});
     delayLabel->setScale(0.5f);
-    this->m_mainLayer->addChild(delayLabel);
+    labelNode->addChild(delayLabel);
     
     auto delaySlider = createSlider("random-delay", {0.0f, -50.0f}, 150.0f);
+    delaySlider->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 50.0f});
     menu->addChild(delaySlider);
     
     // Value display label
     float currentDelay = Mod::get()->getSettingValue<double>("random-delay");
     std::string valueText = "Current: " + std::to_string(currentDelay).substr(0, 4) + "s";
     m_delayValueLabel = CCLabelBMFont::create(valueText.c_str(), "bigFont.fnt");
-    m_delayValueLabel->setPosition({0.0f, -80.0f});
+    m_delayValueLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 80.0f});
     m_delayValueLabel->setScale(0.45f);
-    this->m_mainLayer->addChild(m_delayValueLabel);
+    labelNode->addChild(m_delayValueLabel);
+
+    labelNode->setPosition({0, 9});
+    menu->setPosition({0, 9});
     
     return true;
 }
