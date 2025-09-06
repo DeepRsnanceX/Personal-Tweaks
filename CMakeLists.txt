@@ -10,21 +10,9 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(PersonalTweaks VERSION 1.0.0)
 
-add_library(${PROJECT_NAME} SHARED
-    src/legacytrail.cpp
-    src/brb.cpp
-    src/waveparticlesfix.cpp
-    src/totem.cpp
-    src/legacypulse.cpp
-    src/pauselayer.cpp
-    src/customcolors.cpp
-    src/iconinfogetter.cpp
-    src/stupidassfeatures.cpp
-    src/realrandomizer.cpp
-    src/personalrgb.cpp
-    src/iconrenderer.cpp
-    # Add any extra C++ source files here
-)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 if (NOT DEFINED ENV{GEODE_SDK})
     message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")

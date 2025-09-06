@@ -16,7 +16,7 @@
 			"type": "bool",
 			"name": "Enable Conditional Icon Randomizer",
 			"description": "Enables the Conditional Icon Randomizer - An icon randomizer mode that only gets activated on specific conditions, configured below.",
-			"default": true
+			"default": false
 		},
 		"cond-randomizer-type": {
 			"type": "string",
@@ -56,77 +56,77 @@
             "name": "Randomize Cube",
             "description": "Randomize the cube icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
         "randomize-ship": {
             "type": "bool",
             "name": "Randomize Ship",
             "description": "Randomize the ship icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
         "randomize-ball": {
             "type": "bool",
             "name": "Randomize Ball",
             "description": "Randomize the ball icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
         "randomize-ufo": {
             "type": "bool",
             "name": "Randomize UFO",
             "description": "Randomize the UFO icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
         "randomize-wave": {
             "type": "bool",
             "name": "Randomize Wave",
             "description": "Randomize the wave icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
 		"randomize-robot": {
             "type": "bool",
             "name": "Randomize Robot",
             "description": "Randomize the robot icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
         "randomize-spider": {
             "type": "bool",
             "name": "Randomize Spider",
             "description": "Randomize the spider icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
         "randomize-swing": {
             "type": "bool",
             "name": "Randomize Swing",
             "description": "Randomize the swing icon.",
             "enable-if": "cond-ic-randomizer || live-ic-randomizer",
-            "default": true
+            "default": false
         },
 		"randomize-color1": {
 			"type": "bool",
 			"name": "Randomize Color 1",
 			"description": "Randomize the first color of the icon.",
 			"enable-if": "cond-ic-randomizer || live-ic-randomizer",
-			"default": true
+			"default": false
 		},
 		"randomize-color2": {
 			"type": "bool",
 			"name": "Randomize Color 2",
 			"description": "Randomize the second color of the icon.",
 			"enable-if": "cond-ic-randomizer || live-ic-randomizer",
-			"default": true
+			"default": false
 		},
 		"randomize-glowcolor": {
 			"type": "bool",
 			"name": "Randomize Glow Color",
 			"description": "Randomize the glow color of the icon.",
 			"enable-if": "cond-ic-randomizer || live-ic-randomizer",
-			"default": true
+			"default": false
 		},
 		"rgbicons-title": {
 			"type": "title",
@@ -251,13 +251,13 @@
 			"type": "bool",
 			"name": "Garage: Icon Select Animation",
 			"description": "Enables a small scaling animation + a sound when selecting icons in the Icon Kit.",
-			"default": true
+			"default": false
 		},
 		"ballrot-bug": {
 			"type": "bool",
 			"name": "Gameplay: Ball Rotation Bug",
 			"description": "Replicates the Ball Rotation Bug from older GD versions. \nThis feature is taken from QOLMod.",
-			"default": true
+			"default": false
 		},
 		"iconlist-ft": {
 			"type": "bool",

@@ -508,6 +508,8 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
 
         if (!enableRenderer) return true;
 
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+
         auto rendererButtonsMenu = CCMenu::create();
         rendererButtonsMenu->setLayout(
             ColumnLayout::create()
@@ -544,7 +546,7 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
         );
 
         rendererButtonsMenu->setContentSize({40.f, 100.f});
-        rendererButtonsMenu->setPosition({20.f, 90.f});
+        rendererButtonsMenu->setPosition({winSize.width - 20.f, winSize.height - 15.f});
         rendererButtonsMenu->setID("pt-renderer-buttons-menu"_spr);
         this->addChild(rendererButtonsMenu, 2);
 
