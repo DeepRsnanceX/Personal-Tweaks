@@ -86,7 +86,7 @@ CCNode* CustomSettingsPopup::createRandomizerSection() {
     section->addChild(title);
     
     // Create buttons for Conditional and Live popups using ButtonSprite
-    auto condSpr = ButtonSprite::create("Conditional", "bigFont.fnt", "BlackButton.png"_spr, 0.7f);
+    auto condSpr = ButtonSprite::create("Cond.", "bigFont.fnt", "BlackButton.png"_spr, 0.7f);
     auto conditionalBtn = CCMenuItemSpriteExtra::create(
         condSpr,
         this,
@@ -462,6 +462,7 @@ bool ConditionalRandomizerPopup::setup() {
         
         auto toggler = createToggler(modes[i].first, {60.0f, y});
         toggler->setPosition({size.width / 2.0f + 60.0f, size.height / 2.0f + y});
+        toggler->setScale(0.8f);
         menu->addChild(toggler);
     }
 
@@ -562,29 +563,30 @@ bool LiveRandomizerPopup::setup() {
     labelNode->addChild(enableLabel);
     
     auto enableToggler = createToggler("live-ic-randomizer", {0.0f, 10.0f});
-    enableToggler->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 10.0f});
+    enableToggler->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 5.0f});
     menu->addChild(enableToggler);
     
     // Delay slider (label in labelNode, slider in menu)
-    auto delayLabel = CCLabelBMFont::create("Randomize Delay:", "bigFont.fnt");
-    delayLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 20.0f});
+    auto delayLabel = CCLabelBMFont::create("Randomize Delay:", "goldFont.fnt");
+    delayLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 30.0f + 15.f});
     delayLabel->setScale(0.5f);
     labelNode->addChild(delayLabel);
     
     auto delaySlider = createSlider("random-delay", {0.0f, -50.0f}, 150.0f);
-    delaySlider->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 50.0f});
+    delaySlider->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 50.0f + 15.f});
     menu->addChild(delaySlider);
     
     // Value display label
     float currentDelay = Mod::get()->getSettingValue<double>("random-delay");
-    std::string valueText = "Current: " + std::to_string(currentDelay).substr(0, 4) + "s";
+    std::string valueText = "Current: " + std::to_string(currentDelay).substr(0, 4);
     m_delayValueLabel = CCLabelBMFont::create(valueText.c_str(), "bigFont.fnt");
-    m_delayValueLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 80.0f});
-    m_delayValueLabel->setScale(0.45f);
+    m_delayValueLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 60.0f + 15.f});
+    m_delayValueLabel->setScale(0.3f);
+    m_delayValueLabel->setOpacity(150);
     labelNode->addChild(m_delayValueLabel);
 
-    labelNode->setPosition({0, 9});
-    menu->setPosition({0, 9});
+    labelNode->setPosition({0, 0});
+    menu->setPosition({0, 0});
     
     return true;
 }
