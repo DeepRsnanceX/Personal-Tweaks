@@ -64,6 +64,7 @@ bool CustomSettingsPopup::setup() {
     
     // Set content size and add to scroll layer
     contentNode->setContentSize({contentW, totalHeight});
+    contentNode->setPosition({0, 20.f});
     scrollLayer->m_contentLayer->addChild(contentNode);
     scrollLayer->m_contentLayer->setContentSize({contentW, totalHeight});
 
@@ -444,7 +445,7 @@ bool ConditionalRandomizerPopup::setup() {
     };
     
     // Mode label
-    auto modeLabel = CCLabelBMFont::create("Randomizer Modes:", "bigFont.fnt");
+    auto modeLabel = CCLabelBMFont::create("Randomizer Modes:", "goldFont.fnt");
     modeLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 20.0f});
     modeLabel->setScale(0.6f);
     labelNode->addChild(modeLabel);
@@ -454,7 +455,8 @@ bool ConditionalRandomizerPopup::setup() {
         float y = -50.0f - i * 28.0f;
         
         auto label = CCLabelBMFont::create(modes[i].second.c_str(), "bigFont.fnt");
-        label->setPosition({size.width / 2.0f - 60.0f, size.height / 2.0f + y});
+        label->setPosition({size.width / 2.0f + 30.0f, size.height / 2.0f + y});
+        label->setAnchorPoint({1.f, 0.5f});
         label->setScale(0.45f);
         labelNode->addChild(label);
         
@@ -463,8 +465,8 @@ bool ConditionalRandomizerPopup::setup() {
         menu->addChild(toggler);
     }
 
-    labelNode->setPosition({0, 9});
-    menu->setPosition({0, 9});
+    labelNode->setPosition({0, 20});
+    menu->setPosition({0, 20});
     
     return true;
 }
@@ -483,15 +485,8 @@ CCMenuItemToggler* ConditionalRandomizerPopup::createToggler(std::string setting
     toggler->setTag(tag);
     this->m_tagToSetting[tag] = settingId;
 
-    // Set initial state
-    if (settingId == "cond-ic-randomizer") {
-        bool initial = Mod::get()->getSettingValue<bool>(settingId);
-        toggler->toggle(initial);
-    } else {
-        // For the mode toggles, we'll check against the string setting
-        std::string currentMode = Mod::get()->getSettingValue<std::string>("cond-randomizer-type");
-        toggler->toggle(currentMode == settingId);
-    }
+    bool initial = Mod::get()->getSettingValue<bool>(settingId);
+    toggler->toggle(initial);
 
     toggler->setUserObject(CCString::create(settingId));
     
@@ -520,11 +515,12 @@ void ConditionalRandomizerPopup::onToggle(CCObject* sender) {
     if (settingIdStr == "cond-ic-randomizer") {
         bool newValue = !toggler->isToggled();
         Mod::get()->setSettingValue<bool>(settingIdStr, newValue);
-    } else {
-        // Handle mode selection - set the string setting
-        if (!toggler->isToggled()) {
-            Mod::get()->setSettingValue<std::string>("cond-randomizer-type", settingIdStr);
+        if (newValue) {
+            Mod::get()->setSettingValue<bool>("live-ic-randomizer", !newValue);
         }
+    } else {
+        bool newModeValue = !toggler->isToggled();
+        Mod::get()->setSettingValue<bool>(settingIdStr, newModeValue);
     }
 
     geode::log::debug("ConditionalRandomizer: toggled {} -> {}", settingIdStr, !toggler->isToggled() ? "true" : "false");
@@ -661,6 +657,9 @@ void LiveRandomizerPopup::onToggle(CCObject* sender) {
     
     bool newValue = !toggler->isToggled();
     Mod::get()->setSettingValue<bool>(settingIdStr, newValue);
+    if (newValue) {
+        Mod::get()->setSettingValue<bool>("cond-ic-randomizer", !newValue);
+    }
 
     geode::log::debug("LiveRandomizer: toggled {} -> {}", settingIdStr, newValue ? "true" : "false");
 }

@@ -9,7 +9,7 @@ using namespace geode::prelude;
 auto doCondRandomize  = Mod::get()->getSettingValue<bool>("cond-ic-randomizer");
 auto doLiveRandomize  = Mod::get()->getSettingValue<bool>("live-ic-randomizer");
 auto maxDelay         = Mod::get()->getSettingValue<double>("random-delay");
-auto randomizerType   = Mod::get()->getSettingValue<std::string>("cond-randomizer-type");
+
 auto randomizeCube    = Mod::get()->getSettingValue<bool>("randomize-cube");
 auto randomizeShip    = Mod::get()->getSettingValue<bool>("randomize-ship");
 auto randomizeBall    = Mod::get()->getSettingValue<bool>("randomize-ball");
@@ -22,6 +22,10 @@ auto randomizeCol1    = Mod::get()->getSettingValue<bool>("randomize-color1");
 auto randomizeCol2    = Mod::get()->getSettingValue<bool>("randomize-color2");
 auto randomizeGlowCol = Mod::get()->getSettingValue<bool>("randomize-glowcolor");
 
+auto randOnGamemode = Mod::get()->getSettingValue<bool>("cond-ongamemodechange");
+auto randOnClick    = Mod::get()->getSettingValue<bool>("cond-onclick");
+auto randOnDeath    = Mod::get()->getSettingValue<bool>("cond-ondeath");
+
 $on_mod(Loaded){
     listenForSettingChanges("cond-ic-randomizer", [](bool value) {
         doCondRandomize = value;
@@ -31,9 +35,6 @@ $on_mod(Loaded){
     });
     listenForSettingChanges("random-delay", [](double value) {
         maxDelay = value;
-    });
-    listenForSettingChanges("cond-randomizer-type", [](std::string value) {
-        randomizerType = value;
     });
     listenForSettingChanges("randomize-cube", [](bool value) {
         randomizeCube = value;
@@ -67,6 +68,15 @@ $on_mod(Loaded){
     });
     listenForSettingChanges("randomize-glowcolor", [](bool value) {
         randomizeGlowCol = value;
+    });
+    listenForSettingChanges("cond-ongamemodechange", [](bool value) {
+        randOnGamemode = value;
+    });
+    listenForSettingChanges("cond-onclick", [](bool value) {
+        randOnClick = value;
+    });
+    listenForSettingChanges("cond-ondeath", [](bool value) {
+        randOnDeath = value;
     });
 }
 
@@ -236,8 +246,8 @@ class $modify(RandomizerPlayer, PlayerObject){
 
         auto fields = m_fields.self();
         auto playLayer = PlayLayer::get();
-        bool validRandomModes = randomizerType == "every-gamemode" || randomizerType == "both"; 
-        if (!playLayer || !doCondRandomize || !validRandomModes) return;
+        bool canRandomize = playLayer && doCondRandomize && randOnGamemode;
+        if (!canRandomize) return;
 
         static bool initialized = false;
         if (!initialized) {
@@ -265,8 +275,8 @@ class $modify(RandomizerPlayer, PlayerObject){
         
         auto fields = m_fields.self();
         auto playLayer = PlayLayer::get();
-        bool validRandomModes = randomizerType == "on-click";
-        if (!playLayer || !doCondRandomize || !validRandomModes) return true;
+        bool canRandomize = playLayer && doCondRandomize && randOnClick;
+        if (!canRandomize) return true;
 
         static bool initialized = false;
         if (!initialized) {
@@ -328,9 +338,8 @@ class $modify(RandomizerPL, PlayLayer) {
     void resetLevel() {
 
         auto cube = !m_player1->m_isShip && !m_player1->m_isBall && !m_player1->m_isBird && !m_player1->m_isDart && !m_player1->m_isSwing && !m_player1->m_isRobot && !m_player1->m_isSpider;
-        bool validRandModes = randomizerType == "on-death" || randomizerType == "both";
 
-        if (doCondRandomize && validRandModes) {
+        if (doCondRandomize && randOnDeath) {
             IconRandomizer::init();
             
             if (cube && randomizeCube) {
