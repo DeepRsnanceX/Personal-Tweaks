@@ -546,7 +546,7 @@ class $modify(RendererGarageLayer, GJGarageLayer) {
         );
 
         rendererButtonsMenu->setContentSize({40.f, 100.f});
-        rendererButtonsMenu->setPosition({winSize.width - 20.f, winSize.height - 90.f});
+        rendererButtonsMenu->setPosition({winSize.width - 20.f, 90.f});
         rendererButtonsMenu->setID("pt-renderer-buttons-menu"_spr);
         this->addChild(rendererButtonsMenu, 2);
 
