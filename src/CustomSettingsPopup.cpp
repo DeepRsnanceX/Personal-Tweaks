@@ -762,7 +762,7 @@ class $modify(CustomGarageLayer, GJGarageLayer) {
 // ===== MODES POPUP =====
 ModesPopup* ModesPopup::create() {
     auto ret = new ModesPopup();
-    if (ret->initAnchored(420.0f, 260.0f, "SquareThing01.png"_spr)) {
+    if (ret->initAnchored(350.0f, 250.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
     }
@@ -787,6 +787,7 @@ bool ModesPopup::setup() {
     labelNode->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(labelNode);
 
+    // Icon type toggles
     std::vector<std::pair<std::string, std::string>> iconTypes = {
         {"randomize-cube", "Cube"}, {"randomize-ship", "Ship"},
         {"randomize-ball", "Ball"}, {"randomize-ufo", "UFO"},
@@ -794,15 +795,19 @@ bool ModesPopup::setup() {
         {"randomize-spider", "Spider"}, {"randomize-swing", "Swing"}
     };
 
+    const int cols = 4;
+    const float originalGap = 75.0f;
+    const float horizGap = originalGap - 15.0f; // extra spacing
+    const float startX = -((cols - 1) * horizGap) / 2.0f;
     const float extraGapPerGroup = 24.0f;
 
     for (int i = 0; i < (int)iconTypes.size(); i++) {
-        int row = i / 4;
-        int col = i % 4;
-        float x = -150.0f + col * 100.0f;
+        int row = i / cols;
+        int col = i % cols;
+        float x = startX + col * horizGap;
         float y = 40.0f - row * 35.0f;
-        // extra offset for groups
-        float extraYOffset = (i / 4) * extraGapPerGroup;
+        // add extra downward offset for groups after the first (every 4 items)
+        float extraYOffset = (i / cols) * extraGapPerGroup;
         y -= extraYOffset;
 
         auto label = CCLabelBMFont::create(iconTypes[i].second.c_str(), "bigFont.fnt");
@@ -815,14 +820,19 @@ bool ModesPopup::setup() {
         menu->addChild(toggler);
     }
 
-    // Color toggles
     std::vector<std::pair<std::string, std::string>> colorTypes = {
         {"randomize-color1", "Color 1"}, {"randomize-color2", "Color 2"}, {"randomize-glowcolor", "Glow"}
     };
 
+    const int colorCols = 3;
+    const float colorOriginalGap = 100.0f;
+    const float colorGap = colorOriginalGap - 25.0f; // extra spacing for colors
+    const float startXColor = -((colorCols - 1) * colorGap) / 2.0f;
+    const float colorY = -90.0f;
+
     for (int i = 0; i < (int)colorTypes.size(); i++) {
-        float x = -100.0f + i * 100.0f;
-        float y = -90.0f;
+        float x = startXColor + i * colorGap;
+        float y = colorY;
 
         auto label = CCLabelBMFont::create(colorTypes[i].second.c_str(), "bigFont.fnt");
         label->setPosition({size.width / 2.0f + x, size.height / 2.0f + y + 15.0f});
