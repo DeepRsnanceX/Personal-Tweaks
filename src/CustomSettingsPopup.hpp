@@ -113,7 +113,8 @@ protected:
     Slider* createSlider(std::string settingId, CCPoint position, float width = 200.0f);
 
     std::unordered_map<int, std::string> m_tagToSetting;
-    CCLabelBMFont* m_valueLabel = nullptr;
+    // per-slider value labels (tag -> label) so we can update display when sliders change
+    std::unordered_map<int, CCLabelBMFont*> m_valueLabels;
 
 public:
     static RGBMainPopup* create();
@@ -122,7 +123,10 @@ public:
 class RGBExtrasPopup : public Popup<> {
 protected:
     bool setup() override;
-
+    void onToggle(CCObject* sender);
+    void onSlider(CCObject* sender);
+    std::unordered_map<int, std::string> m_tagToSetting;
+    std::unordered_map<int, CCLabelBMFont*> m_valueLabels;
 public:
     static RGBExtrasPopup* create();
 };
