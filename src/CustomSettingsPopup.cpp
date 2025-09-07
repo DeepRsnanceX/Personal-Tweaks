@@ -9,7 +9,6 @@ using namespace geode::prelude;
 
 CustomSettingsPopup* CustomSettingsPopup::create() {
     auto ret = new CustomSettingsPopup();
-    // use requested background and make popup slightly smaller so the ScrollLayer better covers it
     if (ret->initAnchored(420.0f, 280.0f, "SquareThing02.png"_spr)) {
         ret->autorelease();
         return ret;
@@ -24,22 +23,21 @@ bool CustomSettingsPopup::setup() {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     auto contentSize = this->m_mainLayer->getContentSize();
     
-    // No ScrollLayer: create discrete section nodes and place them in the popup
     auto size = contentSize;
     const float topY = size.height;
     const float centerX = size.width / 2.0f;
 
-    // Randomizer section (left title + three buttons to the right)
+    // Randomizer section
     auto randomizerSection = createRandomizerSection();
     randomizerSection->setPosition({centerX, topY - 60.f});
     this->m_mainLayer->addChild(randomizerSection);
 
-    // RGB Icons section (left title + two buttons to the right)
+    // RGB Icons section
     auto rgbSection = createRGBSection();
     rgbSection->setPosition({centerX, topY - 95.f});
     this->m_mainLayer->addChild(rgbSection);
 
-    // Custom Colors section stays below RGB (if needed)
+    // Custom Colors section
     auto customColorsSection = createCustomColorsSection();
     customColorsSection->setPosition({centerX, topY - 130.0f});
     this->m_mainLayer->addChild(customColorsSection);
@@ -49,21 +47,20 @@ bool CustomSettingsPopup::setup() {
 
 CCNode* CustomSettingsPopup::createRandomizerSection() {
     auto section = CCNode::create();
-    // make section sized to popup and centered content
     auto contentSize = this->m_mainLayer->getContentSize();
     const float sectionH = 40.f;
     section->setContentSize({contentSize.width, sectionH});
     section->setAnchorPoint({0.5f, 0.5f});
     section->setID("randomizer-section"_spr);
 
-    // Left-aligned title
+    // Left-aligned
     auto title = CCLabelBMFont::create("Randomizer", "bigFont.fnt");
     title->setAnchorPoint({0.f, 0.5f});
     title->setPosition({15.0f, sectionH / 2.0f});
     title->setScale(0.7f);
     section->addChild(title);
 
-    // menu holds the sprite buttons (right side)
+    // menu holds sprite buttons
     auto menu = CCMenu::create();
     menu->setContentSize(section->getContentSize());
     menu->setAnchorPoint({1.0f, 0.5f});
@@ -151,8 +148,7 @@ CCNode* CustomSettingsPopup::createRGBSection() {
 }
  
  CCNode* CustomSettingsPopup::createCustomColorsSection() {
-      auto section = CCNode::create();
-    // make this section like the others and add two buttons that open its popup
+    auto section = CCNode::create();
     auto contentSize = this->m_mainLayer->getContentSize();
     const float sectionH = 40.f;
     section->setContentSize({contentSize.width, sectionH});
@@ -221,7 +217,6 @@ CCNode* CustomSettingsPopup::createRGBSection() {
      CustomColorsPopup::create()->show();
  }
  
- // [Rest of the helper methods remain the same]
  CCMenuItemToggler* CustomSettingsPopup::createToggler(std::string settingId, CCPoint position) {
      auto offSprite = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
      auto onSprite = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
@@ -260,7 +255,7 @@ Slider* CustomSettingsPopup::createSlider(std::string settingId, CCPoint positio
         m_thumb->setTag(tag);
     }
     
-    // Set initial value based on setting type
+    // Set initial value
     if (settingId == "random-delay") {
         float value = Mod::get()->getSettingValue<double>(settingId);
         slider->setValue((value - 0.1f) / (70.0f - 0.1f));
@@ -384,32 +379,28 @@ bool ConditionalRandomizerPopup::setup() {
     
     auto size = this->m_mainLayer->getContentSize();
 
-    // Menu for interactive elements: give it the popup content size and position its origin
+    // Menu for interactive elements
     auto menu = CCMenu::create();
     menu->setContentSize(size);
-    // place menu so its bottom-left aligns relative to the popup center,
-    // this makes child positions computed as (size.width/2 + offset, size.height/2 + offset)
     menu->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(menu);
     
-    // Node for labels / non-interactive elements
+    // Node for labels
     auto labelNode = CCNode::create();
     labelNode->setContentSize(size);
     labelNode->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(labelNode);
     
-    // Main enable toggle (label) -- replicate previous offsets but based on container center
+    // Main enable toggle (label)
     auto enableLabel = CCLabelBMFont::create("Enable Conditional Randomizer", "bigFont.fnt");
     enableLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 40.0f});
     enableLabel->setScale(0.6f);
     labelNode->addChild(enableLabel);
     
     auto enableToggler = createToggler("cond-ic-randomizer", {0.0f, 10.0f});
-    // place toggler relative to container center
     enableToggler->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 10.0f});
     menu->addChild(enableToggler);
     
-    // Mode toggles
     std::vector<std::pair<std::string, std::string>> modes = {
         {"cond-ongamemodechange", "Every Gamemode"},
         {"cond-ondeath", "On Death"}, 
@@ -422,7 +413,6 @@ bool ConditionalRandomizerPopup::setup() {
     modeLabel->setScale(0.6f);
     labelNode->addChild(modeLabel);
     
-    // Add each mode: labels in labelNode, toggles in menu (positions replicate prior layout)
     for (int i = 0; i < (int)modes.size(); i++) {
         float y = -50.0f - i * 28.0f;
         
@@ -516,19 +506,19 @@ bool LiveRandomizerPopup::setup() {
     
     auto size = this->m_mainLayer->getContentSize();
 
-    // Menu for interactive elements: sized to popup and positioned so children can use center offsets
+    // Menu for interactive elements
     auto menu = CCMenu::create();
     menu->setContentSize(size);
     menu->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(menu);
     
-    // Node for labels / non-interactive elements
+    // Node for labels
     auto labelNode = CCNode::create();
     labelNode->setContentSize(size);
     labelNode->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(labelNode);
     
-    // Main enable toggle (label)
+    // Main enable toggle label
     auto enableLabel = CCLabelBMFont::create("Enable Live Randomizer", "bigFont.fnt");
     enableLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 40.0f});
     enableLabel->setScale(0.6f);
@@ -538,7 +528,7 @@ bool LiveRandomizerPopup::setup() {
     enableToggler->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f + 5.0f});
     menu->addChild(enableToggler);
     
-    // Delay slider (label in labelNode, slider in menu)
+    // Delay slider
     auto delayLabel = CCLabelBMFont::create("Randomize Delay:", "goldFont.fnt");
     delayLabel->setPosition({size.width / 2.0f + 0.0f, size.height / 2.0f - 30.0f});
     delayLabel->setScale(0.5f);
@@ -678,7 +668,11 @@ void LiveRandomizerPopup::onDelaySlider(CCObject* sender) {
     }
 }
 
-// ===== MENU LAYER MODIFICATIONS =====
+// ----------------------
+//
+// ===== MENU HOOKS =====
+// 
+// ----------------------
 
 // Add button to MenuLayer
 class $modify(CustomMenuLayer, MenuLayer) {
@@ -709,7 +703,6 @@ class $modify(CustomMenuLayer, MenuLayer) {
     }
 };
 
-// Add button to PauseLayer
 class $modify(CustomPauseLayer, PauseLayer) {
     void customSetup() {
         PauseLayer::customSetup();
@@ -737,7 +730,6 @@ class $modify(CustomPauseLayer, PauseLayer) {
     }
 };
 
-// Add button to GJGarageLayer
 class $modify(CustomGarageLayer, GJGarageLayer) {
     bool init() {
         if (!GJGarageLayer::init()) return false;
@@ -783,20 +775,18 @@ bool ModesPopup::setup() {
 
     auto size = this->m_mainLayer->getContentSize();
 
-    // Menu for togglers (interactive items)
+    // Menu for togglers
     auto menu = CCMenu::create();
     menu->setContentSize(size);
-    // position so child coordinates can be expressed as (size.width/2 + offset, size.height/2 + offset)
     menu->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(menu);
 
-    // Node for labels / non-interactive elements
+    // Node for labels
     auto labelNode = CCNode::create();
     labelNode->setContentSize(size);
     labelNode->setPosition({-size.width / 2.0f, -size.height / 2.0f});
     this->m_mainLayer->addChild(labelNode);
 
-    // Icon type toggles (arranged in rows)
     std::vector<std::pair<std::string, std::string>> iconTypes = {
         {"randomize-cube", "Cube"}, {"randomize-ship", "Ship"},
         {"randomize-ball", "Ball"}, {"randomize-ufo", "UFO"},
@@ -804,7 +794,6 @@ bool ModesPopup::setup() {
         {"randomize-spider", "Spider"}, {"randomize-swing", "Swing"}
     };
 
-    // extra vertical offset added for each group of 4 items (tweak this value)
     const float extraGapPerGroup = 24.0f;
 
     for (int i = 0; i < (int)iconTypes.size(); i++) {
@@ -812,7 +801,7 @@ bool ModesPopup::setup() {
         int col = i % 4;
         float x = -150.0f + col * 100.0f;
         float y = 40.0f - row * 35.0f;
-        // add extra downward offset for groups after the first (every 4 items)
+        // extra offset for groups
         float extraYOffset = (i / 4) * extraGapPerGroup;
         y -= extraYOffset;
 
@@ -822,7 +811,6 @@ bool ModesPopup::setup() {
         labelNode->addChild(label);
 
         auto toggler = createToggler(iconTypes[i].first, {x, y - 5.0f});
-        // place toggler relative to container center
         toggler->setPosition({size.width / 2.0f + x, size.height / 2.0f + y - 5.0f});
         menu->addChild(toggler);
     }
@@ -846,7 +834,6 @@ bool ModesPopup::setup() {
         menu->addChild(toggler);
     }
 
-    // small nudge if you want space from top
     labelNode->setPosition({0, 15});
     menu->setPosition({0, 15});
 
@@ -891,7 +878,6 @@ void ModesPopup::onToggle(CCObject* sender) {
 // ===== RGB MAIN / EXTRAS POPUPS =====
 RGBMainPopup* RGBMainPopup::create() {
     auto ret = new RGBMainPopup();
-    // wider popup to fit two columns + sliders
     if (ret->initAnchored(420.0f, 280.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
@@ -957,7 +943,7 @@ bool RGBMainPopup::setup() {
     this->setTitle("RGB Icons - Main");
     auto size = this->m_mainLayer->getContentSize();
 
-    // containers (children use center-relative coords)
+    // containers
     auto menu = CCMenu::create();
     menu->setContentSize(size);
     this->m_mainLayer->addChild(menu);
@@ -966,11 +952,9 @@ bool RGBMainPopup::setup() {
     labelNode->setContentSize(size);
     this->m_mainLayer->addChild(labelNode);
 
-    // center of the parent (use content size directly)
     const float midX = size.width / 2.0f;
     const float midY = size.height / 2.0f;
 
-    // layout coords (offsets from center)
     const float sidesPadding = 95.f;
     const float fuck = 9.f;
     const float leftX = -140.0f;
@@ -981,7 +965,7 @@ bool RGBMainPopup::setup() {
     const float speedY = -84.0f;   // rgb speed center row
     const float nameLabelNudge = 18.0f; // move name labels upward
 
-    // Color 1 column (positions are relative to the popup center via midX/midY)
+    // Color 1 column
     auto col1Title = CCLabelBMFont::create("Color 1", "bigFont.fnt");
     col1Title->setPosition({midX - sidesPadding, midY + topY + nameLabelNudge});
     col1Title->setScale(0.5f);
@@ -1073,7 +1057,7 @@ bool RGBMainPopup::setup() {
         this->m_valueLabels[bright2Tag] = vl;
     }
 
-    // RGB speed centered
+    // RGB speed
     auto speedLabel = CCLabelBMFont::create("RGB Speed", "bigFont.fnt");
     speedLabel->setPosition({midX, midY + speedY + nameLabelNudge - fuck*1.5f});
     speedLabel->setScale(0.45f);
@@ -1093,14 +1077,12 @@ bool RGBMainPopup::setup() {
         this->m_valueLabels[speedTag] = vl;
     }
 
-    // finally anchor containers to center (0,0) so everything is node-relative
     menu->setPosition({0, 0});
     labelNode->setPosition({0, 0});
 
     return true;
 }
 
-// update handler: update value labels when sliders change
 void RGBMainPopup::onSlider(CCObject* sender) {
     auto slider = dynamic_cast<Slider*>(sender);
     CCObject* userObj = nullptr;
@@ -1187,7 +1169,7 @@ bool RGBExtrasPopup::setup() {
     this->setTitle("RGB Icons - Extras");
     auto size = this->m_mainLayer->getContentSize();
 
-    // containers (children use center-relative coords)
+    // containers
     auto menu = CCMenu::create();
     menu->setContentSize(size);
     this->m_mainLayer->addChild(menu);
@@ -1196,11 +1178,9 @@ bool RGBExtrasPopup::setup() {
     labelNode->setContentSize(size);
     this->m_mainLayer->addChild(labelNode);
 
-    // center of parent
     const float midX = size.width / 2.0f;
     const float midY = size.height / 2.0f;
 
-    // toggles layout (center-relative offsets)
     std::vector<std::pair<std::string, std::string>> extras = {
         {"rgb-wave", "RGB Wave"},
         {"rgb-trail", "RGB Trail"},
@@ -1212,7 +1192,7 @@ bool RGBExtrasPopup::setup() {
     const float leftX = -120.0f;
     const float rightX = 120.0f;
     const float startY = 72.0f;
-    const float rowGap = 25.0f; // reduced by 5 as requested
+    const float rowGap = 25.0f;
     const float fixCenter = 35.f;
 
     for (size_t i = 0; i < extras.size(); ++i) {
@@ -1239,7 +1219,7 @@ bool RGBExtrasPopup::setup() {
         menu->addChild(toggler);
     }
 
-    // p2-distance slider (below toggles)
+    // p2-distance slider
     const float sliderY = startY - extras.size() * rowGap - 30.0f;
     auto pdLabel = CCLabelBMFont::create("Col2 Distance", "bigFont.fnt");
     pdLabel->setPosition({midX, midY + sliderY + 19.0f});
@@ -1265,7 +1245,6 @@ bool RGBExtrasPopup::setup() {
     labelNode->addChild(pdValueLabel);
     this->m_valueLabels[pdTag] = pdValueLabel;
 
-    // set containers to center (0,0) after everything added
     menu->setPosition({0, -5});
     labelNode->setPosition({0, -5});
 
