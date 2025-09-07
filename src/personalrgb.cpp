@@ -8,8 +8,12 @@ auto mod = Mod::get();
 bool doCol1 = mod->getSettingValue<bool>("rgb-col1");
 bool doCol2 = mod->getSettingValue<bool>("rgb-col2");
 bool ignoreP2 = mod->getSettingValue<bool>("ignore-p2");
+bool betterImmersionMode = mod->getSettingValue<bool>("better-immersion-mode");
 float sat = mod->getSettingValue<double>("rgb-saturation");
 float sat2 = mod->getSettingValue<double>("rgb-saturation2");
+float bright1 = mod->getSettingValue<double>("rgb-brightness1");
+float bright2 = mod->getSettingValue<double>("rgb-brightness2");
+float p2Distance = mod->getSettingValue<double>("p2-distance");
 float rgbSpeed = mod->getSettingValue<double>("rgb-speed");
 
 $on_mod(Loaded){
@@ -30,6 +34,18 @@ $on_mod(Loaded){
     });
     listenForSettingChanges("rgb-speed", [](double value) {
         rgbSpeed = value;
+    });
+    listenForSettingChanges("rgb-brightness1", [](double value) {
+        bright1 = value;
+    });
+    listenForSettingChanges("rgb-brightness2", [](double value) {
+        bright2 = value;
+    });
+    listenForSettingChanges("p2-distance", [](double value) {
+        p2Distance = value;
+    });
+    listenForSettingChanges("better-immersion-mode", [](bool value) {
+        betterImmersionMode = value;
     });
 }
 
@@ -76,10 +92,10 @@ class $modify(RGBPlayerObject, PlayerObject) {
         fld->rgbTimer += p0;
 
         float hue1 = fmod(fld->rgbTimer / cycleDuration, 1.f);
-        float hue2 = fmod(hue1 + 0.5f, 1.f);
+        float hue2 = fmod(hue1 + p2Distance, 1.f);
 
-        auto [r, g, b] = hsvToRgbRaw(hue1, sat, 1.f);
-        auto [r2, g2, b2] = hsvToRgbRaw(hue2, sat2, 1.f);
+        auto [r, g, b] = hsvToRgbRaw(hue1, sat, bright1);
+        auto [r2, g2, b2] = hsvToRgbRaw(hue2, sat2, bright2);
 
         cocos2d::ccColor4F colorForParticle({
             r / 255.0f,

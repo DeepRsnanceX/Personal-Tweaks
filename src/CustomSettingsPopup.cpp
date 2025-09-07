@@ -77,19 +77,19 @@ CCNode* CustomSettingsPopup::createRandomizerSection() {
     );
     section->addChild(menu);
 
-    auto condSpr = ButtonSprite::create("Cond.", "bigFont.fnt", "TransparentButtonThing.png"_spr, 0.7f);
+    auto condSpr = ButtonSprite::create("Cond.", "bigFont.fnt", "transparentButtonThing.png"_spr, 0.7f);
     auto conditionalBtn = CCMenuItemSpriteExtra::create(condSpr, this, menu_selector(CustomSettingsPopup::onOpenConditional));
     conditionalBtn->setScale(0.8f);
     conditionalBtn->setID("randomizer-cond-btn"_spr);
     menu->addChild(conditionalBtn);
 
-    auto liveSpr = ButtonSprite::create("Live", "bigFont.fnt", "TransparentButtonThing.png"_spr, 0.7f);
+    auto liveSpr = ButtonSprite::create("Live", "bigFont.fnt", "transparentButtonThing.png"_spr, 0.7f);
     auto liveBtn = CCMenuItemSpriteExtra::create(liveSpr, this, menu_selector(CustomSettingsPopup::onOpenLive));
     liveBtn->setScale(0.8f);
     liveBtn->setID("randomizer-live-btn"_spr);
     menu->addChild(liveBtn);
 
-    auto modesSpr = ButtonSprite::create("Modes", "bigFont.fnt", "TransparentButtonThing.png"_spr, 0.7f);
+    auto modesSpr = ButtonSprite::create("Modes", "bigFont.fnt", "transparentButtonThing.png"_spr, 0.7f);
     auto modesBtn = CCMenuItemSpriteExtra::create(modesSpr, this, menu_selector(CustomSettingsPopup::onOpenModes));
     modesBtn->setScale(0.8f);
     modesBtn->setID("randomizer-modes-btn"_spr);
@@ -131,13 +131,13 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     );
     section->addChild(menu);
 
-    auto mainSpr = ButtonSprite::create("Main", "bigFont.fnt", "TransparentButtonThing.png"_spr, 0.7f);
+    auto mainSpr = ButtonSprite::create("Main", "bigFont.fnt", "transparentButtonThing.png"_spr, 0.7f);
     auto mainBtn = CCMenuItemSpriteExtra::create(mainSpr, this, menu_selector(CustomSettingsPopup::onOpenRGBMain));
     mainBtn->setScale(0.8f);
     mainBtn->setID("rgb-main-btn"_spr);
     menu->addChild(mainBtn);
 
-    auto extrasSpr = ButtonSprite::create("Extras", "bigFont.fnt", "TransparentButtonThing.png"_spr, 0.7f);
+    auto extrasSpr = ButtonSprite::create("Extras", "bigFont.fnt", "transparentButtonThing.png"_spr, 0.7f);
     auto extrasBtn = CCMenuItemSpriteExtra::create(extrasSpr, this, menu_selector(CustomSettingsPopup::onOpenRGBExtras));
     extrasBtn->setScale(0.8f);
     extrasBtn->setID("rgb-extras-btn"_spr);
@@ -178,13 +178,13 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     );
     section->addChild(menu);
 
-    auto colorsSpr = ButtonSprite::create("Colors", "bigFont.fnt", "TransparentButtonThing.png"_spr, 0.7f);
+    auto colorsSpr = ButtonSprite::create("Colors", "bigFont.fnt", "transparentButtonThing.png"_spr, 0.7f);
     auto colorsBtn = CCMenuItemSpriteExtra::create(colorsSpr, this, menu_selector(CustomSettingsPopup::onOpenColors));
     colorsBtn->setScale(0.8f);
     colorsBtn->setID("customcolors-colors-btn"_spr);
     menu->addChild(colorsBtn);
 
-    auto particlesSpr = ButtonSprite::create("Particles", "bigFont.fnt", "TransparentButtonThing.png"_spr, 0.7f);
+    auto particlesSpr = ButtonSprite::create("Particles", "bigFont.fnt", "transparentButtonThing.png"_spr, 0.7f);
     auto particlesBtn = CCMenuItemSpriteExtra::create(particlesSpr, this, menu_selector(CustomSettingsPopup::onOpenParticles));
     particlesBtn->setScale(0.8f);
     particlesBtn->setID("customcolors-particles-btn"_spr);
