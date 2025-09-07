@@ -59,7 +59,7 @@ CCNode* CustomSettingsPopup::createRandomizerSection() {
     // Left-aligned title
     auto title = CCLabelBMFont::create("Randomizer", "bigFont.fnt");
     title->setAnchorPoint({0.f, 0.5f});
-    title->setPosition({10.0f, sectionH / 2.0f});
+    title->setPosition({15.0f, sectionH / 2.0f});
     title->setScale(0.7f);
     section->addChild(title);
 
@@ -113,7 +113,7 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     // Title left
     auto title = CCLabelBMFont::create("RGB Icons", "bigFont.fnt");
     title->setAnchorPoint({0.f, 0.5f});
-    title->setPosition({10.0f, sectionH / 2.0f});
+    title->setPosition({15.0f, sectionH / 2.0f});
     title->setScale(0.7f);
     section->addChild(title);
 
@@ -162,7 +162,7 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     // Section title
     auto title = CCLabelBMFont::create("Custom Colors", "bigFont.fnt");
     title->setAnchorPoint({0.f, 0.5f});
-    title->setPosition({10.0f, sectionH / 2.0f});
+    title->setPosition({15.0f, sectionH / 2.0f});
     title->setScale(0.6f);
     section->addChild(title);
 
@@ -805,7 +805,7 @@ bool ModesPopup::setup() {
     };
 
     // extra vertical offset added for each group of 4 items (tweak this value)
-    const float extraGapPerGroup = 18.0f;
+    const float extraGapPerGroup = 24.0f;
 
     for (int i = 0; i < (int)iconTypes.size(); i++) {
         int row = i / 4;
@@ -817,7 +817,7 @@ bool ModesPopup::setup() {
         y -= extraYOffset;
 
         auto label = CCLabelBMFont::create(iconTypes[i].second.c_str(), "bigFont.fnt");
-        label->setPosition({size.width / 2.0f + x, size.height / 2.0f + y + 15.0f});
+        label->setPosition({size.width / 2.0f + x, size.height / 2.0f + y + 20.0f});
         label->setScale(0.45f);
         labelNode->addChild(label);
 
@@ -834,7 +834,7 @@ bool ModesPopup::setup() {
 
     for (int i = 0; i < (int)colorTypes.size(); i++) {
         float x = -100.0f + i * 100.0f;
-        float y = -60.0f;
+        float y = -90.0f;
 
         auto label = CCLabelBMFont::create(colorTypes[i].second.c_str(), "bigFont.fnt");
         label->setPosition({size.width / 2.0f + x, size.height / 2.0f + y + 15.0f});
@@ -847,8 +847,8 @@ bool ModesPopup::setup() {
     }
 
     // small nudge if you want space from top
-    labelNode->setPosition({0, 20});
-    menu->setPosition({0, 20});
+    labelNode->setPosition({0, 15});
+    menu->setPosition({0, 15});
 
     return true;
 }
@@ -892,7 +892,7 @@ void ModesPopup::onToggle(CCObject* sender) {
 RGBMainPopup* RGBMainPopup::create() {
     auto ret = new RGBMainPopup();
     // wider popup to fit two columns + sliders
-    if (ret->initAnchored(480.0f, 300.0f, "SquareThing01.png"_spr)) {
+    if (ret->initAnchored(420.0f, 280.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
     }
@@ -957,6 +957,7 @@ bool RGBMainPopup::setup() {
     this->setTitle("RGB Icons - Main");
     auto size = this->m_mainLayer->getContentSize();
 
+    // containers (children use center-relative coords)
     auto menu = CCMenu::create();
     menu->setContentSize(size);
     this->m_mainLayer->addChild(menu);
@@ -965,8 +966,13 @@ bool RGBMainPopup::setup() {
     labelNode->setContentSize(size);
     this->m_mainLayer->addChild(labelNode);
 
-    // layout coordinates (relative offsets from center)
-    // increased vertical spacing and name labels moved up
+    // center of the parent (use content size directly)
+    const float midX = size.width / 2.0f;
+    const float midY = size.height / 2.0f;
+
+    // layout coords (offsets from center)
+    const float sidesPadding = 95.f;
+    const float fuck = 9.f;
     const float leftX = -140.0f;
     const float rightX = 140.0f;
     const float topY = 72.0f;      // toggler row
@@ -974,52 +980,48 @@ bool RGBMainPopup::setup() {
     const float brightY = -18.0f;  // brightness slider row
     const float speedY = -84.0f;   // rgb speed center row
     const float nameLabelNudge = 18.0f; // move name labels upward
-    const float elementVertGap = 18.0f; // additional spacing between elements (tweak as needed)
 
-    // Color 1 column
+    // Color 1 column (positions are relative to the popup center via midX/midY)
     auto col1Title = CCLabelBMFont::create("Color 1", "bigFont.fnt");
-    col1Title->setPosition({leftX, topY + nameLabelNudge});
+    col1Title->setPosition({midX - sidesPadding, midY + topY + nameLabelNudge});
     col1Title->setScale(0.5f);
     labelNode->addChild(col1Title);
 
-    auto col1Toggler = createToggler("rgb-col1", {leftX, topY - 15.0f});
-    col1Toggler->setPosition({leftX, topY - 15.0f});
+    auto col1Toggler = createToggler("rgb-col1", {leftX, topY - 7.0f});
+    col1Toggler->setPosition({midX - sidesPadding, midY + topY - 7.0f});
     menu->addChild(col1Toggler);
 
-    // Saturation 1
     auto sat1Label = CCLabelBMFont::create("Saturation", "bigFont.fnt");
-    sat1Label->setPosition({leftX, satY + nameLabelNudge});
+    sat1Label->setPosition({midX - sidesPadding, midY + satY + nameLabelNudge - fuck});
     sat1Label->setScale(0.45f);
     labelNode->addChild(sat1Label);
 
     auto sat1Slider = createSlider("rgb-saturation", {leftX, satY}, 140.0f);
-    sat1Slider->setPosition({leftX, satY});
+    sat1Slider->setPosition({midX - sidesPadding, midY + satY - fuck});
     menu->addChild(sat1Slider);
-    // value label under slider
     int sat1Tag = sat1Slider->getTag();
     {
         auto vl = CCLabelBMFont::create(std::to_string(Mod::get()->getSettingValue<double>("rgb-saturation")).substr(0,4).c_str(), "bigFont.fnt");
-        vl->setPosition({leftX, satY - 18.0f});
-        vl->setScale(0.4f);
+        vl->setPosition({midX - sidesPadding, midY + satY - 18.0f - fuck});
+        vl->setScale(0.3f);
         vl->setOpacity(150);
         labelNode->addChild(vl);
         this->m_valueLabels[sat1Tag] = vl;
     }
 
-    // Brightness 1
     auto bright1Label = CCLabelBMFont::create("Brightness", "bigFont.fnt");
-    bright1Label->setPosition({leftX, brightY + nameLabelNudge});
+    bright1Label->setPosition({midX - sidesPadding, midY + brightY + nameLabelNudge - fuck*2 - 5.f});
     bright1Label->setScale(0.45f);
     labelNode->addChild(bright1Label);
 
     auto bright1Slider = createSlider("rgb-brightness1", {leftX, brightY}, 140.0f);
-    bright1Slider->setPosition({leftX, brightY});
+    bright1Slider->setPosition({midX - sidesPadding, midY + brightY - fuck*2 - 5.f});
     menu->addChild(bright1Slider);
     int bright1Tag = bright1Slider->getTag();
     {
         auto vl = CCLabelBMFont::create(std::to_string(Mod::get()->getSettingValue<double>("rgb-brightness1")).substr(0,4).c_str(), "bigFont.fnt");
-        vl->setPosition({leftX, brightY - 18.0f});
-        vl->setScale(0.4f);
+        vl->setPosition({midX - sidesPadding, midY + brightY - 18.0f - fuck*2 - 5.f});
+        vl->setScale(0.3f);
         vl->setOpacity(150);
         labelNode->addChild(vl);
         this->m_valueLabels[bright1Tag] = vl;
@@ -1027,47 +1029,45 @@ bool RGBMainPopup::setup() {
 
     // Color 2 column
     auto col2Title = CCLabelBMFont::create("Color 2", "bigFont.fnt");
-    col2Title->setPosition({rightX, topY + nameLabelNudge});
+    col2Title->setPosition({midX + sidesPadding, midY + topY + nameLabelNudge});
     col2Title->setScale(0.5f);
     labelNode->addChild(col2Title);
 
-    auto col2Toggler = createToggler("rgb-col2", {rightX, topY - 15.0f});
-    col2Toggler->setPosition({rightX, topY - 15.0f});
+    auto col2Toggler = createToggler("rgb-col2", {rightX, topY - 7.0f});
+    col2Toggler->setPosition({midX + sidesPadding, midY + topY - 7.0f});
     menu->addChild(col2Toggler);
 
-    // Saturation 2
     auto sat2Label = CCLabelBMFont::create("Saturation", "bigFont.fnt");
-    sat2Label->setPosition({rightX, satY + nameLabelNudge});
+    sat2Label->setPosition({midX + sidesPadding, midY + satY + nameLabelNudge - fuck});
     sat2Label->setScale(0.45f);
     labelNode->addChild(sat2Label);
 
     auto sat2Slider = createSlider("rgb-saturation2", {rightX, satY}, 140.0f);
-    sat2Slider->setPosition({rightX, satY});
+    sat2Slider->setPosition({midX + sidesPadding, midY + satY - fuck});
     menu->addChild(sat2Slider);
     int sat2Tag = sat2Slider->getTag();
     {
         auto vl = CCLabelBMFont::create(std::to_string(Mod::get()->getSettingValue<double>("rgb-saturation2")).substr(0,4).c_str(), "bigFont.fnt");
-        vl->setPosition({rightX, satY - 18.0f});
-        vl->setScale(0.4f);
+        vl->setPosition({midX + sidesPadding, midY + satY - 18.0f - fuck});
+        vl->setScale(0.3f);
         vl->setOpacity(150);
         labelNode->addChild(vl);
         this->m_valueLabels[sat2Tag] = vl;
     }
 
-    // Brightness 2
     auto bright2Label = CCLabelBMFont::create("Brightness", "bigFont.fnt");
-    bright2Label->setPosition({rightX, brightY + nameLabelNudge});
+    bright2Label->setPosition({midX + sidesPadding, midY + brightY + nameLabelNudge - fuck*2 - 5.f});
     bright2Label->setScale(0.45f);
     labelNode->addChild(bright2Label);
 
     auto bright2Slider = createSlider("rgb-brightness2", {rightX, brightY}, 140.0f);
-    bright2Slider->setPosition({rightX, brightY});
+    bright2Slider->setPosition({midX + sidesPadding, midY + brightY - fuck*2 - 5.f});
     menu->addChild(bright2Slider);
     int bright2Tag = bright2Slider->getTag();
     {
         auto vl = CCLabelBMFont::create(std::to_string(Mod::get()->getSettingValue<double>("rgb-brightness2")).substr(0,4).c_str(), "bigFont.fnt");
-        vl->setPosition({rightX, brightY - 18.0f});
-        vl->setScale(0.4f);
+        vl->setPosition({midX + sidesPadding, midY + brightY - 18.0f - fuck*2 - 5.f});
+        vl->setScale(0.3f);
         vl->setOpacity(150);
         labelNode->addChild(vl);
         this->m_valueLabels[bright2Tag] = vl;
@@ -1075,28 +1075,28 @@ bool RGBMainPopup::setup() {
 
     // RGB speed centered
     auto speedLabel = CCLabelBMFont::create("RGB Speed", "bigFont.fnt");
-    speedLabel->setPosition({0.0f, speedY + nameLabelNudge});
+    speedLabel->setPosition({midX, midY + speedY + nameLabelNudge - fuck*1.5f});
     speedLabel->setScale(0.45f);
     labelNode->addChild(speedLabel);
 
     auto speedSlider = createSlider("rgb-speed", {0.0f, speedY}, 240.0f);
-    speedSlider->setPosition({0.0f, speedY});
+    speedSlider->setPosition({midX, midY + speedY - fuck*1.5f});
     menu->addChild(speedSlider);
     int speedTag = speedSlider->getTag();
     {
         float initSpeed = Mod::get()->getSettingValue<double>("rgb-speed");
         auto vl = CCLabelBMFont::create(std::to_string(initSpeed).substr(0,4).c_str(), "bigFont.fnt");
-        vl->setPosition({0.0f, speedY - 18.0f});
-        vl->setScale(0.4f);
+        vl->setPosition({midX, midY + speedY - 18.0f - fuck*1.5f});
+        vl->setScale(0.3f);
         vl->setOpacity(150);
         labelNode->addChild(vl);
         this->m_valueLabels[speedTag] = vl;
     }
 
+    // finally anchor containers to center (0,0) so everything is node-relative
     menu->setPosition({0, 0});
     labelNode->setPosition({0, 0});
 
-    // done
     return true;
 }
 
@@ -1175,7 +1175,7 @@ void RGBMainPopup::onToggle(CCObject* sender) {
 // ===== RGB EXTRAS POPUP =====
 RGBExtrasPopup* RGBExtrasPopup::create() {
     auto ret = new RGBExtrasPopup();
-    if (ret->initAnchored(380.0f, 220.0f, "SquareThing01.png"_spr)) {
+    if (ret->initAnchored(280.f, 250.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
     }
@@ -1187,6 +1187,7 @@ bool RGBExtrasPopup::setup() {
     this->setTitle("RGB Icons - Extras");
     auto size = this->m_mainLayer->getContentSize();
 
+    // containers (children use center-relative coords)
     auto menu = CCMenu::create();
     menu->setContentSize(size);
     this->m_mainLayer->addChild(menu);
@@ -1195,23 +1196,30 @@ bool RGBExtrasPopup::setup() {
     labelNode->setContentSize(size);
     this->m_mainLayer->addChild(labelNode);
 
-    // toggles - layout with more vertical spacing and smaller togglers
+    // center of parent
+    const float midX = size.width / 2.0f;
+    const float midY = size.height / 2.0f;
+
+    // toggles layout (center-relative offsets)
     std::vector<std::pair<std::string, std::string>> extras = {
         {"rgb-wave", "RGB Wave"},
         {"rgb-trail", "RGB Trail"},
         {"rgb-dash", "RGB Dash"},
-        {"better-immersion-mode", "RGB Immersion Mode"},
-        {"ignore-p2", "Ignore Player 2"}
+        {"better-immersion-mode", "Immersion Mode"},
+        {"ignore-p2", "Ignore P2"}
     };
 
     const float leftX = -120.0f;
     const float rightX = 120.0f;
     const float startY = 72.0f;
-    const float rowGap = 36.0f; // increased vertical spacing
+    const float rowGap = 25.0f; // reduced by 5 as requested
+    const float fixCenter = 35.f;
+
     for (size_t i = 0; i < extras.size(); ++i) {
         float y = startY - (float)i * rowGap;
         auto label = CCLabelBMFont::create(extras[i].second.c_str(), "bigFont.fnt");
-        label->setPosition({leftX, y});
+        label->setAnchorPoint({1.0f, 0.5f});
+        label->setPosition({midX - 20.f + fixCenter, midY + y});
         label->setScale(0.45f);
         labelNode->addChild(label);
 
@@ -1220,7 +1228,7 @@ bool RGBExtrasPopup::setup() {
         offS->setScale(0.7f);
         onS->setScale(0.7f);
         auto toggler = CCMenuItemToggler::create(offS, onS, this, menu_selector(RGBExtrasPopup::onToggle));
-        toggler->setPosition({rightX, y});
+        toggler->setPosition({midX + 20.f + fixCenter, midY + y - 2.f});
         toggler->setScale(0.95f);
         int tag = static_cast<int>(std::hash<std::string>{}(extras[i].first));
         toggler->setTag(tag);
@@ -1231,15 +1239,16 @@ bool RGBExtrasPopup::setup() {
         menu->addChild(toggler);
     }
 
-    // p2-distance slider (placed under the list with spacing)
-    const float sliderY = startY - extras.size() * rowGap - 12.0f;
-    auto pdLabel = CCLabelBMFont::create("Player 2 Distance", "bigFont.fnt");
-    pdLabel->setPosition({-20.0f, sliderY + 12.0f});
+    // p2-distance slider (below toggles)
+    const float sliderY = startY - extras.size() * rowGap - 30.0f;
+    auto pdLabel = CCLabelBMFont::create("Col2 Distance", "bigFont.fnt");
+    pdLabel->setPosition({midX, midY + sliderY + 19.0f});
     pdLabel->setScale(0.45f);
     labelNode->addChild(pdLabel);
 
     auto pdSlider = Slider::create(this, menu_selector(RGBExtrasPopup::onSlider), 0.8f);
-    pdSlider->setPosition({80.0f, sliderY});
+    pdSlider->setAnchorPoint({0.f, 0.f});
+    pdSlider->setPosition({midX, midY + sliderY});
     pdSlider->m_sliderBar->setContentSize({200.0f, pdSlider->m_sliderBar->getContentSize().height});
     int pdTag = static_cast<int>(std::hash<std::string>{}("p2-distance"));
     pdSlider->setTag(pdTag);
@@ -1250,14 +1259,15 @@ bool RGBExtrasPopup::setup() {
     menu->addChild(pdSlider);
 
     auto pdValueLabel = CCLabelBMFont::create(std::to_string(pdValue).substr(0,4).c_str(), "bigFont.fnt");
-    pdValueLabel->setPosition({80.0f, sliderY - 18.0f});
+    pdValueLabel->setPosition({midX, midY + sliderY - 18.0f});
     pdValueLabel->setScale(0.4f);
     pdValueLabel->setOpacity(150);
     labelNode->addChild(pdValueLabel);
     this->m_valueLabels[pdTag] = pdValueLabel;
 
-    menu->setPosition({0, 0});
-    labelNode->setPosition({0, 0});
+    // set containers to center (0,0) after everything added
+    menu->setPosition({0, -5});
+    labelNode->setPosition({0, -5});
 
     return true;
 }
