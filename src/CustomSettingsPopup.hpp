@@ -59,13 +59,16 @@ class CustomColorsPopup : public Popup<>, public geode::ColorPickPopupDelegate {
 protected:
     bool setup() override;
     void onColorPicker(CCObject* sender);
+    void onToggle(CCObject* sender);
     void updateColor(cocos2d::ccColor4B const& color) override;
     
     // Color picker button creation
     CCMenuItemSpriteExtra* createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor3B currentColor);
+    CCMenuItemToggler* createToggler(std::string settingId, CCPoint position);
     
     std::string m_currentSettingId; // Track which setting we're currently editing
     CCSprite* m_currentButtonSprite = nullptr; // Direct reference to the button sprite being edited
+    std::unordered_map<int, std::string> m_tagToSetting;
     
 public:
     static CustomColorsPopup* create();
@@ -76,13 +79,16 @@ class ParticlesPopup : public Popup<>, public geode::ColorPickPopupDelegate {
 protected:
     bool setup() override;
     void onColorPicker(CCObject* sender);
+    void onToggle(CCObject* sender);
     void updateColor(cocos2d::ccColor4B const& color) override;
     
     // Color picker button creation
     CCMenuItemSpriteExtra* createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor4B currentColor);
+    CCMenuItemToggler* createToggler(std::string settingId, CCPoint position);
     
     std::string m_currentSettingId; // Track which setting we're currently editing
     CCSprite* m_currentButtonSprite = nullptr; // Direct reference to the button sprite being edited
+    std::unordered_map<int, std::string> m_tagToSetting;
     
 public:
     static ParticlesPopup* create();
