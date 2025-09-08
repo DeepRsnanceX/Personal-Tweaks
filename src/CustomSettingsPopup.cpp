@@ -213,7 +213,7 @@ void CustomSettingsPopup::onOpenColors(CCObject*) {
     CustomColorsPopup::create()->show();
 }
 void CustomSettingsPopup::onOpenParticles(CCObject*) {
-    CustomColorsPopup::create()->show();
+    ParticlesPopup::create()->show();
 }
  
 CCMenuItemToggler* CustomSettingsPopup::createToggler(std::string settingId, CCPoint position) {
@@ -1300,10 +1300,10 @@ void RGBExtrasPopup::onSlider(CCObject* sender) {
     }
 }
 
-// ===== CUSTOM COLORS POPUP =====
+// ===== CUSTOM COLORS POPUP (ccColor3B) =====
 CustomColorsPopup* CustomColorsPopup::create() {
     auto ret = new CustomColorsPopup();
-    if (ret->initAnchored(360.0f, 220.0f, "SquareThing01.png"_spr)) {
+    if (ret->initAnchored(300.0f, 200.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
     }
@@ -1313,7 +1313,232 @@ CustomColorsPopup* CustomColorsPopup::create() {
 
 bool CustomColorsPopup::setup() {
     this->setTitle("Custom Colors");
-    // empty for now
     
+    auto size = this->m_mainLayer->getContentSize();
+    const float midX = size.width / 2.0f;
+    const float midY = size.height / 2.0f;
+
+    // Create menu for buttons
+    auto menu = CCMenu::create();
+    menu->setContentSize(size);
+    this->m_mainLayer->addChild(menu);
+
+    // Create labels node
+    auto labelNode = CCNode::create();
+    labelNode->setContentSize(size);
+    this->m_mainLayer->addChild(labelNode);
+
+    // Example: Add a color picker button for "p1-primary" setting
+    auto p1Label = CCLabelBMFont::create("Player 1 Primary", "bigFont.fnt");
+    p1Label->setPosition({midX, midY + 20.0f});
+    p1Label->setScale(0.5f);
+    labelNode->addChild(p1Label);
+
+    // Get current color from setting
+    auto currentP1Color = Mod::get()->getSettingValue<cocos2d::ccColor3B>("p1-primary");
+    auto p1ColorBtn = createColorPickerButton("p1-primary", {midX, midY - 10.0f}, currentP1Color);
+    menu->addChild(p1ColorBtn);
+
+    menu->setPosition({0, 0});
+    labelNode->setPosition({0, 0});
+
     return true;
+}
+
+CCMenuItemSpriteExtra* CustomColorsPopup::createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor3B currentColor) {
+    // Create colored sprite from the color button texture
+    auto colorSprite = CCSprite::createWithSpriteFrameName("GJ_colorBtn_001.png");
+    colorSprite->setColor(currentColor);
+    colorSprite->setScale(0.8f);
+    
+    auto button = CCMenuItemSpriteExtra::create(
+        colorSprite,
+        this,
+        menu_selector(CustomColorsPopup::onColorPicker)
+    );
+    
+    button->setPosition(position);
+    
+    // Store the setting ID in user data
+    button->setUserObject(CCString::create(settingId));
+    
+    return button;
+}
+
+void CustomColorsPopup::onColorPicker(CCObject* sender) {
+    auto menuItem = static_cast<CCMenuItemSpriteExtra*>(sender);
+    if (!menuItem) return;
+    
+    // Get the setting ID from user data
+    auto userObj = menuItem->getUserObject();
+    if (!userObj) return;
+    
+    auto settingIdStr = dynamic_cast<CCString*>(userObj);
+    if (!settingIdStr) return;
+    
+    m_currentSettingId = std::string(settingIdStr->getCString());
+    
+    // Get current color from settings
+    auto currentColor = Mod::get()->getSettingValue<cocos2d::ccColor3B>(m_currentSettingId);
+    
+    // Create and show color picker popup
+    auto colorPopup = geode::ColorPickPopup::create(currentColor);
+    colorPopup->setDelegate(this);
+    colorPopup->show();
+}
+
+void CustomColorsPopup::updateColor(cocos2d::ccColor4B const& color) {
+    if (m_currentSettingId.empty()) return;
+    
+    // Convert ccColor4B to ccColor3B (ignore alpha)
+    cocos2d::ccColor3B color3B = {color.r, color.g, color.b};
+    
+    // Save to mod settings
+    Mod::get()->setSettingValue<cocos2d::ccColor3B>(m_currentSettingId, color3B);
+    
+    // Update the button color
+    // Find the button and update its color
+    auto menu = static_cast<CCMenu*>(this->m_mainLayer->getChildren()->objectAtIndex(0));
+    if (menu) {
+        CCObject* child;
+        CCARRAY_FOREACH(menu->getChildren(), child) {
+            auto menuItem = dynamic_cast<CCMenuItemSpriteExtra*>(child);
+            if (menuItem) {
+                auto userObj = menuItem->getUserObject();
+                if (userObj) {
+                    auto settingStr = dynamic_cast<CCString*>(userObj);
+                    if (settingStr && std::string(settingStr->getCString()) == m_currentSettingId) {
+                        auto sprite = dynamic_cast<CCSprite*>(menuItem->getNormalImage());
+                        if (sprite) {
+                            sprite->setColor(color3B);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    geode::log::debug("CustomColors: Updated {} to ({}, {}, {})", m_currentSettingId, color.r, color.g, color.b);
+}
+
+// ===== PARTICLES POPUP (ccColor4B) =====
+ParticlesPopup* ParticlesPopup::create() {
+    auto ret = new ParticlesPopup();
+    if (ret->initAnchored(300.0f, 200.0f, "SquareThing01.png"_spr)) {
+        ret->autorelease();
+        return ret;
+    }
+    delete ret;
+    return nullptr;
+}
+
+bool ParticlesPopup::setup() {
+    this->setTitle("Particle Colors");
+    
+    auto size = this->m_mainLayer->getContentSize();
+    const float midX = size.width / 2.0f;
+    const float midY = size.height / 2.0f;
+
+    // Create menu for buttons
+    auto menu = CCMenu::create();
+    menu->setContentSize(size);
+    this->m_mainLayer->addChild(menu);
+
+    // Create labels node
+    auto labelNode = CCNode::create();
+    labelNode->setContentSize(size);
+    this->m_mainLayer->addChild(labelNode);
+
+    // Example: Add a color picker button for "p1-main-particles-start" setting
+    auto particleLabel = CCLabelBMFont::create("P1 Main Particles Start", "bigFont.fnt");
+    particleLabel->setPosition({midX, midY + 20.0f});
+    particleLabel->setScale(0.5f);
+    labelNode->addChild(particleLabel);
+
+    // Get current color from setting
+    auto currentParticleColor = Mod::get()->getSettingValue<cocos2d::ccColor4B>("p1-main-particles-start");
+    auto particleColorBtn = createColorPickerButton("p1-main-particles-start", {midX, midY - 10.0f}, currentParticleColor);
+    menu->addChild(particleColorBtn);
+
+    menu->setPosition({0, 0});
+    labelNode->setPosition({0, 0});
+
+    return true;
+}
+
+CCMenuItemSpriteExtra* ParticlesPopup::createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor4B currentColor) {
+    // Create colored sprite from the color button texture
+    auto colorSprite = CCSprite::createWithSpriteFrameName("GJ_colorBtn_001.png");
+    // Set color (ignoring alpha for display)
+    colorSprite->setColor({currentColor.r, currentColor.g, currentColor.b});
+    colorSprite->setScale(0.8f);
+    
+    auto button = CCMenuItemSpriteExtra::create(
+        colorSprite,
+        this,
+        menu_selector(ParticlesPopup::onColorPicker)
+    );
+    
+    button->setPosition(position);
+    
+    // Store the setting ID in user data
+    button->setUserObject(CCString::create(settingId));
+    
+    return button;
+}
+
+void ParticlesPopup::onColorPicker(CCObject* sender) {
+    auto menuItem = static_cast<CCMenuItemSpriteExtra*>(sender);
+    if (!menuItem) return;
+    
+    // Get the setting ID from user data
+    auto userObj = menuItem->getUserObject();
+    if (!userObj) return;
+    
+    auto settingIdStr = dynamic_cast<CCString*>(userObj);
+    if (!settingIdStr) return;
+    
+    m_currentSettingId = std::string(settingIdStr->getCString());
+    
+    // Get current color from settings
+    auto currentColor = Mod::get()->getSettingValue<cocos2d::ccColor4B>(m_currentSettingId);
+    
+    // Create and show color picker popup (with alpha support)
+    auto colorPopup = geode::ColorPickPopup::create(currentColor);
+    colorPopup->setDelegate(this);
+    colorPopup->show();
+}
+
+void ParticlesPopup::updateColor(cocos2d::ccColor4B const& color) {
+    if (m_currentSettingId.empty()) return;
+    
+    // Save to mod settings (keep full ccColor4B with alpha)
+    Mod::get()->setSettingValue<cocos2d::ccColor4B>(m_currentSettingId, color);
+    
+    // Update the button color
+    // Find the button and update its color
+    auto menu = static_cast<CCMenu*>(this->m_mainLayer->getChildren()->objectAtIndex(0));
+    if (menu) {
+        CCObject* child;
+        CCARRAY_FOREACH(menu->getChildren(), child) {
+            auto menuItem = dynamic_cast<CCMenuItemSpriteExtra*>(child);
+            if (menuItem) {
+                auto userObj = menuItem->getUserObject();
+                if (userObj) {
+                    auto settingStr = dynamic_cast<CCString*>(userObj);
+                    if (settingStr && std::string(settingStr->getCString()) == m_currentSettingId) {
+                        auto sprite = dynamic_cast<CCSprite*>(menuItem->getNormalImage());
+                        if (sprite) {
+                            // Update button color (ignoring alpha for display)
+                            sprite->setColor({color.r, color.g, color.b});
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    geode::log::debug("Particles: Updated {} to ({}, {}, {}, {})", m_currentSettingId, color.r, color.g, color.b, color.a);
 }
