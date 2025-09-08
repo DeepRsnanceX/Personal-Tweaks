@@ -1292,18 +1292,22 @@ void RGBExtrasPopup::onSlider(CCObject* sender) {
         else return;
     }
 
+    Mod::get()->setSettingValue<double>(id, value);
+
+    /*
     if (id == "p2-distance") {
         Mod::get()->setSettingValue<double>(id, value);
         if (this->m_valueLabels.count(tag)) {
             this->m_valueLabels[tag]->setString(std::to_string(value).substr(0,4).c_str());
         }
     }
+    */
 }
 
 // ===== CUSTOM COLORS POPUP (ccColor3B) =====
 CustomColorsPopup* CustomColorsPopup::create() {
     auto ret = new CustomColorsPopup();
-    if (ret->initAnchored(300.0f, 200.0f, "SquareThing01.png"_spr)) {
+    if (ret->initAnchored(320.0f, 300.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
     }
@@ -1313,55 +1317,164 @@ CustomColorsPopup* CustomColorsPopup::create() {
 
 bool CustomColorsPopup::setup() {
     this->setTitle("Custom Colors");
-    
+
     auto size = this->m_mainLayer->getContentSize();
     const float midX = size.width / 2.0f;
     const float midY = size.height / 2.0f;
 
-    // Create menu for buttons
+    // containers
     auto menu = CCMenu::create();
     menu->setContentSize(size);
     this->m_mainLayer->addChild(menu);
 
-    // Create labels node
     auto labelNode = CCNode::create();
     labelNode->setContentSize(size);
     this->m_mainLayer->addChild(labelNode);
 
-    // Example: Add a color picker button for "p1-primary" setting
-    auto p1Label = CCLabelBMFont::create("Player 1 Primary", "bigFont.fnt");
-    p1Label->setPosition({midX, midY + 20.0f});
-    p1Label->setScale(0.5f);
-    labelNode->addChild(p1Label);
+    auto enableToggler = createToggler("enable-customcolors", {midX, size.height - 45.f});
+    enableToggler->setID("enable-custom-colors");
+    menu->addChild(enableToggler);
 
-    // Get current color from setting
-    auto currentP1Color = Mod::get()->getSettingValue<cocos2d::ccColor3B>("p1-primary");
-    auto p1ColorBtn = createColorPickerButton("p1-primary", {midX, midY - 10.0f}, currentP1Color);
-    menu->addChild(p1ColorBtn);
+    // Columns X offsets from center
+    const float colOffset = 75.0f;
+    const float startY = 75.0f;
+    const float rowGap = 28.0f;
 
+    // Left (Player 1) labels + buttons + toggles
+    std::vector<std::pair<std::string, std::string>> p1Colors = {
+        {"p1-primary", "Col 1"},
+        {"p1-secondary", "Col 2"},
+        {"p1-glow", "Glow"},
+        {"p1-wave", "Wave"},
+        {"p1-trail", "Trail"},
+        {"p1-ghost-trail", "Ghost"},
+        {"p1-dashfire", "Dash"},
+        {"p1-ufodome", "Dome"}
+    };
+
+    // Right (Player 2)
+    std::vector<std::pair<std::string, std::string>> p2Colors = {
+        {"p2-primary", "Col 1"},
+        {"p2-secondary", "Col 2"},
+        {"p2-glow", "Glow"},
+        {"p2-wave", "Wave"},
+        {"p2-trail", "Trail"},
+        {"p2-ghost-trail", "Ghost"},
+        {"p2-dashfire", "Dash"},
+        {"p2-ufodome", "Dome"}
+    };
+
+    // Add rows for both players (labels in labelNode, color buttons in menu, toggles in menu)
+    for (size_t i = 0; i < p1Colors.size(); ++i) {
+        float y = startY - 5.f - (float)i * rowGap;
+
+        // Player 1 label
+        auto labL = CCLabelBMFont::create(p1Colors[i].second.c_str(), "bigFont.fnt");
+        labL->setPosition({midX - colOffset - 36.0f, midY + y});
+        labL->setScale(0.45f);
+        labelNode->addChild(labL);
+
+        // Player 1 color button
+        auto p1btn = createColorPickerButton(p1Colors[i].first, {midX - colOffset + 10.0f, midY + y}, Mod::get()->getSettingValue<cocos2d::ccColor3B>(p1Colors[i].first));
+        p1btn->setID((p1Colors[i].first + "-btn").c_str());
+        menu->addChild(p1btn);
+
+        // Player 2 label
+        auto labR = CCLabelBMFont::create(p2Colors[i].second.c_str(), "bigFont.fnt");
+        labR->setPosition({midX + colOffset - 36.0f, midY + y});
+        labR->setScale(0.45f);
+        labelNode->addChild(labR);
+
+        // Player 2 color button
+        auto p2btn = createColorPickerButton(p2Colors[i].first, {midX + colOffset + 10.0f, midY + y}, Mod::get()->getSettingValue<cocos2d::ccColor3B>(p2Colors[i].first));
+        p2btn->setID((p2Colors[i].first + "-btn").c_str());
+        menu->addChild(p2btn);
+
+        // For the rows that require a toggler (Trail/Ghost/Dash/Dome) add a toggler to each side
+        if (i >= 4) {
+            // map row index 4..7 to global toggles (existing settings)
+            // trail  -> tint-trail
+            // ghost  -> tint-ghost-trail
+            // dash   -> tint-dashfire
+            // dome   -> tint-ufodome
+            static const std::array<std::string,4> mapTog = {"tint-trail", "tint-ghost-trail", "tint-dashfire", "tint-ufodome"};
+            auto settingId = mapTog[i - 4];
+
+            auto t1 = createToggler(settingId, {midX - colOffset + 26.0f + 13.f, midY + y});
+            t1->setID((settingId + "-p1").c_str());
+            menu->addChild(t1);
+
+            auto t2 = createToggler(settingId, {midX + colOffset + 26.0f + 13.f, midY + y});
+            t2->setID((settingId + "-p2").c_str());
+            menu->addChild(t2);
+        }
+    }
+
+    // Anchor containers to center
     menu->setPosition({0, 0});
     labelNode->setPosition({0, 0});
 
     return true;
 }
 
+// helper toggler for CustomColorsPopup
+CCMenuItemToggler* CustomColorsPopup::createToggler(std::string settingId, CCPoint position) {
+    auto offSprite = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
+    auto onSprite  = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
+    offSprite->setScale(0.8f);
+    onSprite->setScale(0.8f);
+    auto toggler = CCMenuItemToggler::create(offSprite, onSprite, this, menu_selector(CustomColorsPopup::onToggle));
+    toggler->setPosition(position);
+
+    int tag = static_cast<int>(std::hash<std::string>{}(settingId));
+    toggler->setTag(tag);
+    this->m_tagToSetting[tag] = settingId;
+
+    bool initial = false;
+    // for toggles that are global, read their current setting; if not present, default false
+    try { initial = Mod::get()->getSettingValue<bool>(settingId); } catch(...) {}
+
+    toggler->toggle(initial);
+    toggler->setUserObject(CCString::create(settingId));
+    return toggler;
+}
+
+void CustomColorsPopup::onToggle(CCObject* sender) {
+    auto toggler = static_cast<CCMenuItemToggler*>(sender);
+    if (!toggler) return;
+
+    int tag = toggler->getTag();
+    std::string id;
+    auto it = this->m_tagToSetting.find(tag);
+    if (it != this->m_tagToSetting.end()) id = it->second;
+    else {
+        auto obj = toggler->getUserObject();
+        if (!obj) return;
+        if (auto cs = dynamic_cast<CCString*>(obj)) id = cs->getCString();
+        else return;
+    }
+
+    bool newValue = !toggler->isToggled();
+    Mod::get()->setSettingValue<bool>(id, newValue);
+}
+
+// update: set ID on color picker creation (preserve existing function)
 CCMenuItemSpriteExtra* CustomColorsPopup::createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor3B currentColor) {
-    // Create colored sprite from the color button texture
     auto colorSprite = CCSprite::createWithSpriteFrameName("GJ_colorBtn_001.png");
     colorSprite->setColor(currentColor);
     colorSprite->setScale(0.8f);
-    
+
     auto button = CCMenuItemSpriteExtra::create(
         colorSprite,
         this,
         menu_selector(CustomColorsPopup::onColorPicker)
     );
-    
+
     button->setPosition(position);
-    
-    // Store the setting ID in user data
     button->setUserObject(CCString::create(settingId));
-    
+    // set ID to help later organization
+    button->setID((settingId + "-btn").c_str());
+
     return button;
 }
 
@@ -1411,7 +1524,7 @@ void CustomColorsPopup::updateColor(cocos2d::ccColor4B const& color) {
 // ===== PARTICLES POPUP (ccColor4B) =====
 ParticlesPopup* ParticlesPopup::create() {
     auto ret = new ParticlesPopup();
-    if (ret->initAnchored(300.0f, 200.0f, "SquareThing01.png"_spr)) {
+    if (ret->initAnchored(280.0f, 210.0f, "SquareThing01.png"_spr)) {
         ret->autorelease();
         return ret;
     }
@@ -1421,36 +1534,201 @@ ParticlesPopup* ParticlesPopup::create() {
 
 bool ParticlesPopup::setup() {
     this->setTitle("Particle Colors");
-    
     auto size = this->m_mainLayer->getContentSize();
     const float midX = size.width / 2.0f;
     const float midY = size.height / 2.0f;
 
-    // Create menu for buttons
+    const float togglerScale = 0.7f;
+    const float colBtnGap = 15.f;
+    const float togglerGap = 30.f;
+
+    // containers
     auto menu = CCMenu::create();
     menu->setContentSize(size);
     this->m_mainLayer->addChild(menu);
 
-    // Create labels node
     auto labelNode = CCNode::create();
     labelNode->setContentSize(size);
     this->m_mainLayer->addChild(labelNode);
 
-    // Example: Add a color picker button for "p1-main-particles-start" setting
-    auto particleLabel = CCLabelBMFont::create("P1 Main Particles Start", "bigFont.fnt");
-    particleLabel->setPosition({midX, midY + 20.0f});
-    particleLabel->setScale(0.5f);
-    labelNode->addChild(particleLabel);
+    // Layout values
+    const float colOffset = 60.f;
+    const float startY = 36.f;
+    const float rowGap = 32.f;
 
-    // Get current color from setting
-    auto currentParticleColor = Mod::get()->getSettingValue<cocos2d::ccColor4B>("p1-main-particles-start");
-    auto particleColorBtn = createColorPickerButton("p1-main-particles-start", {midX, midY - 10.0f}, currentParticleColor);
-    menu->addChild(particleColorBtn);
+    // Main tint toggles (global) -- show per-player toggler for easy access
+    auto mainLabel = CCLabelBMFont::create("Main", "bigFont.fnt");
+    mainLabel->setPosition({midX - colOffset, midY + startY});
+    mainLabel->setScale(0.45f);
+    labelNode->addChild(mainLabel);
 
-    menu->setPosition({0, 0});
-    labelNode->setPosition({0, 0});
+    auto mainLabelR = CCLabelBMFont::create("Main", "bigFont.fnt");
+    mainLabelR->setPosition({midX + colOffset, midY + startY});
+    mainLabelR->setScale(0.45f);
+    labelNode->addChild(mainLabelR);
+
+    auto mainT1 = createToggler("tint-mainparticles-p1", {midX - colOffset + togglerGap, midY + startY});
+    mainT1->setID("tint-mainparticles-p1");
+    mainT1->setScale(togglerScale);
+    menu->addChild(mainT1);
+    auto mainT2 = createToggler("tint-mainparticles-p2", {midX + colOffset + togglerGap, midY + startY});
+    mainT2->setID("tint-mainparticles-p2");
+    mainT2->setScale(togglerScale);
+    menu->addChild(mainT2);
+
+    // Color buttons (Main start/end) for each player
+    // Player 1 two buttons
+    auto p1b1 = createColorPickerButton("p1-main-particles-start", {midX - colOffset - colBtnGap, midY + startY - rowGap}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p1-main-particles-start"));
+    p1b1->setID("p1-main-particles-start-btn");
+    menu->addChild(p1b1);
+    auto p1b2 = createColorPickerButton("p1-main-particles-end", {midX - colOffset + colBtnGap, midY + startY - rowGap}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p1-main-particles-end"));
+    p1b2->setID("p1-main-particles-end-btn");
+    menu->addChild(p1b2);
+
+    // Player 2 two buttons
+    auto p2b1 = createColorPickerButton("p2-main-particles-start", {midX + colOffset - colBtnGap, midY + startY - rowGap}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p2-main-particles-start"));
+    p2b1->setID("p2-main-particles-start-btn");
+    menu->addChild(p2b1);
+    auto p2b2 = createColorPickerButton("p2-main-particles-end", {midX + colOffset + colBtnGap, midY + startY - rowGap}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p2-main-particles-end"));
+    p2b2->setID("p2-main-particles-end-btn");
+    menu->addChild(p2b2);
+
+    // UFO Click toggles + color buttons
+    auto ufoLabelL = CCLabelBMFont::create("UFO Click", "bigFont.fnt");
+    ufoLabelL->setPosition({midX - colOffset, midY + startY - rowGap * 2});
+    ufoLabelL->setScale(0.45f);
+    labelNode->addChild(ufoLabelL);
+
+    auto ufoLabelR = CCLabelBMFont::create("UFO Click", "bigFont.fnt");
+    ufoLabelR->setPosition({midX + colOffset, midY + startY - rowGap * 2});
+    ufoLabelR->setScale(0.45f);
+    labelNode->addChild(ufoLabelR);
+
+    auto ufoT1 = createToggler("tint-ufo-click-particles-p1", {midX - colOffset + togglerGap + 20.f, midY + startY - rowGap * 2});
+    ufoT1->setID("tint-ufo-click-particles-p1");
+    ufoT1->setScale(togglerScale);
+    menu->addChild(ufoT1);
+    auto ufoT2 = createToggler("tint-ufo-click-particles-p2", {midX + colOffset + togglerGap + 20.f, midY + startY - rowGap * 2});
+    ufoT2->setID("tint-ufo-click-particles-p2");
+    ufoT2->setScale(togglerScale);
+    menu->addChild(ufoT2);
+
+    // color buttons for UFO click
+    auto up1 = createColorPickerButton("p1-ufo-click-particles-start", {midX - colOffset - colBtnGap, midY + startY - rowGap * 3}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p1-ufo-click-particles-start"));
+    up1->setID("p1-ufo-click-particles-start-btn");
+    menu->addChild(up1);
+    auto up2 = createColorPickerButton("p1-ufo-click-particles-end", {midX - colOffset + colBtnGap, midY + startY - rowGap * 3}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p1-ufo-click-particles-end"));
+    up2->setID("p1-ufo-click-particles-end-btn");
+    menu->addChild(up2);
+
+    auto up3 = createColorPickerButton("p2-ufo-click-particles-start", {midX + colOffset - colBtnGap, midY + startY - rowGap * 3}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p2-ufo-click-particles-start"));
+    up3->setID("p2-ufo-click-particles-start-btn");
+    menu->addChild(up3);
+    auto up4 = createColorPickerButton("p2-ufo-click-particles-end", {midX + colOffset + colBtnGap, midY + startY - rowGap * 3}, Mod::get()->getSettingValue<cocos2d::ccColor4B>("p2-ufo-click-particles-end"));
+    up4->setID("p2-ufo-click-particles-end-btn");
+    menu->addChild(up4);
+
+    // start/end labels
+    auto mainP1StartLabel = CCLabelBMFont::create("S", "bigFont.fnt");
+    auto mainP2StartLabel = CCLabelBMFont::create("S", "bigFont.fnt");
+    auto mainP1EndLabel = CCLabelBMFont::create("E", "bigFont.fnt");
+    auto mainP2EndLabel = CCLabelBMFont::create("E", "bigFont.fnt");
+    auto ufoClickP1StartLabel = CCLabelBMFont::create("S", "bigFont.fnt");
+    auto ufoClickP2StartLabel = CCLabelBMFont::create("S", "bigFont.fnt");
+    auto ufoClickP1EndLabel = CCLabelBMFont::create("E", "bigFont.fnt");
+    auto ufoClickP2EndLabel = CCLabelBMFont::create("E", "bigFont.fnt");
+
+    mainP1StartLabel->setPosition(p1b1->getPosition());
+    mainP1StartLabel->setOpacity(50);
+    mainP1StartLabel->setScale(0.6f);
+    labelNode->addChild(mainP1StartLabel);
+
+    mainP1EndLabel->setPosition(p1b2->getPosition());
+    mainP1EndLabel->setOpacity(50);
+    mainP1EndLabel->setScale(0.6f);
+    labelNode->addChild(mainP1EndLabel);
+
+    mainP2StartLabel->setPosition(p2b1->getPosition());
+    mainP2StartLabel->setOpacity(50);
+    mainP2StartLabel->setScale(0.6f);
+    labelNode->addChild(mainP2StartLabel);
+
+    mainP2EndLabel->setPosition(p2b2->getPosition());
+    mainP2EndLabel->setOpacity(50);
+    mainP2EndLabel->setScale(0.6f);
+    labelNode->addChild(mainP2EndLabel);
+
+    ufoClickP1StartLabel->setPosition(up1->getPosition());
+    ufoClickP1StartLabel->setOpacity(50);
+    ufoClickP1StartLabel->setScale(0.6f);
+    labelNode->addChild(ufoClickP1StartLabel);
+
+    ufoClickP1EndLabel->setPosition(up2->getPosition());
+    ufoClickP1EndLabel->setOpacity(50);
+    ufoClickP1EndLabel->setScale(0.6f);
+    labelNode->addChild(ufoClickP1EndLabel);
+
+    ufoClickP2StartLabel->setPosition(up3->getPosition());
+    ufoClickP2StartLabel->setOpacity(50);
+    ufoClickP2StartLabel->setScale(0.6f);
+    labelNode->addChild(ufoClickP2StartLabel);
+
+    ufoClickP2EndLabel->setPosition(up4->getPosition());
+    ufoClickP2EndLabel->setOpacity(50);
+    ufoClickP2EndLabel->setScale(0.6f);
+    labelNode->addChild(ufoClickP2EndLabel);
+
+    auto p1LabelThing = CCLabelBMFont::create("Player 1", "goldFont.fnt");
+    p1LabelThing->setPosition({midX - colOffset, midY + startY + 30.f});
+    p1LabelThing->setScale(0.7f);
+    labelNode->addChild(p1LabelThing);
+
+    auto p2LabelThing = CCLabelBMFont::create("Player 2", "goldFont.fnt");
+    p2LabelThing->setPosition({midX + colOffset, midY + startY + 30.f});
+    p2LabelThing->setScale(0.7f);
+    labelNode->addChild(p2LabelThing);
+
+    // finalize positions
+    menu->setPosition({0, -10});
+    labelNode->setPosition({0, -10});
 
     return true;
+}
+
+CCMenuItemToggler* ParticlesPopup::createToggler(std::string settingId, CCPoint position) {
+    auto offSprite = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
+    auto onSprite  = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
+    offSprite->setScale(0.8f);
+    onSprite->setScale(0.8f);
+    auto toggler = CCMenuItemToggler::create(offSprite, onSprite, this, menu_selector(ParticlesPopup::onToggle));
+    toggler->setPosition(position);
+
+    int tag = static_cast<int>(std::hash<std::string>{}(settingId));
+    toggler->setTag(tag);
+    this->m_tagToSetting[tag] = settingId;
+
+    bool initial = false;
+    try { initial = Mod::get()->getSettingValue<bool>(settingId); } catch(...) {}
+    toggler->toggle(initial);
+    toggler->setUserObject(CCString::create(settingId));
+    return toggler;
+}
+
+void ParticlesPopup::onToggle(CCObject* sender) {
+    auto toggler = static_cast<CCMenuItemToggler*>(sender);
+    if (!toggler) return;
+    int tag = toggler->getTag();
+    std::string id;
+    auto it = this->m_tagToSetting.find(tag);
+    if (it != this->m_tagToSetting.end()) id = it->second;
+    else {
+        auto obj = toggler->getUserObject();
+        if (!obj) return;
+        if (auto cs = dynamic_cast<CCString*>(obj)) id = cs->getCString();
+        else return;
+    }
+    bool newValue = !toggler->isToggled();
+    Mod::get()->setSettingValue<bool>(id, newValue);
 }
 
 CCMenuItemSpriteExtra* ParticlesPopup::createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor4B currentColor) {

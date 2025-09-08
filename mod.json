@@ -567,72 +567,84 @@
 			"default": [10, 10, 10, 10],
 			"enable-if": "override-all-variances"
 		},
-		"tint-mainparticles": {
+		"tint-mainparticles-p1": {
 			"type": "bool",
-			"name": "Tint Main Particles",
-			"description": "Defines if the main particles will be tinted a different color from the icon's primary color.",
+			"name": "Tint Main Particles - P1",
+			"description": "Defines if the main particles for Player 1 will be tinted a different color from the icon's primary color.",
 			"default": false
 		},
 		"p1-main-particles-start": {
 			"type": "rgba",
 			"name": "Main Particles StartColor - P1",
 			"description": "The start color of the main particles.",
-			"enable-if": "tint-mainparticles",
+			"enable-if": "tint-mainparticles-p1",
 			"default": [255, 255, 255, 255]
 		},
 		"p1-main-particles-end": {
 			"type": "rgba",
 			"name": "Main Particles EndColor - P1",
 			"description": "The end color of the main particles.",
-			"enable-if": "tint-mainparticles",
+			"enable-if": "tint-mainparticles-p1",
 			"default": [255, 255, 255, 255]
+		},
+		"tint-mainparticles-p2": {
+			"type": "bool",
+			"name": "Tint Main Particles - P2",
+			"description": "Defines if Player 2's main particles will be tinted a different color from Player 1's main particles.",
+			"default": false
 		},
 		"p2-main-particles-start": {
 			"type": "rgba",
 			"name": "Main Particles StartColor - P2",
 			"description": "The start color of the main particles.",
-			"enable-if": "tint-mainparticles",
+			"enable-if": "tint-mainparticles-p2",
 			"default": [255, 255, 255, 255]
 		},
 		"p2-main-particles-end": {
 			"type": "rgba",
 			"name": "Main Particles EndColor - P2",
 			"description": "The end color of the main particles.",
-			"enable-if": "tint-mainparticles",
+			"enable-if": "tint-mainparticles-p2",
 			"default": [255, 255, 255, 255]
 		},
-		"tint-ufo-click-particles": {
+		"tint-ufo-click-particles-p1": {
 			"type": "bool",
 			"name": "Tint UFO Click Particles",
-			"description": "Defines if the UFO click particles will be tinted a different color.",
+			"description": "Defines if the UFO click particles will be tinted a different color for Player 1.",
 			"default": false
 		},
 		"p1-ufo-click-particles-start": {
 			"type": "rgba",
 			"name": "UFO Click Particles StartColor - P1",
 			"description": "The start color of the UFO click particles.",
-			"enable-if": "tint-ufo-click-particles",
+			"enable-if": "tint-ufo-click-particles-p1",
 			"default": [255, 255, 255, 255]
 		},
 		"p1-ufo-click-particles-end": {
 			"type": "rgba",
 			"name": "UFO Click Particles EndColor - P1",
 			"description": "The end color of the UFO click particles.",
-			"enable-if": "tint-ufo-click-particles",
+			"enable-if": "tint-ufo-click-particles-p1",
 			"default": [255, 255, 255, 255]
+		},
+		"tint-ufo-click-particles-p2": {
+			"type": "bool",
+			"name": "Tint UFO Click Particles - P2",
+			"description": "Defines if Player 2's UFO click particles will be tinted a different color from Player 1's UFO click particles.",
+			"default": false
 		},
 		"p2-ufo-click-particles-start": {
 			"type": "rgba",
 			"name": "UFO Click Particles StartColor - P2",
 			"description": "The start color of the UFO click particles.",
-			"enable-if": "tint-ufo-click-particles",
+			"enable-if": "tint-ufo-click-particles-p2",
 			"default": [255, 255, 255, 255]
 		},
 		"p2-ufo-click-particles-end": {
 			"type": "rgba",
 			"name": "UFO Click Particles EndColor - P2",
 			"description": "The end color of the UFO click particles.",
-			"enable-if": "tint-ufo-click-particles",
+			"enable-if": "tint-ufo-click-particles-p2",
 			"default": [255, 255, 255, 255]
 		}
 	},
