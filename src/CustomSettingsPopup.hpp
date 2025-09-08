@@ -65,6 +65,7 @@ protected:
     CCMenuItemSpriteExtra* createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor3B currentColor);
     
     std::string m_currentSettingId; // Track which setting we're currently editing
+    CCSprite* m_currentButtonSprite = nullptr; // Direct reference to the button sprite being edited
     
 public:
     static CustomColorsPopup* create();
@@ -81,6 +82,7 @@ protected:
     CCMenuItemSpriteExtra* createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor4B currentColor);
     
     std::string m_currentSettingId; // Track which setting we're currently editing
+    CCSprite* m_currentButtonSprite = nullptr; // Direct reference to the button sprite being edited
     
 public:
     static ParticlesPopup* create();

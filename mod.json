@@ -437,6 +437,12 @@
 			"default": "#ffffff",
 			"enable-if": "enable-customcolors"
 		},
+		"p1-glow": {
+			"type": "rgb",
+			"name": "Player 1 - Glow Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
 		"p1-wave": {
 			"type": "rgb",
 			"name": "Player 1 - Wave Color",
@@ -452,6 +458,12 @@
 		"p2-secondary": {
 			"type": "rgb",
 			"name": "Player 2 - Secondary Color",
+			"default": "#ffffff",
+			"enable-if": "enable-customcolors"
+		},
+		"p2-glow": {
+			"type": "rgb",
+			"name": "Player 2 - Glow Color",
 			"default": "#ffffff",
 			"enable-if": "enable-customcolors"
 		},
@@ -517,6 +529,25 @@
 			"name": "Player 2 - Dash Fire Color",
 			"default": "#ffffff",
 			"enable-if": "tint-dashfire"
+		},
+		"tint-ufodome": {
+			"type": "bool",
+			"name": "Tint UFO Dome",
+			"description": "Defines if the UFO dome will be tinted a different color from the icon's primary color.",
+			"enable-if": "enable-customcolors",
+			"default": false
+		},
+		"p1-ufodome": {
+			"type": "rgb",
+			"name": "Player 1 - UFO Dome Color",
+			"default": "#ffffff",
+			"enable-if": "tint-ufodome"
+		},
+		"p2-ufodome": {
+			"type": "rgb",
+			"name": "Player 2 - UFO Dome Color",
+			"default": "#ffffff",
+			"enable-if": "tint-ufodome"
 		},
 		"custom-particles-title": {
 			"type": "title",

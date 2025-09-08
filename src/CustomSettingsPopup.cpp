@@ -1377,6 +1377,9 @@ void CustomColorsPopup::onColorPicker(CCObject* sender) {
     if (!settingIdStr) return;
     
     m_currentSettingId = std::string(settingIdStr->getCString());
+
+    // Store direct reference to the button sprite for instant updates
+    m_currentButtonSprite = dynamic_cast<CCSprite*>(menuItem->getNormalImage());
     
     // Get current color from settings
     auto currentColor = Mod::get()->getSettingValue<cocos2d::ccColor3B>(m_currentSettingId);
@@ -1396,27 +1399,10 @@ void CustomColorsPopup::updateColor(cocos2d::ccColor4B const& color) {
     // Save to mod settings
     Mod::get()->setSettingValue<cocos2d::ccColor3B>(m_currentSettingId, color3B);
     
-    // Update the button color
-    // Find the button and update its color
-    auto menu = static_cast<CCMenu*>(this->m_mainLayer->getChildren()->objectAtIndex(0));
-    if (menu) {
-        CCObject* child;
-        CCARRAY_FOREACH(menu->getChildren(), child) {
-            auto menuItem = dynamic_cast<CCMenuItemSpriteExtra*>(child);
-            if (menuItem) {
-                auto userObj = menuItem->getUserObject();
-                if (userObj) {
-                    auto settingStr = dynamic_cast<CCString*>(userObj);
-                    if (settingStr && std::string(settingStr->getCString()) == m_currentSettingId) {
-                        auto sprite = dynamic_cast<CCSprite*>(menuItem->getNormalImage());
-                        if (sprite) {
-                            sprite->setColor(color3B);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+    // Update the button color instantly using direct reference
+    if (m_currentButtonSprite) {
+        // Update button color (ignoring alpha for display)
+        m_currentButtonSprite->setColor({color.r, color.g, color.b});
     }
     
     geode::log::debug("CustomColors: Updated {} to ({}, {}, {})", m_currentSettingId, color.r, color.g, color.b);
@@ -1501,6 +1487,9 @@ void ParticlesPopup::onColorPicker(CCObject* sender) {
     
     m_currentSettingId = std::string(settingIdStr->getCString());
     
+    // Store direct reference to the button sprite for instant updates
+    m_currentButtonSprite = dynamic_cast<CCSprite*>(menuItem->getNormalImage());
+    
     // Get current color from settings
     auto currentColor = Mod::get()->getSettingValue<cocos2d::ccColor4B>(m_currentSettingId);
     
@@ -1516,28 +1505,10 @@ void ParticlesPopup::updateColor(cocos2d::ccColor4B const& color) {
     // Save to mod settings (keep full ccColor4B with alpha)
     Mod::get()->setSettingValue<cocos2d::ccColor4B>(m_currentSettingId, color);
     
-    // Update the button color
-    // Find the button and update its color
-    auto menu = static_cast<CCMenu*>(this->m_mainLayer->getChildren()->objectAtIndex(0));
-    if (menu) {
-        CCObject* child;
-        CCARRAY_FOREACH(menu->getChildren(), child) {
-            auto menuItem = dynamic_cast<CCMenuItemSpriteExtra*>(child);
-            if (menuItem) {
-                auto userObj = menuItem->getUserObject();
-                if (userObj) {
-                    auto settingStr = dynamic_cast<CCString*>(userObj);
-                    if (settingStr && std::string(settingStr->getCString()) == m_currentSettingId) {
-                        auto sprite = dynamic_cast<CCSprite*>(menuItem->getNormalImage());
-                        if (sprite) {
-                            // Update button color (ignoring alpha for display)
-                            sprite->setColor({color.r, color.g, color.b});
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+    // Update the button color instantly using direct reference
+    if (m_currentButtonSprite) {
+        // Update button color (ignoring alpha for display)
+        m_currentButtonSprite->setColor({color.r, color.g, color.b});
     }
     
     geode::log::debug("Particles: Updated {} to ({}, {}, {}, {})", m_currentSettingId, color.r, color.g, color.b, color.a);
