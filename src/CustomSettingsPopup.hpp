@@ -13,6 +13,7 @@ class ModesPopup;
 class RGBMainPopup;
 class RGBExtrasPopup;
 class CustomColorsPopup;
+class ParticlesPopup;
 
 class CustomSettingsPopup : public Popup<> {
 protected:
@@ -53,12 +54,36 @@ public:
     static CustomSettingsPopup* create();
 };
 
-// Custom Colors popup (Colors / Particles)
-class CustomColorsPopup : public Popup<> {
+// Custom Colors popup (Colors)
+class CustomColorsPopup : public Popup<>, public geode::ColorPickPopupDelegate {
 protected:
     bool setup() override;
+    void onColorPicker(CCObject* sender);
+    void updateColor(cocos2d::ccColor4B const& color) override;
+    
+    // Color picker button creation
+    CCMenuItemSpriteExtra* createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor3B currentColor);
+    
+    std::string m_currentSettingId; // Track which setting we're currently editing
+    
 public:
     static CustomColorsPopup* create();
+};
+
+// Particles popup (4B colors)
+class ParticlesPopup : public Popup<>, public geode::ColorPickPopupDelegate {
+protected:
+    bool setup() override;
+    void onColorPicker(CCObject* sender);
+    void updateColor(cocos2d::ccColor4B const& color) override;
+    
+    // Color picker button creation
+    CCMenuItemSpriteExtra* createColorPickerButton(const std::string& settingId, CCPoint position, cocos2d::ccColor4B currentColor);
+    
+    std::string m_currentSettingId; // Track which setting we're currently editing
+    
+public:
+    static ParticlesPopup* create();
 };
 
 // Conditional Randomizer Sub-Popup

@@ -96,7 +96,7 @@ CCNode* CustomSettingsPopup::createRandomizerSection() {
     menu->addChild(modesBtn);
     menu->updateLayout();
 
-     return section;
+    return section;
 }
 
 CCNode* CustomSettingsPopup::createRGBSection() {
@@ -144,10 +144,10 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     menu->addChild(extrasBtn);
     menu->updateLayout();
 
-     return section;
+    return section;
 }
  
- CCNode* CustomSettingsPopup::createCustomColorsSection() {
+CCNode* CustomSettingsPopup::createCustomColorsSection() {
     auto section = CCNode::create();
     auto contentSize = this->m_mainLayer->getContentSize();
     const float sectionH = 40.f;
@@ -191,35 +191,34 @@ CCNode* CustomSettingsPopup::createRGBSection() {
     menu->addChild(particlesBtn);
     menu->updateLayout();
       
-      return section;
- }
+    return section;
+}
  
- void CustomSettingsPopup::onOpenConditional(CCObject*) {
-     ConditionalRandomizerPopup::create()->show();
- }
+void CustomSettingsPopup::onOpenConditional(CCObject*) {
+    ConditionalRandomizerPopup::create()->show();
+}
+void CustomSettingsPopup::onOpenLive(CCObject*) {
+    LiveRandomizerPopup::create()->show();
+}
+void CustomSettingsPopup::onOpenModes(CCObject*) {
+    ModesPopup::create()->show();
+}
+void CustomSettingsPopup::onOpenRGBMain(CCObject*) {
+    RGBMainPopup::create()->show();
+}
+void CustomSettingsPopup::onOpenRGBExtras(CCObject*) {
+    RGBExtrasPopup::create()->show();
+}
+void CustomSettingsPopup::onOpenColors(CCObject*) {
+    CustomColorsPopup::create()->show();
+}
+void CustomSettingsPopup::onOpenParticles(CCObject*) {
+    CustomColorsPopup::create()->show();
+}
  
- void CustomSettingsPopup::onOpenLive(CCObject*) {
-     LiveRandomizerPopup::create()->show();
- }
- void CustomSettingsPopup::onOpenModes(CCObject*) {
-     ModesPopup::create()->show();
- }
- void CustomSettingsPopup::onOpenRGBMain(CCObject*) {
-     RGBMainPopup::create()->show();
- }
- void CustomSettingsPopup::onOpenRGBExtras(CCObject*) {
-     RGBExtrasPopup::create()->show();
- }
- void CustomSettingsPopup::onOpenColors(CCObject*) {
-     CustomColorsPopup::create()->show();
- }
- void CustomSettingsPopup::onOpenParticles(CCObject*) {
-     CustomColorsPopup::create()->show();
- }
- 
- CCMenuItemToggler* CustomSettingsPopup::createToggler(std::string settingId, CCPoint position) {
-     auto offSprite = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
-     auto onSprite = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
+CCMenuItemToggler* CustomSettingsPopup::createToggler(std::string settingId, CCPoint position) {
+    auto offSprite = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
+    auto onSprite = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
     
     offSprite->setScale(0.8f);
     onSprite->setScale(0.8f);
