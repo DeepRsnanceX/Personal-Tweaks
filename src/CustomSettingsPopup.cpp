@@ -1279,29 +1279,43 @@ void RGBExtrasPopup::onToggle(CCObject* sender) {
 
 void RGBExtrasPopup::onSlider(CCObject* sender) {
     auto slider = dynamic_cast<Slider*>(sender);
-    if (!slider) return;
-    int tag = slider->getTag();
-    float value = slider->getValue();
-    std::string id;
-    auto it = this->m_tagToSetting.find(tag);
-    if (it != this->m_tagToSetting.end()) id = it->second;
-    else {
-        auto obj = slider->getUserObject();
-        if (!obj) return;
-        if (auto cs = dynamic_cast<CCString*>(obj)) id = cs->getCString();
-        else return;
+    CCObject* userObj = nullptr;
+    int tag = 0;
+    float value = 0.0f;
+
+    if (slider) {
+        userObj = slider->getUserObject();
+        tag = slider->getTag();
+        value = slider->getValue();
+    } else {
+        auto thumb = dynamic_cast<SliderThumb*>(sender);
+        if (thumb) {
+            userObj = thumb->getUserObject();
+            tag = thumb->getTag();
+            value = thumb->getValue();
+        } else {
+            return;
+        }
     }
 
-    Mod::get()->setSettingValue<double>(id, value);
+    std::string id;
+    auto it = this->m_tagToSetting.find(tag);
+    if (it != this->m_tagToSetting.end()) {
+        id = it->second;
+    } else {
+        if (auto cs = dynamic_cast<CCString*>(userObj)) {
+            id = cs->getCString();
+        } else {
+            return;
+        }
+    }
 
-    /*
     if (id == "p2-distance") {
         Mod::get()->setSettingValue<double>(id, value);
         if (this->m_valueLabels.count(tag)) {
-            this->m_valueLabels[tag]->setString(std::to_string(value).substr(0,4).c_str());
+            this->m_valueLabels[tag]->setString(std::to_string(value).substr(0, 4).c_str());
         }
     }
-    */
 }
 
 // ===== CUSTOM COLORS POPUP (ccColor3B) =====

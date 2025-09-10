@@ -7,14 +7,24 @@ auto mod = Mod::get();
 
 bool doCol1 = mod->getSettingValue<bool>("rgb-col1");
 bool doCol2 = mod->getSettingValue<bool>("rgb-col2");
-bool ignoreP2 = mod->getSettingValue<bool>("ignore-p2");
-bool betterImmersionMode = mod->getSettingValue<bool>("better-immersion-mode");
+
+bool BMI = mod->getSettingValue<bool>("better-immersion-mode");
+
+float rgbSpeed = mod->getSettingValue<double>("rgb-speed");
+
 float sat = mod->getSettingValue<double>("rgb-saturation");
 float sat2 = mod->getSettingValue<double>("rgb-saturation2");
+
 float bright1 = mod->getSettingValue<double>("rgb-brightness1");
 float bright2 = mod->getSettingValue<double>("rgb-brightness2");
+
+bool doWaveColr = mod->getSettingValue<bool>("rgb-wave");
+bool doTrailColr = mod->getSettingValue<bool>("rgb-trail");
+bool doDashColr = mod->getSettingValue<bool>("rgb-dash");
+
 float p2Distance = mod->getSettingValue<double>("p2-distance");
-float rgbSpeed = mod->getSettingValue<double>("rgb-speed");
+
+bool ignoreP2 = mod->getSettingValue<bool>("ignore-p2");
 
 $on_mod(Loaded){
     listenForSettingChanges("rgb-col1", [](bool value) {
@@ -45,7 +55,16 @@ $on_mod(Loaded){
         p2Distance = value;
     });
     listenForSettingChanges("better-immersion-mode", [](bool value) {
-        betterImmersionMode = value;
+        BMI = value;
+    });
+    listenForSettingChanges("rgb-wave", [](bool value) {
+        doWaveColr = value;
+    });
+    listenForSettingChanges("rgb-trail", [](bool value) {
+        doTrailColr = value;
+    });
+    listenForSettingChanges("rgb-dash", [](bool value) {
+        doDashColr = value;
     });
 }
 
@@ -53,8 +72,24 @@ class $modify(RGBPlayerObject, PlayerObject) {
     struct Fields {
         bool usingCol1 = doCol1;
         bool usingCol2 = doCol2;
+        bool usingBMI = BMI;
+        bool usingWaveColr = doWaveColr;
+        bool usingTrailColr = doTrailColr;
+        bool usingDashColr = doDashColr;
+        bool isIgnoringP2 = ignoreP2;
         float rgbTimer = 0.f;
     };
+
+    void updateMyRGBSettings() {
+        auto fld = m_fields.self();
+        fld->usingCol1 = doCol1;
+        fld->usingCol2 = doCol2;
+        fld->usingBMI = BMI;
+        fld->usingWaveColr = doWaveColr;
+        fld->usingTrailColr = doTrailColr;
+        fld->usingDashColr = doDashColr;
+        fld->isIgnoringP2 = ignoreP2;
+    }
     
     std::tuple<int, int, int> hsvToRgbRaw(float h, float s, float v) {
         float r, g, b;
@@ -85,7 +120,7 @@ class $modify(RGBPlayerObject, PlayerObject) {
         auto fld = m_fields.self();
         auto playLayer = PlayLayer::get();
         if (!playLayer) return;
-        if (ignoreP2 && m_isSecondPlayer) return;
+        if (fld->isIgnoringP2 && m_isSecondPlayer) return;
 
         float cycleDuration = 64.0f / rgbSpeed;
 
@@ -125,15 +160,6 @@ class $modify(RGBPlayerObject, PlayerObject) {
             if (m_ghostTrail) {
                 m_ghostTrail->m_color = ccColor3B({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
             }
-            if (m_waveTrail) {
-                m_waveTrail->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
-            }
-
-            if (m_dashFireSprite) {
-                m_dashFireSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
-                m_dashParticles->m_tStartColor = colorForParticle;
-                m_dashParticles->m_tEndColor = colorForParticle;
-            }
 
             //particles bc other mods don't do them lol
             m_playerGroundParticles->m_tStartColor = colorForParticle;
@@ -147,6 +173,24 @@ class $modify(RGBPlayerObject, PlayerObject) {
             m_ufoClickParticles->m_tStartColor = colorForParticle;
             m_ufoClickParticles->m_tEndColor = colorForParticle;
         }
+
+        if (m_waveTrail && fld->usingWaveColr) {
+            m_waveTrail->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
+        }
+
+        if (m_dashFireSprite && fld->usingDashColr) {
+            m_dashFireSprite->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
+            m_dashParticles->m_tStartColor = colorForParticle;
+            m_dashParticles->m_tEndColor = colorForParticle;
+        }
+
+        if (m_regularTrail && fld->usingTrailColr) {
+            m_regularTrail->setColor({static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b)});
+        }
+
+        // -----------------------------
+        // color 2 hehe
+        // -----------------------------
         
         if (fld->usingCol2) {
             m_playerColor2 = ccColor3B({static_cast<GLubyte>(r2), static_cast<GLubyte>(g2), static_cast<GLubyte>(b2)});
@@ -170,6 +214,24 @@ class $modify(RGBPlayerObject, PlayerObject) {
         } else if (m_isSpider) {
             if (fld->usingCol1 || fld->usingCol2) {
                 m_spiderSprite->updateColors();
+            }
+        }
+
+        // immersion mode
+        if (fld->usingBMI) {
+            if (m_isShip) {
+                m_trailingParticles->m_tStartColor = colorForParticle;
+                m_trailingParticles->m_tEndColor = colorForParticle;
+                m_shipClickParticles->m_tStartColor = colorForParticle;
+                m_shipClickParticles->m_tEndColor = colorForParticle;
+            } else if (m_isRobot) {
+                m_robotBurstParticles->m_tStartColor = colorForParticle;
+                m_robotBurstParticles->m_tEndColor = colorForParticle;
+            } else if (m_isSwing) {
+                m_swingBurstParticles1->m_tStartColor = colorForParticle;
+                m_swingBurstParticles1->m_tEndColor = colorForParticle;
+                m_swingBurstParticles2->m_tStartColor = colorForParticle;
+                m_swingBurstParticles2->m_tEndColor = colorForParticle;
             }
         }
     }

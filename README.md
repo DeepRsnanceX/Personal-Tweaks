@@ -16,7 +16,7 @@ So, here's a breakdown!
 ## Credits
 *features i didn't make myself*
 
-- Legacy Trail: Taken from [EclipseMenu.](https://github.com/EclipseMenu/EclipseMenu)
+- Legacy Trail/Pulse: Taken from [EclipseMenu.](https://github.com/EclipseMenu/EclipseMenu)
 - Ball Rotation Bug: Taken from [QOLMod.](https://github.com/TheSillyDoggo/GeodeMenu)
 
 ## My Features
@@ -25,9 +25,13 @@ So, here's a breakdown!
 - Wave Particles Fix: Fixes the issue where dragging particles show up on the Wave Gamemode sometimes.
 - Icon Randomizer: Randomizes icons either on death or on every gamemode switch in-game. Based on [Randomize Icon on Death](https://github.com/kittenchilly/Randomize-Icon-on-Death), Inspired by [MHv5's](https://github.com/absoIute/Mega-Hack-v5) Icon Randomizer.
 - Noclip Totem of Undying: Shows Minecraft's Totem of Undying anymation on every noclip death. Inspired by [Totem of Undying.](https://github.com/YellowCat98/TotemofUndying-gd)
-- Full Icon Customizer: Allows for customizing each aspect of the Player icon completely beyond what vanilla offers. Full RGB Custom Colors for: P1, P2, Ghost trail, Trail, Wave trail, Dash fire, Player Paeticles, and more!
+- Full Icon Customizer: Allows for customizing each aspect of the Player icon completely beyond what vanilla offers. Full RGB Custom Colors for: P1, P2, Ghost trail, Trail, Wave trail, Dash fire, Player Particles, UFO Dome... Just about anything you can think of!
 - Quick Icon Info: Basic button added onto the Garage Layer that displays the amount of More Icons loaded icons and displays a total number.
 - Icon Name Lister: Personal assistant tool to create a list of More Icons icon names and save the final list to a txt file.
+- Icon Renderer: Small tool that renders icons directly from the Icon Garage as .png images in the chosen location! *(Will probably end up in a different mod cuz this stops this mod from compiling on iOS and probs Mac too, lmao)*
+- Garage Select Animation: Dumb lil feature that plays a satisfying sound and plays a lil scale bounce animation when choosing an icon in the garage. :3
+
+The mod also now has a fully custom UI to configure the biggest features of the mod individually! Cuz i hated scrolling through the mod's settings every time i wanted to change a single thing. So yeah.
 
 Will any of the original features ever see the light of day as a standalone mod?
 Probably lol idk
@@ -37,4 +41,4 @@ Also, if you're wondering why this is even on github if it has stuff i didn't ma
 
 Github Actions to build the mod for multiplatform. Basically.
 
-<img src="logo.png" width="5" alt="luzojos"/>
+<img src="logo.png" width="10" alt="luzojos"/>

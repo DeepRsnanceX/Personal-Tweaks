@@ -249,34 +249,31 @@
 			"type": "bool",
 			"name": "RGB Wave",
 			"description": "Enables RGB for the Wave trail.",
-			"default": false,
-			"enable-if": "rgb-col1 || rgb-col2"
+			"default": false
 		},
 		"rgb-trail": {
 			"type": "bool",
 			"name": "RGB Trail",
 			"description": "Enables RGB for the normal trail.",
-			"default": false,
-			"enable-if": "rgb-col1 || rgb-col2"
+			"default": false
 		},
 		"rgb-dash": {
 			"type": "bool",
 			"name": "RGB Dash Fire",
 			"description": "Enables RGB for the Dash Fire.",
-			"default": false,
-			"enable-if": "rgb-col1 || rgb-col2"
+			"default": false
 		},
 		"better-immersion-mode": {
 			"type": "bool",
 			"name": "RGB Immersion Mode",
 			"description": "Enables the RGB effect to show on other particles, such as Ship and robot boost.",
-			"default": true,
-			"enable-if": "rgb-col1 || rgb-col2"
+			"default": true
 		},
 		"ignore-p2": {
 			"type": "bool",
 			"name": "Ignore Player 2",
 			"description": "Disables the RGB effect for Player 2.",
+			"enable-if": "rgb-col1 || rgb-col2",
 			"default": false
 		},
 		"p2-distance": {
@@ -443,12 +440,6 @@
 			"default": "#ffffff",
 			"enable-if": "enable-customcolors"
 		},
-		"p1-wave": {
-			"type": "rgb",
-			"name": "Player 1 - Wave Color",
-			"default": "#ffffff",
-			"enable-if": "enable-customcolors"
-		},
 		"p2-primary": {
 			"type": "rgb",
 			"name": "Player 2 - Primary Color",
@@ -467,17 +458,28 @@
 			"default": "#ffffff",
 			"enable-if": "enable-customcolors"
 		},
+		"tint-wave": {
+			"type": "bool",
+			"name": "Tint Wave Trail",
+			"description": "Defines if the wave trail will be tinted or nah. Easier to make this an option LOLLLL",
+			"default": false
+		},
+		"p1-wave": {
+			"type": "rgb",
+			"name": "Player 1 - Wave Color",
+			"default": "#ffffff",
+			"enable-if": "tint-wave"
+		},
 		"p2-wave": {
 			"type": "rgb",
 			"name": "Player 2 - Wave Color",
 			"default": "#ffffff",
-			"enable-if": "enable-customcolors"
+			"enable-if": "tint-wave"
 		},
 		"tint-trail": {
 			"type": "bool",
 			"name": "Tint Trail",
 			"description": "Defines if the trail will be tinted or nah. Easier to make this an option LOLLLL",
-			"enable-if": "enable-customcolors",
 			"default": false
 		},
 		"p1-trail": {
@@ -496,7 +498,6 @@
 			"type": "bool",
 			"name": "Tint Ghost Trail",
 			"description": "Defines if the ghost trail will be tinted a different color from the primary color.",
-			"enable-if": "enable-customcolors",
 			"default": false
 		},
 		"p1-ghost-trail": {
@@ -515,7 +516,6 @@
 			"type": "bool",
 			"name": "Tint Dash Fire",
 			"description": "Defines if the dash fire will be tinted a different color from the primary color.",
-			"enable-if": "enable-customcolors",
 			"default": false
 		},
 		"p1-dashfire": {
@@ -534,7 +534,6 @@
 			"type": "bool",
 			"name": "Tint UFO Dome",
 			"description": "Defines if the UFO dome will be tinted a different color from the icon's primary color.",
-			"enable-if": "enable-customcolors",
 			"default": false
 		},
 		"p1-ufodome": {

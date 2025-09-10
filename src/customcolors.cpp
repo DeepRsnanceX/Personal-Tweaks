@@ -6,10 +6,12 @@ using namespace geode::prelude;
 auto theMod = Mod::get();
 
 // misc settings
-auto useCustomColors = theMod->getSettingValue<bool>("enable-customcolors");
-auto tintTrail = theMod->getSettingValue<bool>("tint-trail");
-auto tintGhostTrail = theMod->getSettingValue<bool>("tint-ghost-trail");
-auto tintDashFire = theMod->getSettingValue<bool>("tint-dashfire");
+bool useCustomColors = theMod->getSettingValue<bool>("enable-customcolors");
+bool tintTrail = theMod->getSettingValue<bool>("tint-trail");
+bool tintGhostTrail = theMod->getSettingValue<bool>("tint-ghost-trail");
+bool tintDashFire = theMod->getSettingValue<bool>("tint-dashfire");
+bool tintUfoDome = theMod->getSettingValue<bool>("tint-ufodome");
+bool tintWave = theMod->getSettingValue<bool>("tint-wave");
 // player 1 color settings
 auto p1PrimaryColor = theMod->getSettingValue<cocos2d::ccColor3B>("p1-primary");
 auto p1SecondaryColor = theMod->getSettingValue<cocos2d::ccColor3B>("p1-secondary");
@@ -17,6 +19,7 @@ auto p1WaveColor = theMod->getSettingValue<cocos2d::ccColor3B>("p1-wave");
 auto p1TrailColor = theMod->getSettingValue<cocos2d::ccColor3B>("p1-trail");
 auto p1GhostTrailColor = theMod->getSettingValue<cocos2d::ccColor3B>("p1-ghost-trail");
 auto p1DashFireColor = theMod->getSettingValue<cocos2d::ccColor3B>("p1-dashfire");
+auto p1UfoDomeColor = theMod->getSettingValue<cocos2d::ccColor3B>("p1-ufodome");
 // player 2 color settings
 auto p2PrimaryColor = theMod->getSettingValue<cocos2d::ccColor3B>("p2-primary");
 auto p2SecondaryColor = theMod->getSettingValue<cocos2d::ccColor3B>("p2-secondary");
@@ -24,6 +27,7 @@ auto p2WaveColor = theMod->getSettingValue<cocos2d::ccColor3B>("p2-wave");
 auto p2TrailColor = theMod->getSettingValue<cocos2d::ccColor3B>("p2-trail");
 auto p2GhostTrailColor = theMod->getSettingValue<cocos2d::ccColor3B>("p2-ghost-trail");
 auto p2DashFireColor = theMod->getSettingValue<cocos2d::ccColor3B>("p2-dashfire");
+auto p2UfoDomeColor = theMod->getSettingValue<cocos2d::ccColor3B>("p2-ufodome");
 // particle settings
 auto overrideAllVariances = theMod->getSettingValue<bool>("override-all-variances");
 auto variancesOverride = theMod->getSettingValue<cocos2d::ccColor4B>("variances-override");
@@ -59,6 +63,12 @@ $on_mod(Loaded) {
     listenForSettingChanges("tint-dashfire", [](bool value) {
         tintDashFire = value;
     });
+    listenForSettingChanges("tint-ufodome", [](bool value) {
+        tintUfoDome = value;
+    });
+    listenForSettingChanges("tint-wave", [](bool value) {
+        tintWave = value;
+    });
     // p1 colors
     listenForSettingChanges("p1-primary", [](cocos2d::ccColor3B value) {
         p1PrimaryColor = value;
@@ -78,6 +88,9 @@ $on_mod(Loaded) {
     listenForSettingChanges("p1-dashfire", [](cocos2d::ccColor3B value) {
         p1DashFireColor = value;
     });
+    listenForSettingChanges("p1-ufodome", [](cocos2d::ccColor3B value) {
+        p1UfoDomeColor = value;
+    });
     // p2 colors
     listenForSettingChanges("p2-primary", [](cocos2d::ccColor3B value) {
         p2PrimaryColor = value;
@@ -96,6 +109,9 @@ $on_mod(Loaded) {
     });
     listenForSettingChanges("p2-dashfire", [](cocos2d::ccColor3B value) {
         p2DashFireColor = value;
+    });
+    listenForSettingChanges("p2-ufodome", [](cocos2d::ccColor3B value) {
+        p2UfoDomeColor = value;
     });
     // particle settings
     listenForSettingChanges("override-all-variances", [](bool value) {
