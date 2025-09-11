@@ -11,14 +11,14 @@ struct PlayerColors {
     cocos2d::ccColor3B secondary = {255, 255, 255};
     cocos2d::ccColor3B glow = {255, 255, 255};
     
-    // Special element colors
+    // Special colors
     cocos2d::ccColor3B wave = {255, 255, 255};
     cocos2d::ccColor3B trail = {255, 255, 255};
     cocos2d::ccColor3B ghostTrail = {255, 255, 255};
     cocos2d::ccColor3B dashFire = {255, 255, 255};
     cocos2d::ccColor3B ufoDome = {255, 255, 255};
     
-    // Particle colors (RGBA)
+    // Particle colors
     cocos2d::ccColor4B mainParticlesStart = {255, 255, 255, 255};
     cocos2d::ccColor4B mainParticlesEnd = {255, 255, 255, 255};
     cocos2d::ccColor4B ufoClickParticlesStart = {255, 255, 255, 255};
@@ -37,7 +37,7 @@ struct ColorSettings {
     // Main toggle
     bool useCustomColors = false;
     
-    // Per-player tinting toggles (these are the ones actually used)
+    // Per-player tinting toggles
     bool tintWaveP1 = false;
     bool tintWaveP2 = false;
     bool tintTrailP1 = false;
@@ -64,7 +64,7 @@ struct ColorSettings {
 
 static ColorSettings g_colorSettings;
 
-// Helper function to load all settings from the mod's config
+// Helper function to load settings
 void loadAllSettings() {
     auto& s = g_colorSettings;
     
@@ -122,15 +122,13 @@ void loadAllSettings() {
 }
 
 $on_mod(Loaded) {
-    // Perform an initial load of all settings
     loadAllSettings();
     
-    // Setting listeners for live updates
     listenForSettingChanges("enable-customcolors", [](bool value) { 
         g_colorSettings.useCustomColors = value; 
     });
     
-    // Per-player tinting listeners
+    // Per-player tinting
     listenForSettingChanges("tint-wave-p1", [](bool value) { 
         g_colorSettings.tintWaveP1 = value; 
     });
@@ -162,7 +160,7 @@ $on_mod(Loaded) {
         g_colorSettings.tintUfoDomeP2 = value; 
     });
     
-    // Particle listeners
+    // Particles
     listenForSettingChanges("tint-mainparticles-p1", [](bool value) { 
         g_colorSettings.tintMainParticlesP1 = value; 
     });
@@ -179,7 +177,7 @@ $on_mod(Loaded) {
         g_colorSettings.overrideAllVariances = value; 
     });
     
-    // Player 1 color listeners
+    // Player 1 colors
     listenForSettingChanges("p1-primary", [](cocos2d::ccColor3B value) { 
         g_colorSettings.p1.primary = value; 
     });
@@ -217,7 +215,7 @@ $on_mod(Loaded) {
         g_colorSettings.p1.ufoClickParticlesEnd = value; 
     });
     
-    // Player 2 color listeners
+    // Player 2 colors
     listenForSettingChanges("p2-primary", [](cocos2d::ccColor3B value) { 
         g_colorSettings.p2.primary = value; 
     });
@@ -267,7 +265,7 @@ class $modify(ColorsPlayer, PlayerObject) {
         bool isP2 = m_isSecondPlayer;
         const PlayerColors& colors = isP2 ? settings.p2 : settings.p1;
         
-        // Basic icon colors (only if custom colors enabled)
+        // Basic icon colors
         if (settings.useCustomColors) {
             m_iconSprite->setColor(colors.primary);
             m_iconSpriteSecondary->setColor(colors.secondary);
@@ -289,46 +287,36 @@ class $modify(ColorsPlayer, PlayerObject) {
         if (m_waveTrail) {
             bool shouldTint = isP2 ? settings.tintWaveP2 : settings.tintWaveP1;
             if (shouldTint) {
-                // Individual toggle enabled - use specific wave color
                 m_waveTrail->setColor(colors.wave);
             } else if (settings.useCustomColors) {
-                // Custom colors enabled but no individual toggle - fallback to primary
                 m_waveTrail->setColor(colors.primary);
             }
-            // If neither condition is true, don't tint (original game colors)
         }
         
-        // Regular Trail
+        // Trail
         if (m_regularTrail) {
             bool shouldTint = isP2 ? settings.tintTrailP2 : settings.tintTrailP1;
             if (shouldTint) {
-                // Individual toggle enabled - use specific trail color
                 m_regularTrail->setColor(colors.trail);
             } else if (settings.useCustomColors) {
-                // Custom colors enabled but no individual toggle - fallback to secondary
                 m_regularTrail->setColor(colors.secondary);
             }
-            // If neither condition is true, don't tint (original game colors)
         }
         
         // Ghost Trail
         if (m_ghostTrail) {
             bool shouldTint = isP2 ? settings.tintGhostTrailP2 : settings.tintGhostTrailP1;
             if (shouldTint) {
-                // Individual toggle enabled - use specific ghost trail color
                 m_ghostTrail->m_color = colors.ghostTrail;
             } else if (settings.useCustomColors) {
-                // Custom colors enabled but no individual toggle - fallback to primary
                 m_ghostTrail->m_color = colors.primary;
             }
-            // If neither condition is true, don't tint (original game colors)
         }
         
         // Dash Fire
         if (m_dashFireSprite) {
             bool shouldTint = isP2 ? settings.tintDashFireP2 : settings.tintDashFireP1;
             if (shouldTint) {
-                // Individual toggle enabled - use specific dash fire color
                 m_dashFireSprite->setColor(colors.dashFire);
                 if (m_dashParticles) {
                     auto dashStart = colors.getParticleColor4F({colors.dashFire.r, colors.dashFire.g, colors.dashFire.b, 255});
@@ -337,7 +325,6 @@ class $modify(ColorsPlayer, PlayerObject) {
                     m_dashParticles->m_tEndColor = dashEnd;
                 }
             } else if (settings.useCustomColors) {
-                // Custom colors enabled but no individual toggle - fallback to secondary
                 m_dashFireSprite->setColor(colors.secondary);
                 if (m_dashParticles) {
                     auto secondaryParticle = cocos2d::ccColor4F{colors.secondary.r / 255.0f, colors.secondary.g / 255.0f, colors.secondary.b / 255.0f, 1.0f};
@@ -345,18 +332,14 @@ class $modify(ColorsPlayer, PlayerObject) {
                     m_dashParticles->m_tEndColor = {secondaryParticle.r, secondaryParticle.g, secondaryParticle.b, 0.0f};
                 }
             }
-            // If neither condition is true, don't tint (original game colors)
         }
         
         // UFO Dome
         if (m_isBird && m_birdVehicle) {
             bool shouldTint = isP2 ? settings.tintUfoDomeP2 : settings.tintUfoDomeP1;
             if (shouldTint) {
-                // Individual toggle enabled - use specific UFO dome color
                 m_birdVehicle->setColor(colors.ufoDome);
             }
-            // If custom colors enabled but no individual toggle - DON'T TINT UFO dome (as requested)
-            // If neither condition is true, don't tint (original game colors)
         }
         
         // Particles
@@ -381,9 +364,9 @@ class $modify(ColorsPlayer, PlayerObject) {
                 endColor = colors.getParticleColor4F(colors.mainParticlesEnd);
             } else if (settings.useCustomColors) {
                 startColor = colors.getPrimaryParticleColor();
-                endColor = startColor; // No alpha fade for primary particles
+                endColor = startColor;
             } else {
-                return; // Skip particle updates if no relevant settings enabled
+                return;
             }
             
             applyToParticle(m_playerGroundParticles, startColor, endColor);
@@ -414,7 +397,6 @@ class $modify(ColorsPlayer, PlayerObject) {
     void update(float dt) {
         PlayerObject::update(dt);
         
-        // Check if we need to apply colors at all
         bool isP2 = m_isSecondPlayer;
         if (g_colorSettings.useCustomColors || 
             (isP2 ? (g_colorSettings.tintWaveP2 || g_colorSettings.tintTrailP2 || 
