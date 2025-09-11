@@ -1418,7 +1418,7 @@ bool CustomColorsPopup::setup() {
             t1->setID((settingId + "-p1").c_str());
             menu->addChild(t1);
 
-            auto t2 = createToggler(settingId, {midX + colOffset + 26.0f + 13.f, midY + y});
+            auto t2 = createToggler((settingId + "-p2").c_str(), {midX + colOffset + 26.0f + 13.f, midY + y});
             t2->setID((settingId + "-p2").c_str());
             menu->addChild(t2);
         }
