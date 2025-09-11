@@ -156,7 +156,7 @@ CCNode* CustomSettingsPopup::createCustomColorsSection() {
     section->setID("customcolors-section"_spr);
 
     // Section title
-    auto title = CCLabelBMFont::create("Custom Colors", "bigFont.fnt");
+    auto title = CCLabelBMFont::create("Icon Colors", "bigFont.fnt");
     title->setAnchorPoint({0.f, 0.5f});
     title->setPosition({15.0f, sectionH / 2.0f});
     title->setScale(0.6f);
@@ -1423,6 +1423,23 @@ bool CustomColorsPopup::setup() {
             menu->addChild(t2);
         }
     }
+
+    // i forgor again
+
+    float xd = 20.f;
+    float xdd = 30.f;
+
+    auto p1IndicatorLabel = CCLabelBMFont::create("Player 1", "bigFont.fnt");
+    auto p2IndicatorLabel = CCLabelBMFont::create("Player 2", "bigFont.fnt");
+    p1IndicatorLabel->setPosition({midX - colOffset - xd, midY + startY + xdd});
+    p2IndicatorLabel->setPosition({midX + colOffset + xd, midY + startY + xdd});
+    p1IndicatorLabel->setScale(0.55f);
+    p2IndicatorLabel->setScale(0.55f);
+    p1IndicatorLabel->setOpacity(120);
+    p2IndicatorLabel->setOpacity(120);
+
+    labelNode->addChild(p1IndicatorLabel);
+    labelNode->addChild(p2IndicatorLabel);
 
     // Anchor containers to center
     menu->setPosition({0, 0});

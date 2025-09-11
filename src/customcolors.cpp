@@ -264,6 +264,7 @@ class $modify(ColorsPlayer, PlayerObject) {
         const auto& settings = g_colorSettings;
         bool isP2 = m_isSecondPlayer;
         const PlayerColors& colors = isP2 ? settings.p2 : settings.p1;
+        auto gm = GameManager::sharedState();
         
         // Basic icon colors
         if (settings.useCustomColors) {
@@ -271,14 +272,25 @@ class $modify(ColorsPlayer, PlayerObject) {
             m_iconSpriteSecondary->setColor(colors.secondary);
             m_vehicleSprite->setColor(colors.primary);
             m_vehicleSpriteSecondary->setColor(colors.secondary);
+
+            if (gm->getPlayerGlow()) {
+                m_iconGlow->setColor(colors.glow);
+                m_vehicleGlow->setColor(colors.glow);
+            }
             
             if (m_isRobot && m_robotSprite) {
                 m_robotSprite->m_color = colors.primary;
                 m_robotSprite->m_secondColor = colors.secondary;
+                if (gm->getPlayerGlow()) {
+                    m_robotSprite->m_glowSprite->setColor(colors.glow);
+                }
                 m_robotSprite->updateColors();
             } else if (m_isSpider && m_spiderSprite) {
                 m_spiderSprite->m_color = colors.primary;
                 m_spiderSprite->m_secondColor = colors.secondary;
+                if (gm->getPlayerGlow()) {
+                    m_spiderSprite->m_glowSprite->setColor(colors.glow);
+                }
                 m_spiderSprite->updateColors();
             }
         }
