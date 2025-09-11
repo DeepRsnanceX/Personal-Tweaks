@@ -1236,12 +1236,19 @@ bool RGBExtrasPopup::setup() {
     labelNode->addChild(pdLabel);
 
     auto pdSlider = Slider::create(this, menu_selector(RGBExtrasPopup::onSlider), 0.8f);
+    auto m_thumb = pdSlider->getThumb();
     pdSlider->setAnchorPoint({0.f, 0.f});
     pdSlider->setPosition({midX, midY + sliderY});
     pdSlider->m_sliderBar->setContentSize({200.0f, pdSlider->m_sliderBar->getContentSize().height});
     int pdTag = static_cast<int>(std::hash<std::string>{}("p2-distance"));
     pdSlider->setTag(pdTag);
     pdSlider->setUserObject(CCString::create("p2-distance"));
+
+    if (m_thumb) { 
+        m_thumb->setUserObject(CCString::create("p2-distance"));
+        m_thumb->setTag(pdTag);
+    }
+
     float pdValue = Mod::get()->getSettingValue<double>("p2-distance");
     pdSlider->setValue(pdValue);
     this->m_tagToSetting[pdTag] = "p2-distance";
@@ -1405,14 +1412,15 @@ bool CustomColorsPopup::setup() {
         menu->addChild(p2btn);
 
         // For the rows that require a toggler (Trail/Ghost/Dash/Dome) add a toggler to each side
-        if (i >= 4) {
-            // map row index 4..7 to global toggles (existing settings)
+        if (i >= 3) {  // Changed from 4 to 3 to include Wave (index 3)
+            // map row index 3..7 to global toggles
+            // wave   -> tint-wave
             // trail  -> tint-trail
             // ghost  -> tint-ghost-trail
             // dash   -> tint-dashfire
             // dome   -> tint-ufodome
-            static const std::array<std::string,4> mapTog = {"tint-trail", "tint-ghost-trail", "tint-dashfire", "tint-ufodome"};
-            auto settingId = mapTog[i - 4];
+            static const std::array<std::string,5> mapTog = {"tint-wave", "tint-trail", "tint-ghost-trail", "tint-dashfire", "tint-ufodome"};  // Added tint-wave and increased size to 5
+            auto settingId = mapTog[i - 3];  // Changed from i - 4 to i - 3
 
             auto t1 = createToggler((settingId + "-p1").c_str(), {midX - colOffset + 26.0f + 13.f, midY + y});
             t1->setID((settingId + "-p1").c_str());
