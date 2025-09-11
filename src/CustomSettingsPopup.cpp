@@ -1414,7 +1414,7 @@ bool CustomColorsPopup::setup() {
             static const std::array<std::string,4> mapTog = {"tint-trail", "tint-ghost-trail", "tint-dashfire", "tint-ufodome"};
             auto settingId = mapTog[i - 4];
 
-            auto t1 = createToggler(settingId, {midX - colOffset + 26.0f + 13.f, midY + y});
+            auto t1 = createToggler((settingId + "-p1").c_str(), {midX - colOffset + 26.0f + 13.f, midY + y});
             t1->setID((settingId + "-p1").c_str());
             menu->addChild(t1);
 

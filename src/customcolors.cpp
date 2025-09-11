@@ -285,37 +285,50 @@ class $modify(ColorsPlayer, PlayerObject) {
             }
         }
         
-        // Special elements (can work independently of custom colors)
+        // Wave Trail
         if (m_waveTrail) {
             bool shouldTint = isP2 ? settings.tintWaveP2 : settings.tintWaveP1;
             if (shouldTint) {
+                // Individual toggle enabled - use specific wave color
                 m_waveTrail->setColor(colors.wave);
             } else if (settings.useCustomColors) {
+                // Custom colors enabled but no individual toggle - fallback to primary
                 m_waveTrail->setColor(colors.primary);
             }
+            // If neither condition is true, don't tint (original game colors)
         }
         
+        // Regular Trail
         if (m_regularTrail) {
             bool shouldTint = isP2 ? settings.tintTrailP2 : settings.tintTrailP1;
             if (shouldTint) {
+                // Individual toggle enabled - use specific trail color
                 m_regularTrail->setColor(colors.trail);
             } else if (settings.useCustomColors) {
-                // Don't tint trail if custom colors but no specific trail tint
+                // Custom colors enabled but no individual toggle - fallback to secondary
+                m_regularTrail->setColor(colors.secondary);
             }
+            // If neither condition is true, don't tint (original game colors)
         }
         
+        // Ghost Trail
         if (m_ghostTrail) {
             bool shouldTint = isP2 ? settings.tintGhostTrailP2 : settings.tintGhostTrailP1;
             if (shouldTint) {
+                // Individual toggle enabled - use specific ghost trail color
                 m_ghostTrail->m_color = colors.ghostTrail;
             } else if (settings.useCustomColors) {
+                // Custom colors enabled but no individual toggle - fallback to primary
                 m_ghostTrail->m_color = colors.primary;
             }
+            // If neither condition is true, don't tint (original game colors)
         }
         
+        // Dash Fire
         if (m_dashFireSprite) {
             bool shouldTint = isP2 ? settings.tintDashFireP2 : settings.tintDashFireP1;
             if (shouldTint) {
+                // Individual toggle enabled - use specific dash fire color
                 m_dashFireSprite->setColor(colors.dashFire);
                 if (m_dashParticles) {
                     auto dashStart = colors.getParticleColor4F({colors.dashFire.r, colors.dashFire.g, colors.dashFire.b, 255});
@@ -324,24 +337,26 @@ class $modify(ColorsPlayer, PlayerObject) {
                     m_dashParticles->m_tEndColor = dashEnd;
                 }
             } else if (settings.useCustomColors) {
-                m_dashFireSprite->setColor(colors.primary);
+                // Custom colors enabled but no individual toggle - fallback to secondary
+                m_dashFireSprite->setColor(colors.secondary);
                 if (m_dashParticles) {
-                    auto primaryParticle = colors.getPrimaryParticleColor();
-                    m_dashParticles->m_tStartColor = primaryParticle;
-                    m_dashParticles->m_tEndColor = {primaryParticle.r, primaryParticle.g, primaryParticle.b, 0.0f};
+                    auto secondaryParticle = cocos2d::ccColor4F{colors.secondary.r / 255.0f, colors.secondary.g / 255.0f, colors.secondary.b / 255.0f, 1.0f};
+                    m_dashParticles->m_tStartColor = secondaryParticle;
+                    m_dashParticles->m_tEndColor = {secondaryParticle.r, secondaryParticle.g, secondaryParticle.b, 0.0f};
                 }
             }
+            // If neither condition is true, don't tint (original game colors)
         }
         
-        // CORRECTED: Check for m_isBird and apply color to m_birdVehicle
+        // UFO Dome
         if (m_isBird && m_birdVehicle) {
             bool shouldTint = isP2 ? settings.tintUfoDomeP2 : settings.tintUfoDomeP1;
             if (shouldTint) {
+                // Individual toggle enabled - use specific UFO dome color
                 m_birdVehicle->setColor(colors.ufoDome);
-            } else if (settings.useCustomColors) {
-                // Fallback for UFO dome is secondary color when custom colors are on
-                m_birdVehicle->setColor(colors.secondary);
             }
+            // If custom colors enabled but no individual toggle - DON'T TINT UFO dome (as requested)
+            // If neither condition is true, don't tint (original game colors)
         }
         
         // Particles

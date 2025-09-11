@@ -458,7 +458,7 @@
 			"default": "#ffffff",
 			"enable-if": "enable-customcolors"
 		},
-		"tint-wave": {
+		"tint-wave-p1": {
 			"type": "bool",
 			"name": "Tint Wave Trail",
 			"description": "Defines if the wave trail will be tinted or nah. Easier to make this an option LOLLLL",
@@ -482,7 +482,7 @@
 			"default": "#ffffff",
 			"enable-if": "tint-wave"
 		},
-		"tint-trail": {
+		"tint-trail-p1": {
 			"type": "bool",
 			"name": "Tint Trail",
 			"description": "Defines if the trail will be tinted or nah. Easier to make this an option LOLLLL",
@@ -506,7 +506,7 @@
 			"default": "#ffffff",
 			"enable-if": "tint-trail"
 		},
-		"tint-ghost-trail": {
+		"tint-ghost-trail-p1": {
 			"type": "bool",
 			"name": "Tint Ghost Trail",
 			"description": "Defines if the ghost trail will be tinted a different color from the primary color.",
@@ -530,7 +530,7 @@
 			"default": "#ffffff",
 			"enable-if": "tint-ghost-trail"
 		},
-		"tint-dashfire": {
+		"tint-dashfire-p1": {
 			"type": "bool",
 			"name": "Tint Dash Fire",
 			"description": "Defines if the dash fire will be tinted a different color from the primary color.",
@@ -554,7 +554,7 @@
 			"default": "#ffffff",
 			"enable-if": "tint-dashfire"
 		},
-		"tint-ufodome": {
+		"tint-ufodome-p1": {
 			"type": "bool",
 			"name": "Tint UFO Dome",
 			"description": "Defines if the UFO dome will be tinted a different color from the icon's primary color.",
