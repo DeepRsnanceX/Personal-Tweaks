@@ -470,6 +470,12 @@
 			"default": "#ffffff",
 			"enable-if": "tint-wave"
 		},
+		"tint-wave-p2": {
+			"type": "bool",
+			"name": "Tint Wave Trail - P2",
+			"description": "Defines if Player 2's wave trail will be tinted a different color from Player 1's wave trail.",
+			"default": false
+		},
 		"p2-wave": {
 			"type": "rgb",
 			"name": "Player 2 - Wave Color",
@@ -487,6 +493,12 @@
 			"name": "Player 1 - Trail Color",
 			"default": "#ffffff",
 			"enable-if": "tint-trail"
+		},
+		"tint-trail-p2": {
+			"type": "bool",
+			"name": "Tint Trail - P2",
+			"description": "Defines if Player 2's trail will be tinted a different color from Player 1's trail.",
+			"default": false
 		},
 		"p2-trail": {
 			"type": "rgb",
@@ -506,6 +518,12 @@
 			"default": "#ffffff",
 			"enable-if": "tint-ghost-trail"
 		},
+		"tint-ghost-trail-p2": {
+			"type": "bool",
+			"name": "Tint Ghost Trail - P2",
+			"description": "Defines if Player 2's ghost trail will be tinted a different color from Player 1's ghost trail.",
+			"default": false
+		},
 		"p2-ghost-trail": {
 			"type": "rgb",
 			"name": "Player 2 - Ghost Trail Color",
@@ -524,6 +542,12 @@
 			"default": "#ffffff",
 			"enable-if": "tint-dashfire"
 		},
+		"tint-dashfire-p2": {
+			"type": "bool",
+			"name": "Tint Dash Fire - P2",
+			"description": "Defines if Player 2's dash fire will be tinted a different color from Player 1's dash fire.",
+			"default": false
+		},
 		"p2-dashfire": {
 			"type": "rgb",
 			"name": "Player 2 - Dash Fire Color",
@@ -541,6 +565,12 @@
 			"name": "Player 1 - UFO Dome Color",
 			"default": "#ffffff",
 			"enable-if": "tint-ufodome"
+		},
+		"tint-ufodome-p2": {
+			"type": "bool",
+			"name": "Tint UFO Dome - P2",
+			"description": "Defines if Player 2's UFO dome will be tinted a different color from Player 1's UFO dome.",
+			"default": false
 		},
 		"p2-ufodome": {
 			"type": "rgb",
