@@ -34,10 +34,31 @@ struct PlayerColors {
 };
 
 struct ColorSettings {
-    bool useCustomColors = false, tintWave = false, tintTrail = false, tintGhostTrail = false, tintDashFire = false, tintUfoDome = false;
-    bool tintWaveP1 = false, tintWaveP2 = false, tintTrailP1 = false, tintTrailP2 = false, tintGhostTrailP1 = false, tintGhostTrailP2 = false, tintDashFireP1 = false, tintDashFireP2 = false, tintUfoDomeP1 = false, tintUfoDomeP2 = false;
-    bool tintMainParticlesP1 = false, tintMainParticlesP2 = false, tintUfoClickParticlesP1 = false, tintUfoClickParticlesP2 = false, overrideAllVariances = false;
-    PlayerColors p1, p2;
+    // Main toggle
+    bool useCustomColors = false;
+    
+    // Per-player tinting toggles (these are the ones actually used)
+    bool tintWaveP1 = false;
+    bool tintWaveP2 = false;
+    bool tintTrailP1 = false;
+    bool tintTrailP2 = false;
+    bool tintGhostTrailP1 = false;
+    bool tintGhostTrailP2 = false;
+    bool tintDashFireP1 = false;
+    bool tintDashFireP2 = false;
+    bool tintUfoDomeP1 = false;
+    bool tintUfoDomeP2 = false;
+    
+    // Particle settings
+    bool tintMainParticlesP1 = false;
+    bool tintMainParticlesP2 = false;
+    bool tintUfoClickParticlesP1 = false;
+    bool tintUfoClickParticlesP2 = false;
+    bool overrideAllVariances = false;
+    
+    // Colors
+    PlayerColors p1;
+    PlayerColors p2;
     cocos2d::ccColor4B variancesOverride = {10, 10, 10, 10};
 };
 
@@ -46,12 +67,11 @@ static ColorSettings g_colorSettings;
 // Helper function to load all settings from the mod's config
 void loadAllSettings() {
     auto& s = g_colorSettings;
+    
+    // Main toggle
     s.useCustomColors = theMod->getSettingValue<bool>("enable-customcolors");
-    s.tintWave = theMod->getSettingValue<bool>("tint-wave");
-    s.tintTrail = theMod->getSettingValue<bool>("tint-trail");
-    s.tintGhostTrail = theMod->getSettingValue<bool>("tint-ghost-trail");
-    s.tintDashFire = theMod->getSettingValue<bool>("tint-dashfire");
-    s.tintUfoDome = theMod->getSettingValue<bool>("tint-ufodome");
+    
+    // Per-player tinting toggles
     s.tintWaveP1 = theMod->getSettingValue<bool>("tint-wave-p1");
     s.tintWaveP2 = theMod->getSettingValue<bool>("tint-wave-p2");
     s.tintTrailP1 = theMod->getSettingValue<bool>("tint-trail-p1");
@@ -62,25 +82,182 @@ void loadAllSettings() {
     s.tintDashFireP2 = theMod->getSettingValue<bool>("tint-dashfire-p2");
     s.tintUfoDomeP1 = theMod->getSettingValue<bool>("tint-ufodome-p1");
     s.tintUfoDomeP2 = theMod->getSettingValue<bool>("tint-ufodome-p2");
+    
+    // Particle settings
     s.tintMainParticlesP1 = theMod->getSettingValue<bool>("tint-mainparticles-p1");
     s.tintMainParticlesP2 = theMod->getSettingValue<bool>("tint-mainparticles-p2");
     s.tintUfoClickParticlesP1 = theMod->getSettingValue<bool>("tint-ufo-click-particles-p1");
     s.tintUfoClickParticlesP2 = theMod->getSettingValue<bool>("tint-ufo-click-particles-p2");
     s.overrideAllVariances = theMod->getSettingValue<bool>("override-all-variances");
+    
+    // Player 1 colors
     s.p1.primary = theMod->getSettingValue<cocos2d::ccColor3B>("p1-primary");
     s.p1.secondary = theMod->getSettingValue<cocos2d::ccColor3B>("p1-secondary");
-    // ... (load all other colors for p1 and p2) ...
+    s.p1.glow = theMod->getSettingValue<cocos2d::ccColor3B>("p1-glow");
+    s.p1.wave = theMod->getSettingValue<cocos2d::ccColor3B>("p1-wave");
+    s.p1.trail = theMod->getSettingValue<cocos2d::ccColor3B>("p1-trail");
+    s.p1.ghostTrail = theMod->getSettingValue<cocos2d::ccColor3B>("p1-ghost-trail");
+    s.p1.dashFire = theMod->getSettingValue<cocos2d::ccColor3B>("p1-dashfire");
+    s.p1.ufoDome = theMod->getSettingValue<cocos2d::ccColor3B>("p1-ufodome");
+    s.p1.mainParticlesStart = theMod->getSettingValue<cocos2d::ccColor4B>("p1-main-particles-start");
+    s.p1.mainParticlesEnd = theMod->getSettingValue<cocos2d::ccColor4B>("p1-main-particles-end");
+    s.p1.ufoClickParticlesStart = theMod->getSettingValue<cocos2d::ccColor4B>("p1-ufo-click-particles-start");
+    s.p1.ufoClickParticlesEnd = theMod->getSettingValue<cocos2d::ccColor4B>("p1-ufo-click-particles-end");
+    
+    // Player 2 colors
+    s.p2.primary = theMod->getSettingValue<cocos2d::ccColor3B>("p2-primary");
+    s.p2.secondary = theMod->getSettingValue<cocos2d::ccColor3B>("p2-secondary");
+    s.p2.glow = theMod->getSettingValue<cocos2d::ccColor3B>("p2-glow");
+    s.p2.wave = theMod->getSettingValue<cocos2d::ccColor3B>("p2-wave");
+    s.p2.trail = theMod->getSettingValue<cocos2d::ccColor3B>("p2-trail");
+    s.p2.ghostTrail = theMod->getSettingValue<cocos2d::ccColor3B>("p2-ghost-trail");
+    s.p2.dashFire = theMod->getSettingValue<cocos2d::ccColor3B>("p2-dashfire");
+    s.p2.ufoDome = theMod->getSettingValue<cocos2d::ccColor3B>("p2-ufodome");
+    s.p2.mainParticlesStart = theMod->getSettingValue<cocos2d::ccColor4B>("p2-main-particles-start");
+    s.p2.mainParticlesEnd = theMod->getSettingValue<cocos2d::ccColor4B>("p2-main-particles-end");
+    s.p2.ufoClickParticlesStart = theMod->getSettingValue<cocos2d::ccColor4B>("p2-ufo-click-particles-start");
+    s.p2.ufoClickParticlesEnd = theMod->getSettingValue<cocos2d::ccColor4B>("p2-ufo-click-particles-end");
+    
     s.variancesOverride = theMod->getSettingValue<cocos2d::ccColor4B>("variances-override");
 }
-
 
 $on_mod(Loaded) {
     // Perform an initial load of all settings
     loadAllSettings();
     
-    // Setting listeners are still useful for live changes if the user doesn't pause
-    listenForSettingChanges("enable-customcolors", [](bool value) { g_colorSettings.useCustomColors = value; });
-    // ... add listeners for all other settings if desired, following the same pattern ...
+    // Setting listeners for live updates
+    listenForSettingChanges("enable-customcolors", [](bool value) { 
+        g_colorSettings.useCustomColors = value; 
+    });
+    
+    // Per-player tinting listeners
+    listenForSettingChanges("tint-wave-p1", [](bool value) { 
+        g_colorSettings.tintWaveP1 = value; 
+    });
+    listenForSettingChanges("tint-wave-p2", [](bool value) { 
+        g_colorSettings.tintWaveP2 = value; 
+    });
+    listenForSettingChanges("tint-trail-p1", [](bool value) { 
+        g_colorSettings.tintTrailP1 = value; 
+    });
+    listenForSettingChanges("tint-trail-p2", [](bool value) { 
+        g_colorSettings.tintTrailP2 = value; 
+    });
+    listenForSettingChanges("tint-ghost-trail-p1", [](bool value) { 
+        g_colorSettings.tintGhostTrailP1 = value; 
+    });
+    listenForSettingChanges("tint-ghost-trail-p2", [](bool value) { 
+        g_colorSettings.tintGhostTrailP2 = value; 
+    });
+    listenForSettingChanges("tint-dashfire-p1", [](bool value) { 
+        g_colorSettings.tintDashFireP1 = value; 
+    });
+    listenForSettingChanges("tint-dashfire-p2", [](bool value) { 
+        g_colorSettings.tintDashFireP2 = value; 
+    });
+    listenForSettingChanges("tint-ufodome-p1", [](bool value) { 
+        g_colorSettings.tintUfoDomeP1 = value; 
+    });
+    listenForSettingChanges("tint-ufodome-p2", [](bool value) { 
+        g_colorSettings.tintUfoDomeP2 = value; 
+    });
+    
+    // Particle listeners
+    listenForSettingChanges("tint-mainparticles-p1", [](bool value) { 
+        g_colorSettings.tintMainParticlesP1 = value; 
+    });
+    listenForSettingChanges("tint-mainparticles-p2", [](bool value) { 
+        g_colorSettings.tintMainParticlesP2 = value; 
+    });
+    listenForSettingChanges("tint-ufo-click-particles-p1", [](bool value) { 
+        g_colorSettings.tintUfoClickParticlesP1 = value; 
+    });
+    listenForSettingChanges("tint-ufo-click-particles-p2", [](bool value) { 
+        g_colorSettings.tintUfoClickParticlesP2 = value; 
+    });
+    listenForSettingChanges("override-all-variances", [](bool value) { 
+        g_colorSettings.overrideAllVariances = value; 
+    });
+    
+    // Player 1 color listeners
+    listenForSettingChanges("p1-primary", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.primary = value; 
+    });
+    listenForSettingChanges("p1-secondary", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.secondary = value; 
+    });
+    listenForSettingChanges("p1-glow", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.glow = value; 
+    });
+    listenForSettingChanges("p1-wave", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.wave = value; 
+    });
+    listenForSettingChanges("p1-trail", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.trail = value; 
+    });
+    listenForSettingChanges("p1-ghost-trail", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.ghostTrail = value; 
+    });
+    listenForSettingChanges("p1-dashfire", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.dashFire = value; 
+    });
+    listenForSettingChanges("p1-ufodome", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p1.ufoDome = value; 
+    });
+    listenForSettingChanges("p1-main-particles-start", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p1.mainParticlesStart = value; 
+    });
+    listenForSettingChanges("p1-main-particles-end", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p1.mainParticlesEnd = value; 
+    });
+    listenForSettingChanges("p1-ufo-click-particles-start", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p1.ufoClickParticlesStart = value; 
+    });
+    listenForSettingChanges("p1-ufo-click-particles-end", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p1.ufoClickParticlesEnd = value; 
+    });
+    
+    // Player 2 color listeners
+    listenForSettingChanges("p2-primary", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.primary = value; 
+    });
+    listenForSettingChanges("p2-secondary", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.secondary = value; 
+    });
+    listenForSettingChanges("p2-glow", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.glow = value; 
+    });
+    listenForSettingChanges("p2-wave", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.wave = value; 
+    });
+    listenForSettingChanges("p2-trail", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.trail = value; 
+    });
+    listenForSettingChanges("p2-ghost-trail", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.ghostTrail = value; 
+    });
+    listenForSettingChanges("p2-dashfire", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.dashFire = value; 
+    });
+    listenForSettingChanges("p2-ufodome", [](cocos2d::ccColor3B value) { 
+        g_colorSettings.p2.ufoDome = value; 
+    });
+    listenForSettingChanges("p2-main-particles-start", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p2.mainParticlesStart = value; 
+    });
+    listenForSettingChanges("p2-main-particles-end", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p2.mainParticlesEnd = value; 
+    });
+    listenForSettingChanges("p2-ufo-click-particles-start", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p2.ufoClickParticlesStart = value; 
+    });
+    listenForSettingChanges("p2-ufo-click-particles-end", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.p2.ufoClickParticlesEnd = value; 
+    });
+    
+    listenForSettingChanges("variances-override", [](cocos2d::ccColor4B value) { 
+        g_colorSettings.variancesOverride = value; 
+    });
 }
 
 class $modify(ColorsPlayer, PlayerObject) {
@@ -90,35 +267,84 @@ class $modify(ColorsPlayer, PlayerObject) {
         bool isP2 = m_isSecondPlayer;
         const PlayerColors& colors = isP2 ? settings.p2 : settings.p1;
         
+        // Basic icon colors (only if custom colors enabled)
         if (settings.useCustomColors) {
             m_iconSprite->setColor(colors.primary);
             m_iconSpriteSecondary->setColor(colors.secondary);
             m_vehicleSprite->setColor(colors.primary);
-            m_vehicleSpriteSecondary->setColor(colors.secondary); // This is correct for ship, etc.
-            // ... robot/spider logic ...
+            m_vehicleSpriteSecondary->setColor(colors.secondary);
+            
+            if (m_isRobot && m_robotSprite) {
+                m_robotSprite->m_color = colors.primary;
+                m_robotSprite->m_secondColor = colors.secondary;
+                m_robotSprite->updateColors();
+            } else if (m_isSpider && m_spiderSprite) {
+                m_spiderSprite->m_color = colors.primary;
+                m_spiderSprite->m_secondColor = colors.secondary;
+                m_spiderSprite->updateColors();
+            }
         }
         
-        // --- Special Elements ---
-
+        // Special elements (can work independently of custom colors)
         if (m_waveTrail) {
             bool shouldTint = isP2 ? settings.tintWaveP2 : settings.tintWaveP1;
-            if (settings.tintWave || shouldTint) m_waveTrail->setColor(colors.wave);
-            else if (settings.useCustomColors) m_waveTrail->setColor(colors.primary);
+            if (shouldTint) {
+                m_waveTrail->setColor(colors.wave);
+            } else if (settings.useCustomColors) {
+                m_waveTrail->setColor(colors.primary);
+            }
+        }
+        
+        if (m_regularTrail) {
+            bool shouldTint = isP2 ? settings.tintTrailP2 : settings.tintTrailP1;
+            if (shouldTint) {
+                m_regularTrail->setColor(colors.trail);
+            } else if (settings.useCustomColors) {
+                // Don't tint trail if custom colors but no specific trail tint
+            }
+        }
+        
+        if (m_ghostTrail) {
+            bool shouldTint = isP2 ? settings.tintGhostTrailP2 : settings.tintGhostTrailP1;
+            if (shouldTint) {
+                m_ghostTrail->m_color = colors.ghostTrail;
+            } else if (settings.useCustomColors) {
+                m_ghostTrail->m_color = colors.primary;
+            }
+        }
+        
+        if (m_dashFireSprite) {
+            bool shouldTint = isP2 ? settings.tintDashFireP2 : settings.tintDashFireP1;
+            if (shouldTint) {
+                m_dashFireSprite->setColor(colors.dashFire);
+                if (m_dashParticles) {
+                    auto dashStart = colors.getParticleColor4F({colors.dashFire.r, colors.dashFire.g, colors.dashFire.b, 255});
+                    auto dashEnd = colors.getParticleColor4F({colors.dashFire.r, colors.dashFire.g, colors.dashFire.b, 0});
+                    m_dashParticles->m_tStartColor = dashStart;
+                    m_dashParticles->m_tEndColor = dashEnd;
+                }
+            } else if (settings.useCustomColors) {
+                m_dashFireSprite->setColor(colors.primary);
+                if (m_dashParticles) {
+                    auto primaryParticle = colors.getPrimaryParticleColor();
+                    m_dashParticles->m_tStartColor = primaryParticle;
+                    m_dashParticles->m_tEndColor = {primaryParticle.r, primaryParticle.g, primaryParticle.b, 0.0f};
+                }
+            }
         }
         
         // CORRECTED: Check for m_isBird and apply color to m_birdVehicle
         if (m_isBird && m_birdVehicle) {
             bool shouldTint = isP2 ? settings.tintUfoDomeP2 : settings.tintUfoDomeP1;
-            if (settings.tintUfoDome || shouldTint) {
+            if (shouldTint) {
                 m_birdVehicle->setColor(colors.ufoDome);
             } else if (settings.useCustomColors) {
                 // Fallback for UFO dome is secondary color when custom colors are on
                 m_birdVehicle->setColor(colors.secondary);
             }
         }
-
-        // --- Particles ---
         
+        // Particles
         auto applyToParticle = [&](cocos2d::CCParticleSystem* particle, const cocos2d::ccColor4F& start, const cocos2d::ccColor4F& end) {
             if (particle) {
                 particle->m_tStartColor = start;
@@ -131,39 +357,65 @@ class $modify(ColorsPlayer, PlayerObject) {
             }
         };
 
-        bool shouldTintMain = isP2 ? settings.tintMainParticlesP2 : settings.tintMainParticlesP1;
-        if (shouldTintMain || settings.useCustomColors) {
+        if (m_playerGroundParticles || m_landParticles0 || m_landParticles1 || m_vehicleGroundParticles) {
+            bool shouldTintMain = isP2 ? settings.tintMainParticlesP2 : settings.tintMainParticlesP1;
             cocos2d::ccColor4F startColor, endColor;
+            
             if (shouldTintMain) {
                 startColor = colors.getParticleColor4F(colors.mainParticlesStart);
                 endColor = colors.getParticleColor4F(colors.mainParticlesEnd);
-            } else {
+            } else if (settings.useCustomColors) {
                 startColor = colors.getPrimaryParticleColor();
-                // CORRECTED: End alpha is max, as particles fade by size, not alpha.
-                endColor = startColor;
+                endColor = startColor; // No alpha fade for primary particles
+            } else {
+                return; // Skip particle updates if no relevant settings enabled
             }
+            
             applyToParticle(m_playerGroundParticles, startColor, endColor);
             applyToParticle(m_landParticles0, startColor, endColor);
             applyToParticle(m_landParticles1, startColor, endColor);
             applyToParticle(m_vehicleGroundParticles, startColor, endColor);
+        }
+        
+        if (m_ufoClickParticles) {
+            bool shouldTintUfo = isP2 ? settings.tintUfoClickParticlesP2 : settings.tintUfoClickParticlesP1;
+            if (shouldTintUfo) {
+                m_ufoClickParticles->m_tStartColor = colors.getParticleColor4F(colors.ufoClickParticlesStart);
+                m_ufoClickParticles->m_tEndColor = colors.getParticleColor4F(colors.ufoClickParticlesEnd);
+            } else if (settings.useCustomColors) {
+                auto primaryParticle = colors.getPrimaryParticleColor();
+                m_ufoClickParticles->m_tStartColor = primaryParticle;
+                m_ufoClickParticles->m_tEndColor = primaryParticle;
+            }
+            
+            if (settings.overrideAllVariances) {
+                auto variance = colors.getParticleColor4F(settings.variancesOverride);
+                m_ufoClickParticles->m_tStartColorVar = variance;
+                m_ufoClickParticles->m_tEndColorVar = variance;
+            }
         }
     }
 
     void update(float dt) {
         PlayerObject::update(dt);
         
-        // This optimization check is still valid
+        // Check if we need to apply colors at all
         bool isP2 = m_isSecondPlayer;
-        if (g_colorSettings.useCustomColors || g_colorSettings.tintWave || g_colorSettings.tintTrail || 
-            (isP2 ? (g_colorSettings.tintWaveP2 || g_colorSettings.tintTrailP2) : (g_colorSettings.tintWaveP1 || g_colorSettings.tintTrailP1))
-            /* ... add other checks here ... */) {
+        if (g_colorSettings.useCustomColors || 
+            (isP2 ? (g_colorSettings.tintWaveP2 || g_colorSettings.tintTrailP2 || 
+                   g_colorSettings.tintGhostTrailP2 || g_colorSettings.tintDashFireP2 || 
+                   g_colorSettings.tintUfoDomeP2 || g_colorSettings.tintMainParticlesP2 || 
+                   g_colorSettings.tintUfoClickParticlesP2) :
+                  (g_colorSettings.tintWaveP1 || g_colorSettings.tintTrailP1 || 
+                   g_colorSettings.tintGhostTrailP1 || g_colorSettings.tintDashFireP1 || 
+                   g_colorSettings.tintUfoDomeP1 || g_colorSettings.tintMainParticlesP1 || 
+                   g_colorSettings.tintUfoClickParticlesP1))) {
             
             applyColorsToPlayer();
         }
     }
 };
 
-// CORRECTED: Re-added PlayLayer hooks to reload settings on unpause
 class $modify(ColorsPlayLayer, PlayLayer) {
     void resume() {
         PlayLayer::resume();
