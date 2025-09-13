@@ -679,7 +679,9 @@
 	},
 	"resources": {
 		"files": [
-			"resources/*.ogg"
+			"resources/*.ogg",
+			"resources/fonts/*.png",
+			"resources/fonts/*.fnt"
 		],
 		"spritesheets": {
 			"TotemSheet": [

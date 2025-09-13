@@ -5,4 +5,5 @@
 class SarahsTweaks {
 public:
     void cooldownTotem(float dt);
+    void cooldownTP (float dt);
 };
