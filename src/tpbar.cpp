@@ -99,7 +99,9 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         if (!playLayer) return;
 
         tpCooldown = true;
-        this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTP), 0.12f);
+        this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTP), 0.2f);
+
+        fmod->playEffect("snd_graze.ogg"_spr);
 
         auto plHasBar = playLayer->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
@@ -109,10 +111,6 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         if (!barFill) return;
 
         float currentScaleY = barFill->getScaleY();
-
-        if (currentScaleY < 1.f) {
-            fmod->playEffect("snd_graze.ogg"_spr);
-        }
 
         float newScaleY = currentScaleY + getRandomFloat(0.01f, 0.09f);
         if (newScaleY > 1.f) newScaleY = 1.f;
@@ -124,10 +122,10 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         if (!barFillLine) return;
 
         auto fillSize = barFill->getContentSize();
-        auto moveLineAnim = CCEaseInOut::create(CCMoveTo::create(0.05f, {barFill->getPositionX(), fillSize.height * newScaleY}), 2.0f);
+        //auto moveLineAnim = CCEaseInOut::create(CCMoveTo::create(0.05f, {barFill->getPositionX(), fillSize.height * newScaleY}), 2.5f);
         //barFillLine->stopAllActions();
-        barFillLine->runAction(moveLineAnim);
-        //barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
+        //barFillLine->runAction(moveLineAnim);
+        barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
 
         auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
         if (!theLabel) return;
@@ -138,6 +136,9 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 
         if (tpAmount == 100) {
             tpString = "MAX";
+            theLabel->setScale(0.6f);
+        } else {
+            theLabel->setScale(0.7f);
         }
 
         theLabel->setString(tpString.c_str(), true);
@@ -150,12 +151,27 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         auto tpSprite = static_cast<CCSprite*>(targetPlayer->getChildByID("tp-effect-sprite"_spr));
         if (!tpSprite) return;
 
-        // Update the sprite to match current player icon
         float tpSpriteExtraScale = 0.3f;
-        tpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
-        tpSprite->setScale(targetPlayer->m_iconSprite->getScale() + tpSpriteExtraScale);
         
-        // Stop any existing animation and run the new one
+        if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
+            tpSprite->setDisplayFrame(targetPlayer->m_vehicleSprite->displayFrame());
+            tpSprite->setScale(targetPlayer->getScale() + tpSpriteExtraScale);
+            tpSprite->setPosition(targetPlayer->m_vehicleSprite->getPosition());
+        } else if (targetPlayer->m_isRobot || targetPlayer->m_isSpider) {
+            auto mainSprite = targetPlayer->m_isRobot ? targetPlayer->m_robotSprite : targetPlayer->m_spiderSprite;
+            auto headSprite = mainSprite->m_headSprite;
+            
+            tpSprite->setDisplayFrame(headSprite->displayFrame());
+            tpSprite->setScale(targetPlayer->getScale() + tpSpriteExtraScale);
+            tpSprite->setPosition(headSprite->getPosition());
+        } else {
+            tpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
+            tpSprite->setScale(targetPlayer->getScale() + tpSpriteExtraScale);
+            tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
+        }
+
+        tpSprite->setBlendFunc({GL_ONE_MINUS_DST_COLOR, GL_ONE});
+        
         tpSprite->stopAllActions();
         
         auto actionThing = CCSequence::create(
@@ -223,6 +239,8 @@ class $modify(TPPlayLayer, PlayLayer) {
         auto percentLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
         if (!percentLabel) return;
         percentLabel->setString("0", true);
+
+        tpCooldown = false;
     }
 };
 
@@ -230,14 +248,14 @@ class $modify(TPPlayerObject, PlayerObject) {
     bool init(int player, int ship, GJBaseGameLayer* gameLayer, CCLayer* layer, bool playLayer) {
         if (!PlayerObject::init(player, ship, gameLayer, layer, playLayer)) return false;
         
-        // Create the TP effect sprite
         auto tpSprite = CCSprite::create();
         tpSprite->setID("tp-effect-sprite"_spr);
-        tpSprite->setOpacity(0); // Start invisible
+        tpSprite->setOpacity(0);
         //tpSprite->setBlendFunc({GL_ONE_MINUS_SRC_COLOR, GL_ONE});
         
-        // We'll set the display frame and scale later when we need it
         this->addChild(tpSprite);
+
+        tpCooldown = false;
         
         return true;
     }
@@ -245,7 +263,6 @@ class $modify(TPPlayerObject, PlayerObject) {
     void switchedToMode(GameObjectType p0) {
         PlayerObject::switchedToMode(p0);
         
-        // Get the PlayLayer and TP bar
         auto playLayer = PlayLayer::get();
         if (!playLayer) return;
         
@@ -259,7 +276,6 @@ class $modify(TPPlayerObject, PlayerObject) {
         
         if (currentScaleY <= 0.f) return;
         
-        // Calculate drain amount: 10% to 100% of current TP
         float minDrain = currentScaleY * 0.1f;
         float maxDrain = currentScaleY;
         float drainAmount = getRandomFloat(minDrain, maxDrain);
@@ -267,27 +283,25 @@ class $modify(TPPlayerObject, PlayerObject) {
         float newScaleY = currentScaleY - drainAmount;
         if (newScaleY < 0.f) newScaleY = 0.f;
         
-        // Update the bar fill
         auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.25f, 1.f, newScaleY), 2.0f);
         barFill->runAction(barScaleAction);
         
         // Update the line position
         auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
-        if (barFillLine) {
-            auto fillSize = barFill->getContentSize();
-            auto moveLineAnim = CCEaseInOut::create(CCMoveTo::create(0.1f, {barFill->getPositionX(), fillSize.height * newScaleY}), 2.0f);
-            barFillLine->runAction(moveLineAnim);
-            //barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
-        }
+        if (!barFillLine) return;
+
+        auto fillSize = barFill->getContentSize();
+        //auto moveLineAnim = CCEaseInOut::create(CCMoveTo::create(0.1f, {barFill->getPositionX(), fillSize.height * newScaleY}), 2.0f);
+        //barFillLine->runAction(moveLineAnim);
+        barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
         
-        // Update the percentage label
         auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
-        if (theLabel) {
-            float tpAmountFloat = newScaleY * 100.f;
-            int tpAmount = static_cast<int>(tpAmountFloat);
-            auto tpString = fmt::format("{}", tpAmount);
-            theLabel->setString(tpString.c_str(), true);
-        }
+        if (!theLabel) return;
+
+        float tpAmountFloat = newScaleY * 100.f;
+        int tpAmount = static_cast<int>(tpAmountFloat);
+        auto tpString = fmt::format("{}", tpAmount);
+        theLabel->setString(tpString.c_str(), true);
 
     }
 };
