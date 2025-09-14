@@ -2,6 +2,7 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <random>
+#include "ShaderCache.h"
 #include "helper.hpp"
 
 using namespace geode::prelude;
@@ -12,6 +13,28 @@ bool isPlayer2 = false;
 static const std::set<int> sawblades = {88, 89, 98, 183, 184, 185, 186, 187, 188, 397, 398, 399, 678, 679, 680, 740, 741, 742, 1619, 1620, 1701, 1702, 1703, 1705, 1706, 1707, 1708, 1709, 1710, 1734, 1735, 1736};
 
 bool enableTPBar = true;
+
+void loadOutlineShader() {
+    std::string fragOutline = R"(
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec4 v_fragmentColor;
+        varying vec2 v_texCoord;
+        uniform sampler2D CC_Texture0;
+
+        void main() {
+            vec4 c = texture2D(CC_Texture0, v_texCoord);
+            float brightness = dot(c.rgb, vec3(1./3.)) / c.a;
+            float isOutline = smoothstep(0.9, 0.0, brightness);
+            c = vec4(c.a * isOutline);
+            gl_FragColor = c * v_fragmentColor;
+        }
+    )";
+
+    ShaderCache::get()->createShader("tp-outline", fragOutline);
+}
 
 float getRandomFloat(float min, float max) {
     static std::random_device rd;
@@ -73,7 +96,7 @@ CCNode* createTpBar() {
     tpPercentLabel->setPosition({tpTextSprite->getPositionX() - 9.f, tpTextSprite->getPositionY() - 18.f});
     tpPercentLabel->setScale(0.7f);
     tpPercentLabel->setAlignment(kCCTextAlignmentLeft);
-    tpPercentLabel->setExtraKerning(-6);
+    tpPercentLabel->setExtraKerning(-5);
     tpPercentLabel->setAnchorPoint({0.f, 0.5f});
     percentSimbol->setPosition({tpTextSprite->getPositionX(), tpPercentLabel->getPositionY() - 13.f});
     percentSimbol->setScale(0.7f);
@@ -88,6 +111,10 @@ CCNode* createTpBar() {
     containerNode->setScale(1.5f);
 
     return containerNode;
+}
+
+$on_mod(Loaded) {
+    loadOutlineShader();
 }
 
 class $modify(TPBaseLayer, GJBaseGameLayer) {
@@ -143,12 +170,14 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 
         theLabel->setString(tpString.c_str(), true);
 
+        // -----------------------
         // all player stuff
+        // -----------------------
 
         PlayerObject* targetPlayer = isPlayer2 ? m_player2 : m_player1;
         if (!targetPlayer) return;
         
-        auto tpSprite = static_cast<CCSprite*>(targetPlayer->getChildByID("tp-effect-sprite"_spr));
+        auto tpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("tp-effect-sprite"_spr));
         if (!tpSprite) return;
 
         float tpSpriteExtraScale = 0.3f;
@@ -170,16 +199,21 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
             tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
         }
 
-        tpSprite->setBlendFunc({GL_ONE_MINUS_DST_COLOR, GL_ONE});
-        
-        tpSprite->stopAllActions();
+        if (CCGLProgram* outlineProgram = ShaderCache::get()->getProgram("tp-outline")) {
+            outlineProgram->setUniformsForBuiltins();
+            tpSprite->setShaderProgram(outlineProgram);
+            outlineProgram->use();
+            tpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
+        }
         
         auto actionThing = CCSequence::create(
             CCFadeIn::create(0.f),
+            CCDelayTime::create(getRandomFloat(0.05f, 0.1f)),
             CCEaseOut::create(CCFadeOut::create(0.3f), 2.f),
             nullptr
         );
 
+        tpSprite->stopAllActions();
         tpSprite->runAction(actionThing);
 
     }
@@ -194,7 +228,7 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 			if (!obj || obj->m_isGroupDisabled || obj == m_anticheatSpike) continue;
 			if (obj->m_objectType != GameObjectType::Hazard && obj->m_objectType != GameObjectType::AnimatedHazard && obj->m_objectType != GameObjectType::Solid) continue;
 			if (obj->m_objectType == GameObjectType::Solid) continue;
-			if (obj->m_isHide || obj->getOpacity() < 1) continue;
+			//if (obj->m_isHide || obj->getOpacity() < 1) continue;
 			const bool isSawblade = std::binary_search(sawblades.begin(), sawblades.end(), obj->m_objectID);
 			const float multiplier = isSawblade ? -2.5f : 2.f;
 			CCRect sensitivityRect = CCRect(obj->getObjectRect().origin - CCPoint(sensitivity, sensitivity), obj->getObjectRect().size + CCPoint(sensitivity * multiplier, sensitivity * multiplier));
@@ -251,9 +285,10 @@ class $modify(TPPlayerObject, PlayerObject) {
         auto tpSprite = CCSprite::create();
         tpSprite->setID("tp-effect-sprite"_spr);
         tpSprite->setOpacity(0);
+        tpSprite->setZOrder(-5);
         //tpSprite->setBlendFunc({GL_ONE_MINUS_SRC_COLOR, GL_ONE});
         
-        this->addChild(tpSprite);
+        m_mainLayer->addChild(tpSprite);
 
         tpCooldown = false;
         
@@ -276,24 +311,25 @@ class $modify(TPPlayerObject, PlayerObject) {
         
         if (currentScaleY <= 0.f) return;
         
+        float dontGoAllTheWayDown = 0.f;
         float minDrain = currentScaleY * 0.1f;
         float maxDrain = currentScaleY;
         float drainAmount = getRandomFloat(minDrain, maxDrain);
         
         float newScaleY = currentScaleY - drainAmount;
         if (newScaleY < 0.f) newScaleY = 0.f;
+        if (newScaleY < 0.f) dontGoAllTheWayDown = 1.f;
         
         auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.25f, 1.f, newScaleY), 2.0f);
         barFill->runAction(barScaleAction);
         
-        // Update the line position
         auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
         if (!barFillLine) return;
 
         auto fillSize = barFill->getContentSize();
         //auto moveLineAnim = CCEaseInOut::create(CCMoveTo::create(0.1f, {barFill->getPositionX(), fillSize.height * newScaleY}), 2.0f);
         //barFillLine->runAction(moveLineAnim);
-        barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
+        barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY + dontGoAllTheWayDown});
         
         auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
         if (!theLabel) return;
