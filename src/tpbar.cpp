@@ -178,24 +178,30 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         if (!targetPlayer) return;
         
         auto tpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("tp-effect-sprite"_spr));
-        if (!tpSprite) return;
+        auto riderTpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("rider-tp-effect-sprite"_spr));
+        if (!tpSprite || !riderTpSprite) return;
 
-        float tpSpriteExtraScale = 0.3f;
+        float tpSpriteExtraScale = 0.45f;
         
         if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
             tpSprite->setDisplayFrame(targetPlayer->m_vehicleSprite->displayFrame());
-            tpSprite->setScale(targetPlayer->getScale() + tpSpriteExtraScale);
+            tpSprite->setScale(1.f + tpSpriteExtraScale);
             tpSprite->setPosition(targetPlayer->m_vehicleSprite->getPosition());
+
+            riderTpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
+            riderTpSprite->setScale(targetPlayer->m_iconSprite->getScale() + tpSpriteExtraScale * targetPlayer->m_iconSprite->getScale());
+            riderTpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
+
         } else if (targetPlayer->m_isRobot || targetPlayer->m_isSpider) {
             auto mainSprite = targetPlayer->m_isRobot ? targetPlayer->m_robotSprite : targetPlayer->m_spiderSprite;
             auto headSprite = mainSprite->m_headSprite;
             
             tpSprite->setDisplayFrame(headSprite->displayFrame());
-            tpSprite->setScale(targetPlayer->getScale() + tpSpriteExtraScale);
+            tpSprite->setScale(1.f + tpSpriteExtraScale);
             tpSprite->setPosition(headSprite->getPosition());
         } else {
             tpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
-            tpSprite->setScale(targetPlayer->getScale() + tpSpriteExtraScale);
+            tpSprite->setScale(1.f + tpSpriteExtraScale);
             tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
         }
 
@@ -204,17 +210,37 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
             tpSprite->setShaderProgram(outlineProgram);
             outlineProgram->use();
             tpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
+            if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
+                riderTpSprite->setShaderProgram(outlineProgram);
+                riderTpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
+            }
         }
+
+        float randomDelay = getRandomFloat(0.05f, 0.1f);
         
         auto actionThing = CCSequence::create(
             CCFadeIn::create(0.f),
-            CCDelayTime::create(getRandomFloat(0.05f, 0.1f)),
+            CCDelayTime::create(randomDelay),
+            CCEaseOut::create(CCFadeOut::create(0.3f), 2.f),
+            nullptr
+        );
+
+        auto riderActionThing = CCSequence::create(
+            CCFadeIn::create(0.f),
+            CCDelayTime::create(randomDelay),
             CCEaseOut::create(CCFadeOut::create(0.3f), 2.f),
             nullptr
         );
 
         tpSprite->stopAllActions();
         tpSprite->runAction(actionThing);
+
+        if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
+            riderTpSprite->stopAllActions();
+            riderTpSprite->runAction(riderActionThing);
+        } else {
+            riderTpSprite->setOpacity(0);
+        }
 
     }
 
@@ -285,10 +311,15 @@ class $modify(TPPlayerObject, PlayerObject) {
         auto tpSprite = CCSprite::create();
         tpSprite->setID("tp-effect-sprite"_spr);
         tpSprite->setOpacity(0);
-        tpSprite->setZOrder(-5);
-        //tpSprite->setBlendFunc({GL_ONE_MINUS_SRC_COLOR, GL_ONE});
+        tpSprite->setZOrder(-6);
+        
+        auto riderTPSprite = CCSprite::create();
+        riderTPSprite->setID("rider-tp-effect-sprite"_spr);
+        riderTPSprite->setOpacity(0);
+        riderTPSprite->setZOrder(-5);
         
         m_mainLayer->addChild(tpSprite);
+        m_mainLayer->addChild(riderTPSprite);
 
         tpCooldown = false;
         
