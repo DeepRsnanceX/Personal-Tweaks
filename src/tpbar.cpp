@@ -126,7 +126,7 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         if (!playLayer) return;
 
         tpCooldown = true;
-        this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTP), 0.2f);
+        this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTP), 0.125f);
 
         fmod->playEffect("snd_graze.ogg"_spr);
 
@@ -181,7 +181,7 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         auto riderTpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("rider-tp-effect-sprite"_spr));
         if (!tpSprite || !riderTpSprite) return;
 
-        float tpSpriteExtraScale = 0.45f;
+        float tpSpriteExtraScale = 0.3f;
         
         if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
             tpSprite->setDisplayFrame(targetPlayer->m_vehicleSprite->displayFrame());
@@ -253,7 +253,7 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 			GameObject* obj = objs->at(i);
 			if (!obj || obj->m_isGroupDisabled || obj == m_anticheatSpike) continue;
 			if (obj->m_objectType != GameObjectType::Hazard && obj->m_objectType != GameObjectType::AnimatedHazard && obj->m_objectType != GameObjectType::Solid) continue;
-			if (obj->m_objectType == GameObjectType::Solid) continue;
+			if (obj->m_objectType == GameObjectType::Solid && !player->m_isDart) continue;
 			//if (obj->m_isHide || obj->getOpacity() < 1) continue;
 			const bool isSawblade = std::binary_search(sawblades.begin(), sawblades.end(), obj->m_objectID);
 			const float multiplier = isSawblade ? -2.5f : 2.f;
