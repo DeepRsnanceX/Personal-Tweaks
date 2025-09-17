@@ -194,8 +194,16 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         }
 
         if (fields->hasDied) {
-            //fields->healSpr->setPosition({(winSize.width / 2.f) + 86.f, 30.f});
-            fields->healSpr->setPosition(convertToNodeSpaceAR(m_player1->getPosition()));
+            auto playerWorldPos = m_player1->getPosition();
+            
+            auto mainNode = this->getChildByID("main-node");
+            auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
+            
+            auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
+            
+            auto screenPos = this->convertToNodeSpace(worldPos);
+            
+            fields->healSpr->setPosition({screenPos.x + 15.f, screenPos.y});
             fields->healSpr->setOpacity(255);
             fields->healSpr->runAction(downAnim);
             fields->healSpr->runAction(fadeAwayAnim);
