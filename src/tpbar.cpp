@@ -275,9 +275,21 @@ class $modify(TPPlayLayer, PlayLayer) {
         this->addChild(barNode);
 
         if (!barNode) return true;
-        barNode->setPosition({45.f, winSize.height / 2.f});
+        barNode->setPosition({-10.f, winSize.height / 2.f});
 
         return true;
+    }
+
+    void setupHasCompleted() {
+        PlayLayer::setupHasCompleted();
+
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+        if (!plHasBar) return;
+
+        auto moveInBar = CCEaseOut::create(CCMoveTo::create(0.3f, {45.f, winSize.height / 2.f}), 3.f);
+
+        plHasBar->runAction(moveInBar);
     }
 
     void resetLevel() {

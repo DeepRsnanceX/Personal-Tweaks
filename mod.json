@@ -681,7 +681,8 @@
 		"files": [
 			"resources/*.ogg",
 			"resources/fonts/*.png",
-			"resources/fonts/*.fnt"
+			"resources/fonts/*.fnt",
+			"resources/animated/*.gif"
 		],
 		"spritesheets": {
 			"TotemSheet": [
@@ -700,7 +701,11 @@
 		"hiimjustin000.more_icons": {
             "version": ">=v1.14.0",
             "importance": "required"
-        }
+        },
+		"prevter.imageplus": {
+			"version": ">=v1.0.1",
+			"importance": "required"
+		}
 	},
 	"id": "saritahhh.personal_tweaks",
 	"name": "Personal Tweaks",

@@ -5,18 +5,32 @@ using namespace geode::prelude;
 
 class $modify(DeltaPlayLayer, PlayLayer) {
     struct Fields {
-        CCSprite* dashBtn = CCSprite::create("dashBtn.png"_spr);
+        CCSprite* dashLabel = CCSprite::create("dashLabel.png"_spr);
         CCSprite* downSpr = CCSprite::create("downMsg.png"_spr);
         CCSprite* healSpr = CCSprite::create("revivedText.png"_spr);
         CCSprite* krisTabAlive = CCSprite::create("krisTab_alive.png"_spr);
         CCSprite* krisTabDown = CCSprite::create("krisTab_down.png"_spr);
-
-        // bars
-        CCSprite* barLine1 = CCSprite::create("tabBarThing.png"_spr);
-        CCSprite* barLine2 = CCSprite::create("tabBarThing.png"_spr);
-        CCSprite* barLine3 = CCSprite::create("tabBarThing.png"_spr);
-        CCSprite* barLine4 = CCSprite::create("tabBarThing.png"_spr);
+        CCSprite* barAnim = CCSprite::create("linesTabLoop.gif"_spr);
+        bool isTabHidden = false;
     };
+
+    void dashBtnPressed(CCObject* sender) {
+        auto fields = m_fields.self();
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto fmod = FMODAudioEngine::sharedEngine();
+
+        auto tab = this->getChildByID("deltarune-ui-node"_spr);
+        if (!tab) return;
+
+        auto hideTab = CCEaseOut::create(CCMoveTo::create(0.25f, {winSize.width / 2.f, -21.5f}), 3.f);
+
+        tab->stopAllActions();
+        tab->runAction(hideTab);
+
+        fmod->playEffect("snd_select.ogg"_spr);
+
+        fields->isTabHidden = true;
+    }
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
@@ -32,39 +46,32 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         fields->krisTabAlive->setID("kris-tab-alive"_spr);
         fields->krisTabDown->setID("kris-tab-down"_spr);
-        fields->dashBtn->setID("tab-dash-action"_spr);
-        fields->barLine1->setID("line"_spr);
-        fields->barLine2->setID("line"_spr);
-        fields->barLine3->setID("line"_spr);
-        fields->barLine4->setID("line"_spr);
+        fields->dashLabel->setID("tab-dash-action"_spr);
+        fields->barAnim->setID("animated-bars"_spr);
 
-        fields->barLine1->setAnchorPoint({0.f, 0.f});
-        fields->barLine2->setAnchorPoint({0.f, 0.f});
-        fields->barLine3->setAnchorPoint({0.f, 0.f});
-        fields->barLine4->setAnchorPoint({0.f, 0.f});
+        fields->barAnim->setAnchorPoint({0.5f, 0.f});
 
         fields->krisTabDown->setVisible(false);
 
         containerNode->addChild(fields->krisTabAlive);
         containerNode->addChild(fields->krisTabDown);
-        containerNode->addChild(fields->dashBtn);
-        containerNode->addChild(fields->barLine1);
-        containerNode->addChild(fields->barLine2);
-        containerNode->addChild(fields->barLine3);
-        containerNode->addChild(fields->barLine4);
+        containerNode->addChild(fields->dashLabel);
+        containerNode->addChild(fields->barAnim);
 
         auto nodeSize = containerNode->getContentSize();
 
         fields->krisTabAlive->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->krisTabDown->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-        fields->dashBtn->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        fields->dashLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        fields->barAnim->setPosition({nodeSize.width / 2.f, 0.f});
+
+        fields->dashLabel->setZOrder(2);
 
         this->addChild(containerNode);
 
-        containerNode->setPosition({winSize.width / 2.f, -20.f});
+        containerNode->setPosition({winSize.width / 2.f, -50.f});
 
         // when
-
         fields->downSpr->setColor({ 255, 0, 0 });
         fields->downSpr->setOpacity(0);
         fields->downSpr->setPosition({0.f, 5.f});
@@ -83,6 +90,32 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         bLayer->addChild(fields->downSpr);
         bLayer->addChild(fields->healSpr);
 
+        // dash button
+
+        auto menu = CCMenu::create();
+        auto dashSpr = CCSprite::create("dashBtn.png"_spr);
+        auto dashRealBtn = CCMenuItemSpriteExtra::create(
+            dashSpr,
+            this,
+            menu_selector(DeltaPlayLayer::dashBtnPressed)
+        );
+
+        menu->addChild(dashRealBtn);
+
+        menu->setLayout(
+            RowLayout::create()
+                ->setGap(20.f)
+                ->setAxisAlignment(AxisAlignment::Center)
+                ->setAxisReverse(false)
+                ->setCrossAxisOverflow(true)
+                ->setAutoGrowAxis(5.f)
+        );
+        menu->setAnchorPoint({0.5f, 0.f});
+
+        containerNode->addChild(menu);
+
+        menu->setPosition({nodeSize.width / 2.f, 3.f});
+
         return true;
     }
 
@@ -90,6 +123,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         PlayLayer::resetLevel();
 
         auto fields = m_fields.self();
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
 
         // no patrick, just bc the code has comments doesn't mean it's ai
         // god forbid i try to actually comment wtf my code does so when i return to it
@@ -133,6 +167,15 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->healSpr->runAction(downAnim);
         fields->healSpr->runAction(fadeAwayAnim);
         fields->healSpr->runAction(stretchAnim);
+
+        if (fields->isTabHidden) {
+            auto enterAction = CCEaseOut::create(CCMoveTo::create(0.3f, {winSize.width / 2.f, 0.f}), 2.f);
+            auto tab = this->getChildByID("deltarune-ui-node"_spr);
+            if (!tab) return;
+
+            tab->stopAllActions();
+            tab->runAction(enterAction);
+        }
     }
 
     void postUpdate(float p0) {
@@ -140,7 +183,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
 
-        //fields->healSpr->setPosition(m_player1->getPosition());
+        fields->healSpr->setPosition(m_player1->getPosition());
     }
 
     void setupHasCompleted() {
@@ -148,13 +191,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fmod = FMODAudioEngine::sharedEngine();
         auto fields = m_fields.self();
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
 
         auto hasTab = this->getChildByID("deltarune-ui-node"_spr);
         if (!hasTab) return;
 
         fmod->playEffect("snd_weaponpull_fast.ogg"_spr);
 
-        auto enterAction = CCEaseOut::create(CCMoveBy::create(0.3f, {0.f, 20.f}), 2.f);
+        auto enterAction = CCEaseOut::create(CCMoveTo::create(0.3f, {winSize.width / 2.f, 0.f}), 2.f);
 
         hasTab->runAction(enterAction);
     }
@@ -203,14 +247,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         fields->krisTabAlive->setVisible(!player->m_isDead);
         fields->krisTabDown->setVisible(player->m_isDead);
-
-    }
-};
-
-class $modify(DeltaPlayerObject, PlayerObject) {
-
-    void playerDestroyed(bool p0) {
-        PlayerObject::playerDestroyed(p0);
 
     }
 };
