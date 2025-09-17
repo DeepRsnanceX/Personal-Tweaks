@@ -276,6 +276,7 @@ class $modify(TPPlayLayer, PlayLayer) {
 
         if (!barNode) return true;
         barNode->setPosition({-10.f, winSize.height / 2.f});
+        barNode->setZOrder(20);
 
         return true;
     }
@@ -287,7 +288,13 @@ class $modify(TPPlayLayer, PlayLayer) {
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
 
-        auto moveInBar = CCEaseOut::create(CCMoveTo::create(0.3f, {45.f, winSize.height / 2.f}), 3.f);
+        float delay = 0.25f;
+
+        auto moveInBar = CCSequence::create(
+            CCDelayTime::create(delay),
+            CCEaseOut::create(CCMoveTo::create(0.3f, {45.f, winSize.height / 2.f}), 3.f),
+            nullptr
+        );
 
         plHasBar->runAction(moveInBar);
     }

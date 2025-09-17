@@ -12,14 +12,20 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         CCSprite* krisTabDown = CCSprite::create("krisTab_down.png"_spr);
         CCSprite* barAnim = CCSprite::create("linesTabLoop.gif"_spr);
         bool isTabHidden = false;
+        bool hasDied = false;
     };
+
+    void delayStartSound(float dt){
+        FMODAudioEngine::sharedEngine()->playEffect("snd_weaponpull_fast.ogg"_spr);
+    }
 
     void dashBtnPressed(CCObject* sender) {
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto fmod = FMODAudioEngine::sharedEngine();
+        auto UILayer = UILayer::get();
 
-        auto tab = this->getChildByID("deltarune-ui-node"_spr);
+        auto tab = UILayer->getChildByID("deltarune-ui-node"_spr);
         if (!tab) return;
 
         auto hideTab = CCEaseOut::create(CCMoveTo::create(0.25f, {winSize.width / 2.f, -21.5f}), 3.f);
@@ -37,6 +43,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto UILayer = UILayer::get();
 
         auto containerNode = CCNode::create();
         containerNode->setContentSize(fields->krisTabAlive->getContentSize());
@@ -67,9 +74,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         fields->dashLabel->setZOrder(2);
 
-        this->addChild(containerNode);
+        UILayer->addChild(containerNode);
 
         containerNode->setPosition({winSize.width / 2.f, -50.f});
+        containerNode->setZOrder(20);
 
         // when
         fields->downSpr->setColor({ 255, 0, 0 });
@@ -88,7 +96,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
 
         bLayer->addChild(fields->downSpr);
-        bLayer->addChild(fields->healSpr);
+
+        this->addChild(fields->healSpr);
 
         // dash button
 
@@ -124,6 +133,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto fmod = FMODAudioEngine::sharedEngine();
 
         // no patrick, just bc the code has comments doesn't mean it's ai
         // god forbid i try to actually comment wtf my code does so when i return to it
@@ -144,38 +154,57 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->downSpr->runAction(forgetDownSpr);
 
         // heal animation and stuff
+        float extraDelay = 0.3f;
+
         auto downAnim = CCSequence::create(
             CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
             CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
-            CCDelayTime::create(0.25f),
+            CCDelayTime::create(0.25f + extraDelay),
             CCMoveBy::create(0.3f, {0.f, 50.f}),
             nullptr
         );
         auto fadeAwayAnim = CCSequence::create(
-            CCDelayTime::create(0.8f),
+            CCDelayTime::create(0.8f + extraDelay),
             CCFadeOut::create(0.3f),
             nullptr
         );
         auto stretchAnim = CCSequence::create(
-            CCDelayTime::create(0.8f),
+            CCDelayTime::create(0.8f + extraDelay),
             CCScaleTo::create(0.3f, 1.f, 2.5f),
             nullptr
         );
 
-        fields->healSpr->setPosition(m_player1->getPosition());
-        fields->healSpr->setOpacity(255);
-        fields->healSpr->runAction(downAnim);
-        fields->healSpr->runAction(fadeAwayAnim);
-        fields->healSpr->runAction(stretchAnim);
+        auto resetHeal = CCSequence::create(
+            CCDelayTime::create(1.1f + extraDelay),
+            CCFadeOut::create(0.f),
+            CCScaleTo::create(0.f, 1.f, 1.f),
+            CCMoveTo::create(0.f, {0.f, 0.f}),
+            nullptr
+        );
 
+        // reset the tab
         if (fields->isTabHidden) {
             auto enterAction = CCEaseOut::create(CCMoveTo::create(0.3f, {winSize.width / 2.f, 0.f}), 2.f);
-            auto tab = this->getChildByID("deltarune-ui-node"_spr);
+            auto UILayer = UILayer::get();
+            auto tab = UILayer->getChildByID("deltarune-ui-node"_spr);
             if (!tab) return;
 
             tab->stopAllActions();
             tab->runAction(enterAction);
         }
+
+        if (fields->hasDied) {
+            //fields->healSpr->setPosition({(winSize.width / 2.f) + 86.f, 30.f});
+            fields->healSpr->setPosition(convertToNodeSpaceAR(m_player1->getPosition()));
+            fields->healSpr->setOpacity(255);
+            fields->healSpr->runAction(downAnim);
+            fields->healSpr->runAction(fadeAwayAnim);
+            fields->healSpr->runAction(stretchAnim);
+            fields->healSpr->runAction(resetHeal);
+
+            fmod->playEffect("snd_heal_c.ogg"_spr);
+        }
+        
     }
 
     void postUpdate(float p0) {
@@ -183,7 +212,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
 
-        fields->healSpr->setPosition(m_player1->getPosition());
+        //fields->healSpr->setPosition(m_player1->getPosition());
     }
 
     void setupHasCompleted() {
@@ -192,13 +221,22 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto fmod = FMODAudioEngine::sharedEngine();
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto UILayer = UILayer::get();
 
-        auto hasTab = this->getChildByID("deltarune-ui-node"_spr);
+        auto hasTab = UILayer->getChildByID("deltarune-ui-node"_spr);
         if (!hasTab) return;
 
-        fmod->playEffect("snd_weaponpull_fast.ogg"_spr);
+        //mod->playEffect("snd_weaponpull_fast.ogg"_spr);
 
-        auto enterAction = CCEaseOut::create(CCMoveTo::create(0.3f, {winSize.width / 2.f, 0.f}), 2.f);
+        float delay = 0.25f;
+
+        this->scheduleOnce(schedule_selector(DeltaPlayLayer::delayStartSound), delay);
+
+        auto enterAction = CCSequence::create(
+            CCDelayTime::create(delay),
+            CCEaseOut::create(CCMoveTo::create(0.3f, {winSize.width / 2.f, 0.f}), 2.f),
+            nullptr
+        );
 
         hasTab->runAction(enterAction);
     }
@@ -244,6 +282,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->downSpr->runAction(fadeAwayAnim);
         fields->downSpr->runAction(stretchAnim);
         fields->downSpr->runAction(resetAll);
+
+        fields->hasDied = true;
 
         fields->krisTabAlive->setVisible(!player->m_isDead);
         fields->krisTabDown->setVisible(player->m_isDead);
