@@ -1,5 +1,6 @@
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include "ShaderCache.h"
 
 using namespace geode::prelude;
 
