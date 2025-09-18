@@ -23,7 +23,66 @@ int getNumberForChar(std::string chosen) {
     return ret;
 }
 
+CCSpriteFrame* getGamemodeFrame(PlayerObject* player) {
+    CCSpriteFrame* ret;
+
+    if (player->m_isShip || player->m_isBird) {
+        ret = player->m_vehicleSprite->displayFrame();
+    } else if (player->m_isSpider) {
+        ret = player->m_spiderSprite->m_headSprite->displayFrame();
+    } else if (player->m_isRobot) {
+        ret = player->m_robotSprite->m_headSprite->displayFrame();
+    } else {
+        ret = player->m_iconSprite->displayFrame();
+    }
+
+    return ret;
+}
+
+ccColor3B pastelizeColor(const ccColor3B& color, float factor = 0.4f) {
+    // Clamp factor between 0 and 1
+    factor = std::max(0.0f, std::min(1.0f, factor));
+    
+    // Mix with white (255, 255, 255)
+    GLubyte r = static_cast<GLubyte>(color.r + (255 - color.r) * factor);
+    GLubyte g = static_cast<GLubyte>(color.g + (255 - color.g) * factor);
+    GLubyte b = static_cast<GLubyte>(color.b + (255 - color.b) * factor);
+
+    ccColor3B pastelized = ccColor3B({r, g, b});
+    
+    return pastelized;
+}
+
+void loadPixelateShader() {
+    std::string fragPixelate = R"(
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec4 v_fragmentColor;
+        varying vec2 v_texCoord;
+        uniform sampler2D CC_Texture0;
+
+        void main() {
+            vec2 texSize = vec2(64.0, 64.0); // Target pixel resolution
+            vec2 pixelSize = 1.0 / texSize;
+            
+            // Snap to pixel grid
+            vec2 pixelCoord = floor(v_texCoord * texSize) / texSize;
+            vec4 color = texture2D(CC_Texture0, pixelCoord + pixelSize * 0.5);
+            
+            // Reduce color depth for more retro look
+            color.rgb = floor(color.rgb * 8.0) / 8.0;
+            
+            gl_FragColor = color * v_fragmentColor;
+        }
+    )";
+
+    ShaderCache::get()->createShader("tp-pixelate", fragPixelate);
+}
+
 $on_mod(Loaded){
+    loadPixelateShader();
     listenForSettingChanges("tab-character", [](std::string value) {
         chosenChar = value;
     });
@@ -89,8 +148,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             fields->charIcon = CCSprite::createWithSpriteFrame(m_player1->m_iconSprite->displayFrame());
             fields->charIcon->setPosition({13.25f, 25.75f});
             fields->charIcon->setScale(0.4f);
-            // need to convert tabColor to a lighter color to use right here
-            fields->charIcon->setColor(fields->tabColor);
+            fields->charIcon->setColor(pastelizeColor(fields->tabColor));
         }
 
         auto containerNode = CCNode::create();
@@ -126,10 +184,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->tabTop->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->dashLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->tabBottom->setPosition({nodeSize.width / 2.f, 0.f});
-        fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpBarFill->setPosition({64.05f, 22.7f});
+        if (chosenChar != "player") fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
 
         fields->dashLabel->setZOrder(2);
         fields->hpBarFill->setZOrder(2);
@@ -277,8 +335,19 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
 
-        //fields->healSpr->setPosition(m_player1->getPosition());
-    }
+        if (!fields->charIcon) return;
+        if (chosenChar != "player") return;
+
+        auto frame = getGamemodeFrame(m_player1);
+        fields->charIcon->setDisplayFrame(frame);
+
+        fields->tabColor = m_player1->m_playerColor1;
+
+        fields->tabTop->setColor(fields->tabColor);
+        fields->tabBottom->setColor(fields->tabColor);
+        fields->hpBarFill->setColor(fields->tabColor);
+        fields->charIcon->setColor(pastelizeColor(fields->tabColor));
+    } 
 
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
