@@ -1,6 +1,5 @@
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
-#include "ShaderCache.h"
 
 using namespace geode::prelude;
 
@@ -54,36 +53,7 @@ ccColor3B pastelizeColor(const ccColor3B& color, float factor = 0.4f) {
     return pastelized;
 }
 
-void loadPixelateShader() {
-    std::string fragPixelate = R"(
-        #ifdef GL_ES
-        precision mediump float;
-        #endif
-
-        varying vec4 v_fragmentColor;
-        varying vec2 v_texCoord;
-        uniform sampler2D CC_Texture0;
-
-        void main() {
-            vec2 texSize = vec2(64.0, 64.0); // Target pixel resolution
-            vec2 pixelSize = 1.0 / texSize;
-            
-            // Snap to pixel grid
-            vec2 pixelCoord = floor(v_texCoord * texSize) / texSize;
-            vec4 color = texture2D(CC_Texture0, pixelCoord + pixelSize * 0.5);
-            
-            // Reduce color depth for more retro look
-            color.rgb = floor(color.rgb * 8.0) / 8.0;
-            
-            gl_FragColor = color * v_fragmentColor;
-        }
-    )";
-
-    ShaderCache::get()->createShader("tp-pixelate", fragPixelate);
-}
-
 $on_mod(Loaded){
-    loadPixelateShader();
     listenForSettingChanges("tab-character", [](std::string value) {
         chosenChar = value;
     });
@@ -328,6 +298,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
             fmod->playEffect("snd_heal_c.ogg"_spr);
         }
+
+        if (chosenChar != "player") {
+            std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
+
+            fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
+        }
         
     }
 
@@ -384,6 +360,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         if (!player->m_isDead) return;
         if (obj == m_anticheatSpike) return;
+
+        if (chosenChar != "player") {
+            std::string iconFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
+            auto hurtFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(iconFilename.c_str());
+
+            fields->charIcon->setDisplayFrame(hurtFrame);
+            log::debug("hurt frame applied i hope");
+        }
 
         fields->downSpr->setPosition(player->getPosition());
         fields->downSpr->setOpacity(255);
