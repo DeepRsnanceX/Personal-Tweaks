@@ -7,6 +7,18 @@
 		"ios": "2.2074"
 	},
 	"settings": {
+		"hichat": {
+			"type": "title",
+			"name": "Settings not in 'mod menu' yet",
+			"description": "Self explanatory"
+		},
+		"tab-character": {
+			"type": "string",
+			"name": "Deltarune - Tab Character",
+			"description": "The character to use in the Deltarune styled tab. Doesn't affect HP values, everyone has max 100 and everyone will take fully random damage",
+			"default": "kris",
+			"one-of": ["kris", "susie", "ralsei", "noelle", "player"]
+		},
 		"randomizer-title": {
 			"type": "title",
 			"name": "Icon Randomizer",
@@ -687,6 +699,9 @@
 		"spritesheets": {
 			"TotemSheet": [
 				"resources/totemFrames/*.png"
+			],
+			"DeltaruneSheet": [
+				"resources/deltarune/*.png"
 			]
 		},
 		"sprites": [
