@@ -84,10 +84,6 @@ float getCurrentTPPercentage() {
     return barFill->getScaleY() * 100.f;
 }
 
-void cooldownHP(float dt) {
-    hpCooldown = false;
-}
-
 $on_mod(Loaded){
     BindManager::get()->registerBindable({
 		"heal-prayer-key"_spr,
@@ -119,6 +115,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         CCSprite* hpBarFill = CCSprite::createWithSpriteFrameName("hpBarFiller.png"_spr);
         CCSprite* nameLabel = nullptr;
         CCSprite* charIcon = nullptr;
+        CCSprite* hurtIcon = nullptr;
 
         // HP SYSTEM
         CCLabelBMFont* hpLabel = nullptr;
@@ -163,10 +160,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         if (chosenChar != "player") {
             std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
-            std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
-
             fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
+
+            std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
             fields->nameLabel = CCSprite::createWithSpriteFrameName(labelFilename.c_str());
+            
+            std::string hurtFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
+            fields->hurtIcon = CCSprite::createWithSpriteFrameName(hurtFilename.c_str());
+            
         } else {
             std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
             fields->nameLabel = CCSprite::createWithSpriteFrameName(labelFilename.c_str());
@@ -212,7 +213,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         containerNode->setScale(1.3f);
 
         fields->tabTop->setID("tab-top"_spr);
-        //fields->dashLabel->setID("tab-dash-action"_spr);
         fields->tabBottom->setID("tab-bottom"_spr);
         fields->charIcon->setID("character-icon"_spr);
         fields->nameLabel->setID("character-name"_spr);
@@ -226,7 +226,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpBarFill->setColor(fields->tabColor);
 
         containerNode->addChild(fields->tabTop);
-        //containerNode->addChild(fields->dashLabel);
         containerNode->addChild(fields->tabBottom);
         containerNode->addChild(fields->charIcon);
         containerNode->addChild(fields->nameLabel);
@@ -238,7 +237,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto nodeSize = containerNode->getContentSize();
 
         fields->tabTop->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-        //fields->dashLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->tabBottom->setPosition({nodeSize.width / 2.f, 0.f});
         fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
@@ -246,6 +244,13 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpLabel->setPosition({80.f, 19.f});
         fields->maxHpLabel->setPosition({102.5f, 19.f});
         if (chosenChar != "player") fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+
+        if (fields->hurtIcon) {
+            fields->hurtIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+            containerNode->addChild(fields->hurtIcon);
+            fields->hurtIcon->setID("hurt-icon");
+            fields->hurtIcon->setVisible(false);
+        }
 
         //fields->dashLabel->setZOrder(2);
         fields->hpBarFill->setZOrder(2);
@@ -435,12 +440,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
             fmod->playEffect("snd_heal_c.ogg"_spr);
         }
-
-        if (chosenChar != "player") {
-            std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
-
-            fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
-        }
         
     }
 
@@ -449,8 +448,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
 
-        if (!fields->charIcon) return;
         if (chosenChar != "player") return;
+        if (!fields->charIcon) return;
 
         auto frame = getGamemodeFrame(m_player1);
         fields->charIcon->setDisplayFrame(frame);
@@ -507,6 +506,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 hpCooldown = true;
                 this->scheduleOnce(schedule_selector(DeltaPlayLayer::cooldownHPFunction), 1.1f);
                 fmod->playEffect("snd_hurt.ogg"_spr);
+                
+                if (chosenChar != "player" && fields->hurtIcon) {
+                    fields->charIcon->setVisible(false);
+                    fields->hurtIcon->setVisible(true);
+                    this->scheduleOnce(schedule_selector(DeltaPlayLayer::resetNormalSprite), 0.5f);
+                }
 
                 // Update HP bar
                 float newScaleX = std::max(0.f, fields->currentHP / 100.f);
@@ -636,6 +641,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         hpCooldown = false;
     }
 
+    void resetNormalSprite(float dt) {
+        auto fields = m_fields.self();
+        fields->charIcon->setVisible(true);
+        fields->hurtIcon->setVisible(false);
+    }
+
     void delayStartSound(float dt){
         FMODAudioEngine::sharedEngine()->playEffect("snd_weaponpull_fast.ogg"_spr);
     }
@@ -720,8 +731,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         int displayHP = static_cast<int>(fields->currentHP);
         fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
-        if (fields->currentHP > 0) {
+        if (fields->currentHP > fields->maxHP / 4) {
             fields->hpLabel->setColor({255, 255, 255});
+            fields->maxHpLabel->setColor({255, 255, 255});
         }
 
         PlayerObject* targetPlayer = m_player1; // handle p2 later
@@ -870,8 +882,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         int displayHP = static_cast<int>(fields->currentHP);
         fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
-        if (fields->currentHP > 0) {
+        if (fields->currentHP > fields->maxHP / 4) {
             fields->hpLabel->setColor({255, 255, 255});
+            fields->maxHpLabel->setColor({255, 255, 255});
         }
 
         PlayerObject* targetPlayer = m_player1; // handle p2 later
