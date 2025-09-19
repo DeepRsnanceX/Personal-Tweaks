@@ -186,10 +186,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         // Create Max HP label
         fields->maxHpLabel = CCLabelBMFont::create("100", "hpNumbers.fnt"_spr);
-        fields->maxHpLabel->setID("hp-label"_spr);
+        fields->maxHpLabel->setID("max-hp-label"_spr);
         fields->maxHpLabel->setAlignment(kCCTextAlignmentRight);
         fields->maxHpLabel->setAnchorPoint({1.f, 0.5f});
         fields->maxHpLabel->setExtraKerning(16);
+        fields->maxHpLabel->updateLabel();
 
         // Create damage label
         fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
@@ -335,6 +336,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpBarFill->setScaleX(1.f);
         fields->hpLabel->setString("100", true);
         fields->hpLabel->setColor({255, 255, 255});
+        fields->maxHpLabel->setColor({255, 255, 255});
         hpCooldown = false;
 
         // no patrick, just bc the code has comments doesn't mean it's ai
@@ -514,6 +516,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 if (fields->currentHP <= fields->maxHP / 4) {
                     fields->hpLabel->setColor({255, 255, 0});
                     fields->maxHpLabel->setColor({255, 255, 0});
+                } else {
+                    fields->hpLabel->setColor({255, 255, 255});
+                    fields->maxHpLabel->setColor({255, 255, 255});
                 }
 
                 // Update HP label
@@ -521,6 +526,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                     int displayHP = static_cast<int>(std::round(fields->currentHP));
                     fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
                     fields->hpLabel->setColor({255, 0, 0});
+                    fields->maxHpLabel->setColor({255, 0, 0});
                     
                     // Use down sprite for death
                     auto playerWorldPos = player->getPosition();
