@@ -165,7 +165,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
         fields->damageLabel->setID("damage-label"_spr);
         fields->damageLabel->setOpacity(0);
-        fields->damageLabel->setExtraKerning(12);
+        fields->damageLabel->setExtraKerning(64);
 
         auto containerNode = CCNode::create();
         containerNode->setContentSize(fields->tabTop->getContentSize());
@@ -204,7 +204,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpBarFill->setPosition({64.05f, 22.7f});
-        fields->hpLabel->setPosition({124.f, 22.7f});
+        fields->hpLabel->setPosition({80.f, 19.f});
         if (chosenChar != "player") fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
 
         //fields->dashLabel->setZOrder(2);
@@ -431,6 +431,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) {
         auto fields = m_fields.self();
+        auto fmod = FMODAudioEngine::sharedEngine();
 
         if (!player->m_isDead && obj != m_anticheatSpike && !hpCooldown) {
             if (fields->currentHP > 0) {
@@ -441,6 +442,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 
                 hpCooldown = true;
                 this->scheduleOnce(schedule_selector(DeltaPlayLayer::cooldownHPFunction), 1.1f);
+                fmod->playEffect("snd_hurt.ogg"_spr);
 
                 // Update HP bar
                 float newScaleX = std::max(0.f, fields->currentHP / 100.f);
@@ -457,7 +459,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                     auto mainNode = this->getChildByID("main-node");
                     auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
                     auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
-                    auto screenPos = this->convertToNodeSpace(worldPos);
+                    auto screenPos = bLayer->convertToNodeSpace(worldPos);
                     
                     fields->downSpr->setPosition(screenPos);
                     fields->downSpr->setOpacity(255);
@@ -500,16 +502,17 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                     // Show damage indicator
                     int displayHP = static_cast<int>(fields->currentHP);
                     fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
+                    fmod->playEffect("snd_hurt.ogg"_spr);
                     
                     // Position and animate damage label
                     auto playerWorldPos = player->getPosition();
                     auto mainNode = this->getChildByID("main-node");
                     auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
                     auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
-                    auto screenPos = bLayer->convertToNodeSpace(worldPos);
+                    auto screenPos = this->convertToNodeSpace(worldPos);
                     
                     fields->damageLabel->setPosition(screenPos);
-                    fields->damageLabel->setString(fmt::format("-{}", static_cast<int>(damageAmount)).c_str(), true);
+                    fields->damageLabel->setString(fmt::format("{}", static_cast<int>(damageAmount)).c_str(), true);
                     fields->damageLabel->setOpacity(255);
 
                     auto downAnim = CCSequence::create(
@@ -552,48 +555,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 return; // Don't call original if we still have HP
             }
         }
-
-        PlayLayer::destroyPlayer(player, obj);
-
-        auto bl = GJBaseGameLayer::get();
-
-        if (!player->m_isDead) return;
-        if (obj == m_anticheatSpike) return;
-
-        fields->downSpr->setPosition(player->getPosition());
-        fields->downSpr->setOpacity(255);
-
-        auto downAnim = CCSequence::create(
-            CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
-            CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
-            CCDelayTime::create(0.25f),
-            CCMoveBy::create(0.3f, {0.f, 50.f}),
-            nullptr
-        );
-        auto fadeAwayAnim = CCSequence::create(
-            CCDelayTime::create(0.8f),
-            CCFadeOut::create(0.3f),
-            nullptr
-        );
-        auto stretchAnim = CCSequence::create(
-            CCDelayTime::create(0.8f),
-            CCScaleTo::create(0.3f, 1.f, 2.5f),
-            nullptr
-        );
-
-        auto resetAll = CCSequence::create(
-            CCDelayTime::create(1.2f),
-            CCScaleTo::create(0.f, 1.f, 1.f),
-            CCMoveTo::create(0.f, {0.f, 0.f}),
-            nullptr
-        );
-
-        fields->downSpr->runAction(downAnim);
-        fields->downSpr->runAction(fadeAwayAnim);
-        fields->downSpr->runAction(stretchAnim);
-        fields->downSpr->runAction(resetAll);
-
-        fields->hasDied = true;
 
     }
 
