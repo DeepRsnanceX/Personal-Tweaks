@@ -1,9 +1,12 @@
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include <random>
 
 using namespace geode::prelude;
 
 std::string chosenChar = Mod::get()->getSettingValue<std::string>("tab-character");
+
+bool hpCooldown = false;
 
 int getNumberForChar(std::string chosen) {
     int ret;
@@ -53,6 +56,30 @@ ccColor3B pastelizeColor(const ccColor3B& color, float factor = 0.4f) {
     return pastelized;
 }
 
+float getRandomHPFloat(float min, float max) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(min, max);
+    return dis(gen);
+}
+
+float getCurrentTPPercentage() {
+    auto playLayer = PlayLayer::get();
+    if (!playLayer) return 0.f;
+    
+    auto plHasBar = playLayer->getChildByID("tp-bar-container"_spr);
+    if (!plHasBar) return 0.f;
+    
+    auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
+    if (!barFill) return 0.f;
+    
+    return barFill->getScaleY() * 100.f;
+}
+
+void cooldownHP(float dt) {
+    hpCooldown = false;
+}
+
 $on_mod(Loaded){
     listenForSettingChanges("tab-character", [](std::string value) {
         chosenChar = value;
@@ -69,11 +96,16 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         CCSprite* tabTop = CCSprite::createWithSpriteFrameName("deltaTab_top.png"_spr);
         CCSprite* tabBottom = CCSprite::create("linesTabLoop.gif"_spr);
         // TAB ELEMENTS
-        CCSprite* dashLabel = CCSprite::createWithSpriteFrameName("dashLabel.png"_spr);
         CCSprite* hpOverlay = CCSprite::createWithSpriteFrameName("hpUI.png"_spr);
         CCSprite* hpBarFill = CCSprite::createWithSpriteFrameName("hpBarFiller.png"_spr);
         CCSprite* nameLabel = nullptr;
         CCSprite* charIcon = nullptr;
+
+        // HP SYSTEM
+        CCLabelBMFont* hpLabel = nullptr;
+        CCLabelBMFont* damageLabel = nullptr;
+        float currentHP = 100.f;
+        float lastDamage = 0.f;
 
         // VARIABLES
         bool isTabHidden = false;
@@ -122,6 +154,19 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             fields->charIcon->setColor(pastelizeColor(fields->tabColor));
         }
 
+        // Create HP label
+        fields->hpLabel = CCLabelBMFont::create("100", "hpNumbers.fnt"_spr);
+        fields->hpLabel->setID("hp-label"_spr);
+        fields->hpLabel->setAlignment(kCCTextAlignmentRight);
+        fields->hpLabel->setAnchorPoint({1.f, 0.5f});
+        fields->hpLabel->setExtraKerning(16);
+
+        // Create damage label
+        fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
+        fields->damageLabel->setID("damage-label"_spr);
+        fields->damageLabel->setOpacity(0);
+        fields->damageLabel->setExtraKerning(12);
+
         auto containerNode = CCNode::create();
         containerNode->setContentSize(fields->tabTop->getContentSize());
         containerNode->setID("deltarune-ui-node"_spr);
@@ -129,7 +174,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         containerNode->setScale(1.3f);
 
         fields->tabTop->setID("tab-top"_spr);
-        fields->dashLabel->setID("tab-dash-action"_spr);
+        //fields->dashLabel->setID("tab-dash-action"_spr);
         fields->tabBottom->setID("tab-bottom"_spr);
         fields->charIcon->setID("character-icon"_spr);
         fields->nameLabel->setID("character-name"_spr);
@@ -143,24 +188,26 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpBarFill->setColor(fields->tabColor);
 
         containerNode->addChild(fields->tabTop);
-        containerNode->addChild(fields->dashLabel);
+        //containerNode->addChild(fields->dashLabel);
         containerNode->addChild(fields->tabBottom);
         containerNode->addChild(fields->charIcon);
         containerNode->addChild(fields->nameLabel);
         containerNode->addChild(fields->hpOverlay);
         containerNode->addChild(fields->hpBarFill);
+        containerNode->addChild(fields->hpLabel);
 
         auto nodeSize = containerNode->getContentSize();
 
         fields->tabTop->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-        fields->dashLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        //fields->dashLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->tabBottom->setPosition({nodeSize.width / 2.f, 0.f});
         fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpBarFill->setPosition({64.05f, 22.7f});
+        fields->hpLabel->setPosition({124.f, 22.7f});
         if (chosenChar != "player") fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
 
-        fields->dashLabel->setZOrder(2);
+        //fields->dashLabel->setZOrder(2);
         fields->hpBarFill->setZOrder(2);
 
         UILayer->addChild(containerNode);
@@ -187,6 +234,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         bLayer->addChild(fields->downSpr);
 
         this->addChild(fields->healSpr);
+        this->addChild(fields->damageLabel);
 
         // dash button
 
@@ -198,11 +246,22 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             menu_selector(DeltaPlayLayer::dashBtnPressed)
         );
 
+        auto healSpr = CCSprite::createWithSpriteFrameName("magicBtn.png"_spr);
+        auto healRealBtn = CCMenuItemSpriteExtra::create(
+            healSpr,
+            this,
+            menu_selector(DeltaPlayLayer::healPrayer)
+        );
+
+        dashSpr->setColor({255, 127, 39});
+        healSpr->setColor({255, 127, 39});
+
         menu->addChild(dashRealBtn);
+        menu->addChild(healRealBtn);
 
         menu->setLayout(
             RowLayout::create()
-                ->setGap(20.f)
+                ->setGap(2.f)
                 ->setAxisAlignment(AxisAlignment::Center)
                 ->setAxisReverse(false)
                 ->setCrossAxisOverflow(true)
@@ -212,7 +271,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         containerNode->addChild(menu);
 
-        menu->setPosition({nodeSize.width / 2.f, 3.f});
+        menu->setPosition({nodeSize.width / 2.f, 0.f});
 
         return true;
     }
@@ -223,6 +282,13 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto fmod = FMODAudioEngine::sharedEngine();
+
+        // Reset HP
+        fields->currentHP = 100.f;
+        fields->hpBarFill->setScaleX(1.f);
+        fields->hpLabel->setString("100", true);
+        fields->hpLabel->setColor({255, 255, 255});
+        hpCooldown = false;
 
         // no patrick, just bc the code has comments doesn't mean it's ai
         // god forbid i try to actually comment wtf my code does so when i return to it
@@ -238,6 +304,17 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         fields->downSpr->stopAllActions();
         fields->downSpr->runAction(forgetDownSpr);
+
+        // reset damage label
+        auto forgetDamageLabel = CCSequence::create(
+            CCFadeOut::create(0.f),
+            CCScaleTo::create(0.f, 1.f, 1.f),
+            CCMoveTo::create(0.f, {0.f, 0.f}),
+            nullptr
+        );
+
+        fields->damageLabel->stopAllActions();
+        fields->damageLabel->runAction(forgetDamageLabel);
 
         // heal animation and stuff
         float extraDelay = 0.3f;
@@ -353,21 +430,135 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     }
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) {
+        auto fields = m_fields.self();
+
+        if (!player->m_isDead && obj != m_anticheatSpike && !hpCooldown) {
+            if (fields->currentHP > 0) {
+
+                float damageAmount = getRandomHPFloat(10.f, 30.f);
+                fields->lastDamage = damageAmount;
+                fields->currentHP -= damageAmount;
+                
+                hpCooldown = true;
+                this->scheduleOnce(schedule_selector(DeltaPlayLayer::cooldownHPFunction), 1.1f);
+
+                // Update HP bar
+                float newScaleX = std::max(0.f, fields->currentHP / 100.f);
+                fields->hpBarFill->setScaleX(newScaleX);
+
+                // Update HP label
+                if (fields->currentHP <= 0) {
+                    int displayHP = static_cast<int>(fields->currentHP);
+                    fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
+                    fields->hpLabel->setColor({255, 0, 0});
+                    
+                    // Use down sprite for death
+                    auto playerWorldPos = player->getPosition();
+                    auto mainNode = this->getChildByID("main-node");
+                    auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
+                    auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
+                    auto screenPos = bLayer->convertToNodeSpace(worldPos);
+                    
+                    fields->downSpr->setPosition(screenPos);
+                    fields->downSpr->setOpacity(255);
+
+                    auto downAnim = CCSequence::create(
+                        CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
+                        CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
+                        CCDelayTime::create(0.25f),
+                        CCMoveBy::create(0.3f, {0.f, 50.f}),
+                        nullptr
+                    );
+                    auto fadeAwayAnim = CCSequence::create(
+                        CCDelayTime::create(0.8f),
+                        CCFadeOut::create(0.3f),
+                        nullptr
+                    );
+                    auto stretchAnim = CCSequence::create(
+                        CCDelayTime::create(0.8f),
+                        CCScaleTo::create(0.3f, 1.f, 2.5f),
+                        nullptr
+                    );
+
+                    auto resetAll = CCSequence::create(
+                        CCDelayTime::create(1.2f),
+                        CCScaleTo::create(0.f, 1.f, 1.f),
+                        CCMoveTo::create(0.f, {0.f, 0.f}),
+                        nullptr
+                    );
+
+                    fields->downSpr->runAction(downAnim);
+                    fields->downSpr->runAction(fadeAwayAnim);
+                    fields->downSpr->runAction(stretchAnim);
+                    fields->downSpr->runAction(resetAll);
+
+                    fields->hasDied = true;
+                    
+                    // Actually kill the player now
+                    PlayLayer::destroyPlayer(player, obj);
+                } else {
+                    // Show damage indicator
+                    int displayHP = static_cast<int>(fields->currentHP);
+                    fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
+                    
+                    // Position and animate damage label
+                    auto playerWorldPos = player->getPosition();
+                    auto mainNode = this->getChildByID("main-node");
+                    auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
+                    auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
+                    auto screenPos = bLayer->convertToNodeSpace(worldPos);
+                    
+                    fields->damageLabel->setPosition(screenPos);
+                    fields->damageLabel->setString(fmt::format("-{}", static_cast<int>(damageAmount)).c_str(), true);
+                    fields->damageLabel->setOpacity(255);
+
+                    auto downAnim = CCSequence::create(
+                        CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
+                        CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
+                        CCDelayTime::create(0.25f),
+                        CCMoveBy::create(0.3f, {0.f, 50.f}),
+                        nullptr
+                    );
+                    auto fadeAwayAnim = CCSequence::create(
+                        CCDelayTime::create(0.8f),
+                        CCFadeOut::create(0.3f),
+                        nullptr
+                    );
+                    auto stretchAnim = CCSequence::create(
+                        CCDelayTime::create(0.8f),
+                        CCScaleTo::create(0.3f, 1.f, 2.5f),
+                        nullptr
+                    );
+
+                    auto resetDamageLabel = CCSequence::create(
+                        CCDelayTime::create(1.1f),
+                        CCFadeOut::create(0.f),
+                        CCScaleTo::create(0.f, 1.f, 1.f),
+                        CCMoveTo::create(0.f, {0.f, 0.f}),
+                        nullptr
+                    );
+
+                    fields->damageLabel->runAction(downAnim);
+                    fields->damageLabel->runAction(fadeAwayAnim);
+                    fields->damageLabel->runAction(stretchAnim);
+                    fields->damageLabel->runAction(resetDamageLabel);
+                }
+
+                // TODO: Update charIcon for non-player characters when taking damage
+                if (chosenChar != "player") {
+                    // Add logic here to update charIcon to hurt frame
+                }
+
+                return; // Don't call original if we still have HP
+            }
+        }
+
         PlayLayer::destroyPlayer(player, obj);
 
         auto bl = GJBaseGameLayer::get();
-        auto fields = m_fields.self();
 
         if (!player->m_isDead) return;
         if (obj == m_anticheatSpike) return;
-
-        if (chosenChar != "player") {
-            std::string iconFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
-            auto hurtFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(iconFilename.c_str());
-
-            fields->charIcon->setDisplayFrame(hurtFrame);
-            log::debug("hurt frame applied i hope");
-        }
 
         fields->downSpr->setPosition(player->getPosition());
         fields->downSpr->setOpacity(255);
@@ -406,6 +597,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
     }
 
+    void cooldownHPFunction(float dt) {
+        hpCooldown = false;
+    }
+
     void delayStartSound(float dt){
         FMODAudioEngine::sharedEngine()->playEffect("snd_weaponpull_fast.ogg"_spr);
     }
@@ -427,5 +622,123 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fmod->playEffect("snd_select.ogg"_spr);
 
         fields->isTabHidden = true;
+    }
+
+    void healPrayer(CCObject* sender) {
+        auto fields = m_fields.self();
+        auto fmod = FMODAudioEngine::sharedEngine();
+
+        // Check if we have enough TP (32% or more)
+        float currentTP = getCurrentTPPercentage();
+        if (currentTP < 32.f) {
+            //fmod->playEffect("snd_cancel.gg"_spr);
+            return;
+        }
+
+        // Get random heal amount
+        float healAmount = getRandomHPFloat(15.f, 40.f);
+        fields->currentHP += healAmount;
+        
+        bool reachedMax = false;
+        if (fields->currentHP >= 100.f) {
+            fields->currentHP = 100.f;
+            reachedMax = true;
+        }
+
+        // Update HP bar (don't go past 1.0 scale)
+        float newScaleX = std::min(1.f, fields->currentHP / 100.f);
+        fields->hpBarFill->setScaleX(newScaleX);
+
+        // Update HP label and reset color if needed
+        int displayHP = static_cast<int>(fields->currentHP);
+        fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
+        if (fields->currentHP > 0) {
+            fields->hpLabel->setColor({255, 255, 255}); // Reset to white
+        }
+
+        // Position for healing indicator (use player position)
+        PlayerObject* targetPlayer = m_player1; // You might want to handle player2 as well
+        auto playerWorldPos = targetPlayer->getPosition();
+        auto mainNode = this->getChildByID("main-node");
+        auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
+        auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
+        auto screenPos = this->convertToNodeSpace(worldPos);
+
+        if (reachedMax) {
+            // Use healSpr for max heal
+            fields->healSpr->setPosition({screenPos.x + 15.f, screenPos.y});
+            fields->healSpr->setOpacity(255);
+
+            auto downAnim = CCSequence::create(
+                CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
+                CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
+                CCDelayTime::create(0.25f),
+                CCMoveBy::create(0.3f, {0.f, 50.f}),
+                nullptr
+            );
+            auto fadeAwayAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCFadeOut::create(0.3f),
+                nullptr
+            );
+            auto stretchAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCScaleTo::create(0.3f, 1.f, 2.5f),
+                nullptr
+            );
+
+            auto resetHeal = CCSequence::create(
+                CCDelayTime::create(1.1f),
+                CCFadeOut::create(0.f),
+                CCScaleTo::create(0.f, 1.f, 1.f),
+                CCMoveTo::create(0.f, {0.f, 0.f}),
+                nullptr
+            );
+
+            fields->healSpr->runAction(downAnim);
+            fields->healSpr->runAction(fadeAwayAnim);
+            fields->healSpr->runAction(stretchAnim);
+            fields->healSpr->runAction(resetHeal);
+        } else {
+            // Create and animate healing indicator label
+            auto healingLabel = CCLabelBMFont::create(fmt::format("+{}", static_cast<int>(healAmount)).c_str(), "damageFont.fnt"_spr);
+            healingLabel->setColor({0, 255, 0}); // Green color
+            healingLabel->setPosition(bLayer->convertToNodeSpace(worldPos));
+            healingLabel->setZOrder(1000);
+            
+            bLayer->addChild(healingLabel);
+
+            auto downAnim = CCSequence::create(
+                CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
+                CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
+                CCDelayTime::create(0.25f),
+                CCMoveBy::create(0.3f, {0.f, 50.f}),
+                nullptr
+            );
+            auto fadeAwayAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCFadeOut::create(0.3f),
+                nullptr
+            );
+            auto stretchAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCScaleTo::create(0.3f, 1.f, 2.5f),
+                nullptr
+            );
+
+            auto cleanup = CCSequence::create(
+                CCDelayTime::create(1.1f),
+                CCCallFunc::create(healingLabel, callfunc_selector(CCNode::removeFromParent)),
+                nullptr
+            );
+
+            healingLabel->runAction(downAnim);
+            healingLabel->runAction(fadeAwayAnim);
+            healingLabel->runAction(stretchAnim);
+            healingLabel->runAction(cleanup);
+        }
+
+        // Play heal sound
+        fmod->playEffect("snd_heal_c.ogg"_spr);
     }
 };
