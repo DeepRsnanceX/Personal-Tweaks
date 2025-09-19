@@ -720,6 +720,10 @@
 		"prevter.imageplus": {
 			"version": ">=v1.0.1",
 			"importance": "required"
+		},
+		"geode.custom-keybinds": {
+			"importance": "required",
+			"version": ">=1.10.0"
 		}
 	},
 	"id": "saritahhh.personal_tweaks",

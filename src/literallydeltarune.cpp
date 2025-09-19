@@ -1,8 +1,16 @@
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include <geode.custom-keybinds/include/Keybinds.hpp>
 #include <random>
 
 using namespace geode::prelude;
+using namespace keybinds;
+
+/*
+MAX DISPLAY: 102.5f, 19.f
+
+CURRENT HP: 80.f, 19.f
+*/
 
 std::string chosenChar = Mod::get()->getSettingValue<std::string>("tab-character");
 
@@ -81,6 +89,17 @@ void cooldownHP(float dt) {
 }
 
 $on_mod(Loaded){
+    BindManager::get()->registerBindable({
+		"heal-prayer-key"_spr,
+		"Heal Prayer keybind",
+
+		"",
+
+		{ Keybind::create(KEY_C, Modifier::None) },
+
+		Mod::get()->getName()
+	});
+
     listenForSettingChanges("tab-character", [](std::string value) {
         chosenChar = value;
     });
@@ -104,6 +123,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         // HP SYSTEM
         CCLabelBMFont* hpLabel = nullptr;
         CCLabelBMFont* damageLabel = nullptr;
+        CCLabelBMFont* healingLabel = nullptr;
         float currentHP = 100.f;
         float lastDamage = 0.f;
 
@@ -119,6 +139,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto UILayer = UILayer::get();
         auto gm = GameManager::sharedState();
+        auto fmod = FMODAudioEngine::sharedEngine();
 
         switch (int what = getNumberForChar(chosenChar)) {
             case 1:
@@ -165,7 +186,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
         fields->damageLabel->setID("damage-label"_spr);
         fields->damageLabel->setOpacity(0);
-        fields->damageLabel->setExtraKerning(48);
+        fields->damageLabel->setExtraKerning(52);
+
+        // Create healing label
+        fields->healingLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
+        fields->healingLabel->setID("healing-label"_spr);
+        fields->healingLabel->setOpacity(0);
+        fields->healingLabel->setExtraKerning(52);
+        fields->healingLabel->setColor({0, 255, 0});
 
         auto containerNode = CCNode::create();
         containerNode->setContentSize(fields->tabTop->getContentSize());
@@ -235,9 +263,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         this->addChild(fields->healSpr);
         this->addChild(fields->damageLabel);
+        this->addChild(fields->healingLabel);
 
         // dash button
-
         auto menu = CCMenu::create();
         auto dashSpr = CCSprite::createWithSpriteFrameName("dashBtn.png"_spr);
         auto dashRealBtn = CCMenuItemSpriteExtra::create(
@@ -246,6 +274,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             menu_selector(DeltaPlayLayer::dashBtnPressed)
         );
 
+        // heal button
         auto healSpr = CCSprite::createWithSpriteFrameName("magicBtn.png"_spr);
         auto healRealBtn = CCMenuItemSpriteExtra::create(
             healSpr,
@@ -272,6 +301,13 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         containerNode->addChild(menu);
 
         menu->setPosition({nodeSize.width / 2.f, 0.f});
+
+        this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+            if (event->isDown()) {
+                DeltaPlayLayer::healPrayerKeybindVer();
+            }
+            return ListenerResult::Propagate;
+        }, "heal-prayer-key"_spr);
 
         return true;
     }
@@ -315,6 +351,17 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         fields->damageLabel->stopAllActions();
         fields->damageLabel->runAction(forgetDamageLabel);
+
+        // reset healing label
+        auto forgetHealingLabel = CCSequence::create(
+            CCFadeOut::create(0.f),
+            CCScaleTo::create(0.f, 1.f, 1.f),
+            CCMoveTo::create(0.f, {0.f, 0.f}),
+            nullptr
+        );
+
+        fields->healingLabel->stopAllActions();
+        fields->healingLabel->runAction(forgetHealingLabel);
 
         // heal animation and stuff
         float extraDelay = 0.3f;
@@ -429,11 +476,15 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         hasTab->runAction(enterAction);
     }
 
-    void destroyPlayer(PlayerObject* player, GameObject* obj) {
+    void destroyPlayer(PlayerObject* player, GameObject* obj) override {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
 
-        if (!player->m_isDead && obj != m_anticheatSpike && !hpCooldown) {
+        if (obj == m_anticheatSpike) {
+            return PlayLayer::destroyPlayer(player, obj);
+        }
+
+        if (!player->m_isDead && !hpCooldown) {
             if (fields->currentHP > 0) {
 
                 float damageAmount = getRandomHPFloat(10.f, 40.f);
@@ -497,7 +548,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                     fields->hasDied = true;
                     
                     // Actually kill the player now
-                    PlayLayer::destroyPlayer(player, obj);
+                    return PlayLayer::destroyPlayer(player, obj);
                 } else {
                     // Show damage indicator
                     int displayHP = static_cast<int>(std::round(fields->currentHP));
@@ -585,15 +636,50 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->isTabHidden = true;
     }
 
-    void healPrayer(CCObject* sender) {
+    void healPrayerKeybindVer() {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
 
         // Check for enough TP (32% at least)
         float currentTP = getCurrentTPPercentage();
         if (currentTP < 32.f) {
-            //fmod->playEffect("snd_cancel.gg"_spr);
+            fmod->playEffect("snd_cantselect_1.ogg"_spr);
             return;
+        }
+
+        // Deduct 32% TP
+        auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+        if (plHasBar) {
+            auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
+            if (barFill) {
+                float currentScaleY = barFill->getScaleY();
+                float newScaleY = std::max(0.f, currentScaleY - 0.32f);
+                
+                auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.1f, 1.f, newScaleY), 2.0f);
+                barFill->runAction(barScaleAction);
+
+                auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
+                if (barFillLine) {
+                    auto fillSize = barFill->getContentSize();
+                    barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
+                }
+
+                auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
+                if (theLabel) {
+                    float tpAmountFloat = newScaleY * 100.f;
+                    int tpAmount = static_cast<int>(tpAmountFloat);
+                    auto tpString = fmt::format("{}", tpAmount);
+                    
+                    if (tpAmount == 100) {
+                        tpString = "MAX";
+                        theLabel->setScale(0.6f);
+                    } else {
+                        theLabel->setScale(0.7f);
+                    }
+                    
+                    theLabel->setString(tpString.c_str(), true);
+                }
+            }
         }
 
         // Get random heal amount
@@ -657,13 +743,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             fields->healSpr->runAction(stretchAnim);
             fields->healSpr->runAction(resetHeal);
         } else {
-            // Create and animate healing indicator label
-            auto healingLabel = CCLabelBMFont::create(fmt::format("+{}", static_cast<int>(healAmount)).c_str(), "damageFont.fnt"_spr);
-            healingLabel->setColor({0, 255, 0}); // Green color
-            healingLabel->setPosition({screenPos.x + 15.f, screenPos.y});
-            healingLabel->setZOrder(1000);
-            
-            this->addChild(healingLabel);
+            // Position and animate healing label
+            fields->healingLabel->setPosition(screenPos);
+            fields->healingLabel->setString(fmt::format("{}", static_cast<int>(healAmount)).c_str(), true);
+            fields->healingLabel->setOpacity(255);
 
             auto downAnim = CCSequence::create(
                 CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
@@ -683,16 +766,166 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 nullptr
             );
 
-            auto cleanup = CCSequence::create(
+            auto resetHealingLabel = CCSequence::create(
                 CCDelayTime::create(1.1f),
-                CCCallFunc::create(healingLabel, callfunc_selector(CCNode::removeFromParent)),
+                CCFadeOut::create(0.f),
+                CCScaleTo::create(0.f, 1.f, 1.f),
+                CCMoveTo::create(0.f, {0.f, 0.f}),
                 nullptr
             );
 
-            healingLabel->runAction(downAnim);
-            healingLabel->runAction(fadeAwayAnim);
-            healingLabel->runAction(stretchAnim);
-            healingLabel->runAction(cleanup);
+            fields->healingLabel->runAction(downAnim);
+            fields->healingLabel->runAction(fadeAwayAnim);
+            fields->healingLabel->runAction(stretchAnim);
+            fields->healingLabel->runAction(resetHealingLabel);
+        }
+
+        // Play heal sound
+        fmod->playEffect("snd_heal_c.ogg"_spr);
+    }
+
+    void healPrayer(CCObject* sender) {
+        auto fields = m_fields.self();
+        auto fmod = FMODAudioEngine::sharedEngine();
+
+        // Check for enough TP (32% at least)
+        float currentTP = getCurrentTPPercentage();
+        if (currentTP < 32.f) {
+            fmod->playEffect("snd_cantselect_1.ogg"_spr);
+            return;
+        }
+
+        // Deduct 32% TP
+        auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+        if (plHasBar) {
+            auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
+            if (barFill) {
+                float currentScaleY = barFill->getScaleY();
+                float newScaleY = std::max(0.f, currentScaleY - 0.32f);
+                
+                auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.1f, 1.f, newScaleY), 2.0f);
+                barFill->runAction(barScaleAction);
+
+                auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
+                if (barFillLine) {
+                    auto fillSize = barFill->getContentSize();
+                    barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
+                }
+
+                auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
+                if (theLabel) {
+                    float tpAmountFloat = newScaleY * 100.f;
+                    int tpAmount = static_cast<int>(tpAmountFloat);
+                    auto tpString = fmt::format("{}", tpAmount);
+                    
+                    if (tpAmount == 100) {
+                        tpString = "MAX";
+                        theLabel->setScale(0.6f);
+                    } else {
+                        theLabel->setScale(0.7f);
+                    }
+                    
+                    theLabel->setString(tpString.c_str(), true);
+                }
+            }
+        }
+
+        // Get random heal amount
+        float healAmount = getRandomHPFloat(15.f, 40.f);
+        fields->currentHP += healAmount;
+        
+        bool reachedMax = false;
+        if (fields->currentHP >= 100.f) {
+            fields->currentHP = 100.f;
+            reachedMax = true;
+        }
+
+        float newScaleX = std::min(1.f, fields->currentHP / 100.f);
+        fields->hpBarFill->setScaleX(newScaleX);
+
+        int displayHP = static_cast<int>(fields->currentHP);
+        fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
+        if (fields->currentHP > 0) {
+            fields->hpLabel->setColor({255, 255, 255});
+        }
+
+        PlayerObject* targetPlayer = m_player1; // handle p2 later
+        auto playerWorldPos = targetPlayer->getPosition();
+        auto mainNode = this->getChildByID("main-node");
+        auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
+        auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
+        auto screenPos = this->convertToNodeSpace(worldPos);
+
+        if (reachedMax) {
+            fields->healSpr->setPosition({screenPos.x + 15.f, screenPos.y});
+            fields->healSpr->setOpacity(255);
+
+            auto downAnim = CCSequence::create(
+                CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
+                CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
+                CCDelayTime::create(0.25f),
+                CCMoveBy::create(0.3f, {0.f, 50.f}),
+                nullptr
+            );
+            auto fadeAwayAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCFadeOut::create(0.3f),
+                nullptr
+            );
+            auto stretchAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCScaleTo::create(0.3f, 1.f, 2.5f),
+                nullptr
+            );
+
+            auto resetHeal = CCSequence::create(
+                CCDelayTime::create(1.1f),
+                CCFadeOut::create(0.f),
+                CCScaleTo::create(0.f, 1.f, 1.f),
+                CCMoveTo::create(0.f, {0.f, 0.f}),
+                nullptr
+            );
+
+            fields->healSpr->runAction(downAnim);
+            fields->healSpr->runAction(fadeAwayAnim);
+            fields->healSpr->runAction(stretchAnim);
+            fields->healSpr->runAction(resetHeal);
+        } else {
+            // Position and animate healing label
+            fields->healingLabel->setPosition(screenPos);
+            fields->healingLabel->setString(fmt::format("{}", static_cast<int>(healAmount)).c_str(), true);
+            fields->healingLabel->setOpacity(255);
+
+            auto downAnim = CCSequence::create(
+                CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
+                CCEaseBounceOut::create(CCMoveBy::create(0.4f, {0.f, -18.f})),
+                CCDelayTime::create(0.25f),
+                CCMoveBy::create(0.3f, {0.f, 50.f}),
+                nullptr
+            );
+            auto fadeAwayAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCFadeOut::create(0.3f),
+                nullptr
+            );
+            auto stretchAnim = CCSequence::create(
+                CCDelayTime::create(0.8f),
+                CCScaleTo::create(0.3f, 1.f, 2.5f),
+                nullptr
+            );
+
+            auto resetHealingLabel = CCSequence::create(
+                CCDelayTime::create(1.1f),
+                CCFadeOut::create(0.f),
+                CCScaleTo::create(0.f, 1.f, 1.f),
+                CCMoveTo::create(0.f, {0.f, 0.f}),
+                nullptr
+            );
+
+            fields->healingLabel->runAction(downAnim);
+            fields->healingLabel->runAction(fadeAwayAnim);
+            fields->healingLabel->runAction(stretchAnim);
+            fields->healingLabel->runAction(resetHealingLabel);
         }
 
         // Play heal sound
