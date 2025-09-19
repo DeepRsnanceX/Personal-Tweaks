@@ -457,7 +457,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                     auto mainNode = this->getChildByID("main-node");
                     auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
                     auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
-                    auto screenPos = bLayer->convertToNodeSpace(worldPos);
+                    auto screenPos = this->convertToNodeSpace(worldPos);
                     
                     fields->downSpr->setPosition(screenPos);
                     fields->downSpr->setOpacity(255);
