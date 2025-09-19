@@ -165,7 +165,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
         fields->damageLabel->setID("damage-label"_spr);
         fields->damageLabel->setOpacity(0);
-        fields->damageLabel->setExtraKerning(64);
+        fields->damageLabel->setExtraKerning(48);
 
         auto containerNode = CCNode::create();
         containerNode->setContentSize(fields->tabTop->getContentSize());
@@ -436,7 +436,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         if (!player->m_isDead && obj != m_anticheatSpike && !hpCooldown) {
             if (fields->currentHP > 0) {
 
-                float damageAmount = getRandomHPFloat(10.f, 30.f);
+                float damageAmount = getRandomHPFloat(10.f, 40.f);
                 fields->lastDamage = damageAmount;
                 fields->currentHP -= damageAmount;
                 
@@ -450,7 +450,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
                 // Update HP label
                 if (fields->currentHP <= 0) {
-                    int displayHP = static_cast<int>(fields->currentHP);
+                    int displayHP = static_cast<int>(std::round(fields->currentHP));
                     fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
                     fields->hpLabel->setColor({255, 0, 0});
                     
@@ -500,7 +500,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                     PlayLayer::destroyPlayer(player, obj);
                 } else {
                     // Show damage indicator
-                    int displayHP = static_cast<int>(fields->currentHP);
+                    int displayHP = static_cast<int>(std::round(fields->currentHP));
                     fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
                     fmod->playEffect("snd_hurt.ogg"_spr);
                     
@@ -589,7 +589,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
 
-        // Check if we have enough TP (32% or more)
+        // Check for enough TP (32% at least)
         float currentTP = getCurrentTPPercentage();
         if (currentTP < 32.f) {
             //fmod->playEffect("snd_cancel.gg"_spr);
@@ -606,19 +606,16 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             reachedMax = true;
         }
 
-        // Update HP bar (don't go past 1.0 scale)
         float newScaleX = std::min(1.f, fields->currentHP / 100.f);
         fields->hpBarFill->setScaleX(newScaleX);
 
-        // Update HP label and reset color if needed
         int displayHP = static_cast<int>(fields->currentHP);
         fields->hpLabel->setString(fmt::format("{}", displayHP).c_str(), true);
         if (fields->currentHP > 0) {
-            fields->hpLabel->setColor({255, 255, 255}); // Reset to white
+            fields->hpLabel->setColor({255, 255, 255});
         }
 
-        // Position for healing indicator (use player position)
-        PlayerObject* targetPlayer = m_player1; // You might want to handle player2 as well
+        PlayerObject* targetPlayer = m_player1; // handle p2 later
         auto playerWorldPos = targetPlayer->getPosition();
         auto mainNode = this->getChildByID("main-node");
         auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
@@ -626,7 +623,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto screenPos = this->convertToNodeSpace(worldPos);
 
         if (reachedMax) {
-            // Use healSpr for max heal
             fields->healSpr->setPosition({screenPos.x + 15.f, screenPos.y});
             fields->healSpr->setOpacity(255);
 
@@ -664,10 +660,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             // Create and animate healing indicator label
             auto healingLabel = CCLabelBMFont::create(fmt::format("+{}", static_cast<int>(healAmount)).c_str(), "damageFont.fnt"_spr);
             healingLabel->setColor({0, 255, 0}); // Green color
-            healingLabel->setPosition(bLayer->convertToNodeSpace(worldPos));
+            healingLabel->setPosition({screenPos.x + 15.f, screenPos.y});
             healingLabel->setZOrder(1000);
             
-            bLayer->addChild(healingLabel);
+            this->addChild(healingLabel);
 
             auto downAnim = CCSequence::create(
                 CCEaseOut::create(CCMoveBy::create(0.15f, {0.f, 20.f}), 2.f),
