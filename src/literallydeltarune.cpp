@@ -29,6 +29,8 @@ int getNumberForChar(std::string chosen) {
         ret = 4;
     } else if (chosenChar == "player") {
         ret = 5;
+    } else if (chosenChar == "true-player") {
+        ret = 6;
     }
 
     return ret;
@@ -126,6 +128,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         float maxHP = 100.f;
         float lastDamage = 0.f;
 
+        // DEFENDING SYSTEM
+        CCSprite* defendIcon = nullptr;
+        int defendHitsLeft = 0;
+        bool isDefending = false;
+        bool tabHiddenByDefend = false;
+
         // VARIABLES
         bool isTabHidden = false;
         bool hasDied = false;
@@ -158,6 +166,31 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 break;
         }
 
+        switch (int wtf = getNumberForChar(chosenChar)) {
+            case 1: // kris
+                fields->maxHP = 160.f;
+                break;
+            case 2: // susie
+                fields->maxHP = 190.f;
+                break;
+            case 3: // ralsei
+                fields->maxHP = 140.f;
+                break;
+            case 4: // noelle
+                fields->maxHP = 90.f;
+                break;
+            case 5: // player
+                fields->maxHP = 100.f;
+                break;
+            case 6: // real player
+                fields->maxHP = 1.f;
+                break;
+        }
+
+        fields->currentHP = fields->maxHP;
+
+        fields->defendIcon = CCSprite::createWithSpriteFrameName("defendIconGlobal.png"_spr);
+
         if (chosenChar != "player") {
             std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
             fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
@@ -179,14 +212,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         }
 
         // Create HP label
-        fields->hpLabel = CCLabelBMFont::create("100", "hpNumbers.fnt"_spr);
+        fields->hpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
         fields->hpLabel->setID("hp-label"_spr);
         fields->hpLabel->setAlignment(kCCTextAlignmentRight);
         fields->hpLabel->setAnchorPoint({1.f, 0.5f});
         fields->hpLabel->setExtraKerning(16);
 
         // Create Max HP label
-        fields->maxHpLabel = CCLabelBMFont::create("100", "hpNumbers.fnt"_spr);
+        fields->maxHpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
         fields->maxHpLabel->setID("max-hp-label"_spr);
         fields->maxHpLabel->setAlignment(kCCTextAlignmentRight);
         fields->maxHpLabel->setAnchorPoint({1.f, 0.5f});
@@ -233,6 +266,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         containerNode->addChild(fields->hpBarFill);
         containerNode->addChild(fields->hpLabel);
         containerNode->addChild(fields->maxHpLabel);
+        containerNode->addChild(fields->defendIcon);
 
         auto nodeSize = containerNode->getContentSize();
 
@@ -970,5 +1004,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         // Play heal sound
         fmod->playEffect("snd_heal_c.ogg"_spr);
+    }
+};
+
+class $modify(DeltaPlayerObject, PlayerObject) {
+    void switchedToMode(GameObjectType p0) {
+        
+        PlayerObject::switchedToMode(p0);
     }
 };

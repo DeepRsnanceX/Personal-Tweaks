@@ -1,0 +1,25 @@
+info font="Arial" size="64" bold="0" italic="0" charset="" unicode="0" stretchH="100" smooth="1" aa="1" padding="2,2,2,2" spacing="2,2"
+common lineHeight=99 base=77 pages=1 packed=0 scaleW=380 scaleH=15
+page id=0 file="damageFont.png"
+chars count=21
+char id=37 x=0 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=51 x=19 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=54 x=38 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=48 x=57 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=47 x=76 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=57 x=95 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=56 x=114 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=49 x=133 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=50 x=152 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=53 x=171 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=55 x=190 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=70 x=209 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=73 x=228 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=52 x=247 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=65 x=266 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=101 x=285 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=110 x=304 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=43 x=323 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=46 x=342 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=45 x=361 y=0 width=15 height=15 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
+char id=32 x=0 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=0 page=0 chnl=0
