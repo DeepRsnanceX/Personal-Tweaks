@@ -122,9 +122,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         // HP SYSTEM
         CCLabelBMFont* hpLabel = nullptr;
+        CCLabelBMFont* maxHpLabel = nullptr;
         CCLabelBMFont* damageLabel = nullptr;
         CCLabelBMFont* healingLabel = nullptr;
         float currentHP = 100.f;
+        float maxHP = 100.f;
         float lastDamage = 0.f;
 
         // VARIABLES
@@ -182,6 +184,13 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpLabel->setAnchorPoint({1.f, 0.5f});
         fields->hpLabel->setExtraKerning(16);
 
+        // Create Max HP label
+        fields->maxHpLabel = CCLabelBMFont::create("100", "hpNumbers.fnt"_spr);
+        fields->maxHpLabel->setID("hp-label"_spr);
+        fields->maxHpLabel->setAlignment(kCCTextAlignmentRight);
+        fields->maxHpLabel->setAnchorPoint({1.f, 0.5f});
+        fields->maxHpLabel->setExtraKerning(16);
+
         // Create damage label
         fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
         fields->damageLabel->setID("damage-label"_spr);
@@ -223,6 +232,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         containerNode->addChild(fields->hpOverlay);
         containerNode->addChild(fields->hpBarFill);
         containerNode->addChild(fields->hpLabel);
+        containerNode->addChild(fields->maxHpLabel);
 
         auto nodeSize = containerNode->getContentSize();
 
@@ -233,6 +243,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
         fields->hpBarFill->setPosition({64.05f, 22.7f});
         fields->hpLabel->setPosition({80.f, 19.f});
+        fields->maxHpLabel->setPosition({102.5f, 19.f});
         if (chosenChar != "player") fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
 
         //fields->dashLabel->setZOrder(2);
@@ -499,6 +510,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 float newScaleX = std::max(0.f, fields->currentHP / 100.f);
                 fields->hpBarFill->setScaleX(newScaleX);
 
+                // yellow tint
+                if (fields->currentHP <= fields->maxHP / 4) {
+                    fields->hpLabel->setColor({255, 255, 0});
+                    fields->maxHpLabel->setColor({255, 255, 0});
+                }
+
                 // Update HP label
                 if (fields->currentHP <= 0) {
                     int displayHP = static_cast<int>(std::round(fields->currentHP));
@@ -738,6 +755,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 nullptr
             );
 
+            fields->healSpr->stopAllActions();
             fields->healSpr->runAction(downAnim);
             fields->healSpr->runAction(fadeAwayAnim);
             fields->healSpr->runAction(stretchAnim);
@@ -774,6 +792,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 nullptr
             );
 
+            fields->healingLabel->stopAllActions();
             fields->healingLabel->runAction(downAnim);
             fields->healingLabel->runAction(fadeAwayAnim);
             fields->healingLabel->runAction(stretchAnim);
@@ -886,6 +905,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 nullptr
             );
 
+            fields->healSpr->stopAllActions();
             fields->healSpr->runAction(downAnim);
             fields->healSpr->runAction(fadeAwayAnim);
             fields->healSpr->runAction(stretchAnim);
@@ -922,6 +942,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 nullptr
             );
 
+            fields->healingLabel->stopAllActions();
             fields->healingLabel->runAction(downAnim);
             fields->healingLabel->runAction(fadeAwayAnim);
             fields->healingLabel->runAction(stretchAnim);
