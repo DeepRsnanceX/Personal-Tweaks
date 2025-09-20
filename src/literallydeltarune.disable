@@ -368,6 +368,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     }
 
     void resetLevel() {
+        PlayLayer::resetLevel();
+        
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto fmod = FMODAudioEngine::sharedEngine();
@@ -480,8 +482,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->healSpr->runAction(resetHeal);
 
         fmod->playEffect("snd_heal_c.ogg"_spr);
-
-        PlayLayer::resetLevel();
         
     }
 
@@ -505,6 +505,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     } 
 
     void setupHasCompleted() {
+        PlayLayer::setupHasCompleted();
+
         auto fmod = FMODAudioEngine::sharedEngine();
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -525,8 +527,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         );
 
         hasTab->runAction(enterAction);
-
-        PlayLayer::setupHasCompleted();
     }
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) override {
