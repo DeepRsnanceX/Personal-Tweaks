@@ -28,6 +28,7 @@ class $modify(MyPauseLayer, PauseLayer) {
             menu->setPosition({36.f, winSize.height / 2});
             menu->setContentSize({40, winSize.height - 40.f});
             menu->setZOrder(10);
+            menu->setID("left-button-menu");
             this->addChild(menu);
         }
 

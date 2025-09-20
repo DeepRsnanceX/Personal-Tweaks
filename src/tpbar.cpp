@@ -262,7 +262,6 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 };
 
 class $modify(TPPlayLayer, PlayLayer) {
-
     static void onModify(auto& self) {
         self.setHookPriorityPost("PlayLayer::setupHasCompleted", Priority::Last);
     }
@@ -271,7 +270,6 @@ class $modify(TPPlayLayer, PlayLayer) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
-        
         auto barNode = createTpBar();
         this->addChild(barNode);
 
@@ -285,19 +283,26 @@ class $modify(TPPlayLayer, PlayLayer) {
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
 
+        log::debug("setuphascompleted called");
+
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
 
-        float delay = 0.25f;
+        log::debug("bar exists");
 
+        float delay = 0.25f;
         auto moveInBar = CCSequence::create(
             CCDelayTime::create(delay),
             CCEaseOut::create(CCMoveTo::create(0.3f, {45.f, winSize.height / 2.f}), 3.f),
             nullptr
         );
 
+        log::debug("action made");
+
         plHasBar->runAction(moveInBar);
+
+        log::debug("action ran");
     }
 
     void resetLevel() {
