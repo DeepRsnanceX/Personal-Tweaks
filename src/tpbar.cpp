@@ -303,6 +303,7 @@ class $modify(TPPlayLayer, PlayLayer) {
     }
 
     void resetLevel() {
+        PlayLayer::resetLevel();
 
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
@@ -322,8 +323,6 @@ class $modify(TPPlayLayer, PlayLayer) {
         percentLabel->setString("0", true);
 
         tpCooldown = false;
-
-		PlayLayer::resetLevel();
     }
 };
 
