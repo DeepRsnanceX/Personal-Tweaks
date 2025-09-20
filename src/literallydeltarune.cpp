@@ -140,20 +140,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 
-		if (!enableDeltarune) return true;
-
-		this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
-            if (event->isDown()) {
-                DeltaPlayLayer::healPrayerKeybindVer();
-            }
-            return ListenerResult::Propagate;
-        }, "heal-prayer-key"_spr);
-
-		return true;
-    }
-
-    void setupDeltarune() {
-		auto fields = m_fields.self();
+        if (!enableDeltarune) return true;
+        
+        auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto gm = GameManager::sharedState();
         auto fmod = FMODAudioEngine::sharedEngine();
@@ -376,8 +365,15 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         menu->setPosition({nodeSize.width / 2.f, 0.f});
 
-        return;
-	}
+        this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+            if (event->isDown()) {
+                DeltaPlayLayer::healPrayerKeybindVer();
+            }
+            return ListenerResult::Propagate;
+        }, "heal-prayer-key"_spr);
+
+        return true;
+    }
 
     void resetLevel() {
         PlayLayer::resetLevel();
@@ -530,8 +526,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         if (!enableDeltarune) return;
 
-		setupDeltarune();
-
         auto fmod = FMODAudioEngine::sharedEngine();
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -553,6 +547,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     }
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) override {
+
         if (!enableDeltarune) return PlayLayer::destroyPlayer(player, obj);
 
         auto fields = m_fields.self();

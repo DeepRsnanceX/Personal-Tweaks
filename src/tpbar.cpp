@@ -269,26 +269,26 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 
 class $modify(TPPlayLayer, PlayLayer) {
 
-    void setupMyStuff() {
-        if (!enableDeltaruneMod) return;
+    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+        
+        if (!enableDeltaruneMod) return true;
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto barNode = createTpBar();
         this->addChild(barNode);
 
-        if (!barNode) return;
+        if (!barNode) return true;
         barNode->setPosition({-10.f, winSize.height / 2.f});
         barNode->setZOrder(20);
 
-        return;
+        return true;
     }
 
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
 
         if (!enableDeltaruneMod) return;
-
-		setupMyStuff();
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
