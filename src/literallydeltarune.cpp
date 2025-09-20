@@ -163,6 +163,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             case 5:
                 fields->tabColor = gm->colorForIdx(gm->getPlayerColor());
                 break;
+            case 6:
+                fields->tabColor = gm->colorForIdx(gm->getPlayerColor());
+                break;
         }
 
         switch (int wtf = getNumberForChar(chosenChar)) {
@@ -188,7 +191,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         fields->currentHP = fields->maxHP;
 
-        if (chosenChar != "player") {
+        if (chosenChar == "player" || chosenChar == "true-player") {
+            fields->nameLabel = CCSprite::createWithSpriteFrameName("nameLabel_player.png"_spr);
+
+            fields->charIcon = CCSprite::createWithSpriteFrame(m_player1->m_iconSprite->displayFrame());
+            fields->charIcon->setPosition({13.25f, 25.75f});
+            fields->charIcon->setScale(0.4f);
+            fields->charIcon->setColor(pastelizeColor(fields->tabColor));
+        } else {
             std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
             fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
 
@@ -197,15 +207,6 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             
             std::string hurtFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
             fields->hurtIcon = CCSprite::createWithSpriteFrameName(hurtFilename.c_str());
-            
-        } else {
-            std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
-            fields->nameLabel = CCSprite::createWithSpriteFrameName(labelFilename.c_str());
-
-            fields->charIcon = CCSprite::createWithSpriteFrame(m_player1->m_iconSprite->displayFrame());
-            fields->charIcon->setPosition({13.25f, 25.75f});
-            fields->charIcon->setScale(0.4f);
-            fields->charIcon->setColor(pastelizeColor(fields->tabColor));
         }
 
         // Create HP label
@@ -273,7 +274,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpBarFill->setPosition({64.05f, 22.7f});
         fields->hpLabel->setPosition({80.f, 31.5f});
         fields->maxHpLabel->setPosition({102.5f, 31.5f});
-        if (chosenChar != "player") fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+
+        bool invalidForMidPos = chosenChar == "player" || chosenChar == "true-player";
+        if (!invalidForMidPos) fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
 
         if (fields->hurtIcon) {
             fields->hurtIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
@@ -282,13 +285,18 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             fields->hurtIcon->setVisible(false);
         }
 
+        if (chosenChar == "true-player") {
+            fields->hpLabel->setColor({255, 255, 0});
+            fields->maxHpLabel->setColor({255, 255, 0});
+        }
+
         //fields->dashLabel->setZOrder(2);
         fields->hpBarFill->setZOrder(2);
 
         this->addChild(containerNode);
 
         containerNode->setPosition({winSize.width / 2.f, -50.f});
-        containerNode->setZOrder(20);
+        containerNode->setZOrder(50);
 
         // when
         fields->downSpr->setColor({ 255, 0, 0 });
@@ -383,6 +391,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpLabel->setColor({255, 255, 255});
         fields->maxHpLabel->setColor({255, 255, 255});
         hpCooldown = false;
+
+        if (chosenChar == "true-player") {
+            fields->hpLabel->setColor({255, 255, 0});
+            fields->maxHpLabel->setColor({255, 255, 0});
+        }
 
         // Reset defending
         fields->isDefending = false;
@@ -494,7 +507,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
 
-        if (chosenChar != "player") return;
+        if (chosenChar != "player" || chosenChar != "true-player") return;
         if (!fields->charIcon) return;
 
         auto frame = getGamemodeFrame(m_player1);
@@ -580,8 +593,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
                 hpCooldown = true;
                 this->scheduleOnce(schedule_selector(DeltaPlayLayer::cooldownHPFunction), 1.1f);
                 fmod->playEffect("snd_hurt.ogg"_spr);
+
+                bool invalidCharsForHurt = chosenChar == "player" || chosenChar == "true-player";
                 
-                if (chosenChar != "player" && fields->hurtIcon && !fields->isDefending) {
+                if (!invalidCharsForHurt && fields->hurtIcon && !fields->isDefending) {
                     fields->charIcon->setVisible(false);
                     fields->hurtIcon->setVisible(true);
                     this->scheduleOnce(schedule_selector(DeltaPlayLayer::resetNormalSprite), 0.5f);
@@ -752,7 +767,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         // Show defend icon, hide char icon
         if (fields->defendIcon) {
             fields->defendIcon->setVisible(true);
-            fields->defendIcon->setColor(chosenChar == "player" ? pastelizeColor(fields->tabColor) : fields->tabColor);
+            fields->defendIcon->setColor(pastelizeColor(fields->tabColor));
         }
         if (fields->charIcon) fields->charIcon->setVisible(false);
         
@@ -992,11 +1007,4 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fmod->playEffect("snd_heal_c.ogg"_spr);
     }
 
-};
-
-class $modify(DeltaPlayerObject, PlayerObject) {
-    void switchedToMode(GameObjectType p0) {
-        
-        PlayerObject::switchedToMode(p0);
-    }
 };

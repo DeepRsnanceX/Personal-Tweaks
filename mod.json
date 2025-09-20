@@ -23,7 +23,7 @@
 			"name": "Deltarune - Tab Character",
 			"description": "The character to use in the Deltarune styled tab. Doesn't affect HP values, everyone has max 100 and everyone will take fully random damage",
 			"default": "kris",
-			"one-of": ["kris", "susie", "ralsei", "noelle", "player"]
+			"one-of": ["kris", "susie", "ralsei", "noelle", "player", "true-player"]
 		},
 		"randomizer-title": {
 			"type": "title",
