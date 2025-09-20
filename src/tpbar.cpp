@@ -2,7 +2,7 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <random>
-#include "ShaderCache.h"
+//#include "ShaderCache.h"
 #include "helper.hpp"
 
 using namespace geode::prelude;
@@ -14,6 +14,7 @@ static const std::set<int> sawblades = {88, 89, 98, 183, 184, 185, 186, 187, 188
 
 bool enableTPBar = true;
 
+/*
 void loadOutlineShader() {
     std::string fragOutline = R"(
         #ifdef GL_ES
@@ -35,6 +36,7 @@ void loadOutlineShader() {
 
     ShaderCache::get()->createShader("tp-outline", fragOutline);
 }
+*/
 
 float getRandomFloat(float min, float max) {
     static std::random_device rd;
