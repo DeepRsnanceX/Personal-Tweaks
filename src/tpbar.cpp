@@ -114,7 +114,7 @@ CCNode* createTpBar() {
 }
 
 $on_mod(Loaded) {
-    loadOutlineShader();
+    //loadOutlineShader();
 }
 
 class $modify(TPBaseLayer, GJBaseGameLayer) {
@@ -205,6 +205,7 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
             tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
         }
 
+        /*
         if (CCGLProgram* outlineProgram = ShaderCache::get()->getProgram("tp-outline")) {
             outlineProgram->setUniformsForBuiltins();
             tpSprite->setShaderProgram(outlineProgram);
@@ -215,6 +216,7 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
                 riderTpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
             }
         }
+        */
 
         float randomDelay = getRandomFloat(0.05f, 0.1f);
         
@@ -254,7 +256,6 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 			if (!obj || obj->m_isGroupDisabled || obj == m_anticheatSpike) continue;
 			if (obj->m_objectType != GameObjectType::Hazard && obj->m_objectType != GameObjectType::AnimatedHazard && obj->m_objectType != GameObjectType::Solid) continue;
 			if (obj->m_objectType == GameObjectType::Solid && !player->m_isDart) continue;
-			//if (obj->m_isHide || obj->getOpacity() < 1) continue;
 			const bool isSawblade = std::binary_search(sawblades.begin(), sawblades.end(), obj->m_objectID);
 			const float multiplier = isSawblade ? -2.5f : 2.f;
 			CCRect sensitivityRect = CCRect(obj->getObjectRect().origin - CCPoint(sensitivity, sensitivity), obj->getObjectRect().size + CCPoint(sensitivity * multiplier, sensitivity * multiplier));
