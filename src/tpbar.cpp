@@ -276,7 +276,7 @@ class $modify(TPPlayLayer, PlayLayer) {
         auto barNode = createTpBar();
         this->addChild(barNode);
 
-        if (!barNode) return true;
+        if (!barNode) return;
         barNode->setPosition({-10.f, winSize.height / 2.f});
         barNode->setZOrder(20);
 
