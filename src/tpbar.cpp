@@ -262,6 +262,8 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 };
 
 class $modify(TPPlayLayer, PlayLayer) {
+    self.setHookPriorityPost("PlayLayer::setupHasCompleted", Priority::Last);
+
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 
@@ -279,7 +281,7 @@ class $modify(TPPlayLayer, PlayLayer) {
 
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
-        
+
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
