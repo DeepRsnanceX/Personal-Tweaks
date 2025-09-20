@@ -14,6 +14,7 @@ static const std::set<int> sawblades = {88, 89, 98, 183, 184, 185, 186, 187, 188
 
 bool enableTPBar = true;
 
+bool enableDeltaruneMod = Mod::get()->getSettingValue<bool>("enable-deltarune");
 
 void loadOutlineShader() {
     std::string fragOutline = R"(
@@ -116,6 +117,10 @@ CCNode* createTpBar() {
 
 $on_mod(Loaded) {
     loadOutlineShader();
+
+    listenForSettingChanges("enable-deltarune", [](bool value) {
+        enableDeltaruneMod = value;
+    });
 }
 
 class $modify(TPBaseLayer, GJBaseGameLayer) {
@@ -243,6 +248,7 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 
     void collisionCheckObjects(PlayerObject* player, gd::vector<GameObject*>* objs, int myAss, float v1) {
 		GJBaseGameLayer::collisionCheckObjects(player, objs, myAss, v1);
+        if (!enableDeltaruneMod) return;
 		if (!enableTPBar || !PlayLayer::get()) return;
         if (tpCooldown) return;
 
@@ -262,13 +268,11 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 };
 
 class $modify(TPPlayLayer, PlayLayer) {
-    static void onModify(auto& self) {
-        self.setHookPriorityPost("PlayLayer::setupHasCompleted", Priority::Last);
-        self.setHookPriorityPre("PlayLayer::init", Priority::First);
-    }
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+        
+        if (!enableDeltaruneMod) return true;
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto barNode = createTpBar();
@@ -284,16 +288,11 @@ class $modify(TPPlayLayer, PlayLayer) {
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
 
-        log::info("setuphascompleted called");
+        if (!enableDeltaruneMod) return;
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
-        if (!plHasBar) {
-            log::info("bar doesn't seem to exist?");
-        }
         if (!plHasBar) return;
-
-        log::info("bar exists");
 
         float delay = 0.25f;
         auto moveInBar = CCSequence::create(
@@ -302,15 +301,14 @@ class $modify(TPPlayLayer, PlayLayer) {
             nullptr
         );
 
-        log::info("action made");
-
         plHasBar->runAction(moveInBar);
 
-        log::info("action ran");
     }
 
     void resetLevel() {
         PlayLayer::resetLevel();
+
+        if (!enableDeltaruneMod) return;
 
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
@@ -336,6 +334,8 @@ class $modify(TPPlayLayer, PlayLayer) {
 class $modify(TPPlayerObject, PlayerObject) {
     bool init(int player, int ship, GJBaseGameLayer* gameLayer, CCLayer* layer, bool playLayer) {
         if (!PlayerObject::init(player, ship, gameLayer, layer, playLayer)) return false;
+
+        if (!enableDeltaruneMod) return true;
         
         auto tpSprite = CCSprite::create();
         tpSprite->setID("tp-effect-sprite"_spr);
@@ -357,6 +357,8 @@ class $modify(TPPlayerObject, PlayerObject) {
 
     void switchedToMode(GameObjectType p0) {
         PlayerObject::switchedToMode(p0);
+
+        if (!enableDeltaruneMod) return;
         
         auto playLayer = PlayLayer::get();
         if (!playLayer) return;

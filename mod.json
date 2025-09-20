@@ -12,6 +12,12 @@
 			"name": "Settings not in 'mod menu' yet",
 			"description": "Self explanatory"
 		},
+		"enable-deltarune": {
+			"type": "bool",
+			"name": "Enable Deltarune",
+			"description": "Disable if ur boring as hell",
+			"default": false
+		},
 		"tab-character": {
 			"type": "string",
 			"name": "Deltarune - Tab Character",

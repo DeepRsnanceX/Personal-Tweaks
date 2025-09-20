@@ -6,13 +6,8 @@
 using namespace geode::prelude;
 using namespace keybinds;
 
-/*
-MAX DISPLAY: 102.5f, 19.f
-
-CURRENT HP: 80.f, 19.f
-*/
-
 std::string chosenChar = Mod::get()->getSettingValue<std::string>("tab-character");
+bool enableDeltarune = Mod::get()->getSettingValue<bool>("enable-deltarune");
 
 bool hpCooldown = false;
 
@@ -101,6 +96,9 @@ $on_mod(Loaded){
     listenForSettingChanges("tab-character", [](std::string value) {
         chosenChar = value;
     });
+    listenForSettingChanges("enable-deltarune", [](bool value) {
+        enableDeltarune = value;
+    });
 }
 
 class $modify(DeltaPlayLayer, PlayLayer) {
@@ -141,6 +139,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+
+        if (!enableDeltarune) return true;
         
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -369,6 +369,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
     void resetLevel() {
         PlayLayer::resetLevel();
+
+        if (!enableDeltarune) return;
         
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -488,6 +490,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     void postUpdate(float p0) {
         PlayLayer::postUpdate(p0);
 
+        if (!enableDeltarune) return;
+
         auto fields = m_fields.self();
 
         if (chosenChar != "player") return;
@@ -507,14 +511,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
 
+        if (!enableDeltarune) return;
+
         auto fmod = FMODAudioEngine::sharedEngine();
         auto fields = m_fields.self();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
 
         auto hasTab = this->getChildByID("deltarune-ui-node"_spr);
         if (!hasTab) return;
-
-        //mod->playEffect("snd_weaponpull_fast.ogg"_spr);
 
         float delay = 0.25f;
 
@@ -530,6 +534,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     }
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) override {
+
+        if (!enableDeltarune) return PlayLayer::destroyPlayer(player, obj);
+
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
 
