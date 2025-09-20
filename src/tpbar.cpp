@@ -2,7 +2,7 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <random>
-//#include "ShaderCache.h"
+#include "ShaderCache.h"
 #include "helper.hpp"
 
 using namespace geode::prelude;
