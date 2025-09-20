@@ -278,6 +278,8 @@ class $modify(TPPlayLayer, PlayLayer) {
     }
 
     void setupHasCompleted() {
+        PlayLayer::setupHasCompleted();
+        
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
@@ -291,8 +293,6 @@ class $modify(TPPlayLayer, PlayLayer) {
         );
 
         plHasBar->runAction(moveInBar);
-
-        PlayLayer::setupHasCompleted();
     }
 
     void resetLevel() {
