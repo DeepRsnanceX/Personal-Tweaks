@@ -14,7 +14,7 @@ static const std::set<int> sawblades = {88, 89, 98, 183, 184, 185, 186, 187, 188
 
 bool enableTPBar = true;
 
-/*
+
 void loadOutlineShader() {
     std::string fragOutline = R"(
         #ifdef GL_ES
@@ -36,7 +36,6 @@ void loadOutlineShader() {
 
     ShaderCache::get()->createShader("tp-outline", fragOutline);
 }
-*/
 
 float getRandomFloat(float min, float max) {
     static std::random_device rd;
@@ -116,7 +115,7 @@ CCNode* createTpBar() {
 }
 
 $on_mod(Loaded) {
-    //loadOutlineShader();
+    loadOutlineShader();
 }
 
 class $modify(TPBaseLayer, GJBaseGameLayer) {
@@ -143,7 +142,6 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 
         float newScaleY = currentScaleY + getRandomFloat(0.01f, 0.09f);
         if (newScaleY > 1.f) newScaleY = 1.f;
-        //barFill->setScaleY(newScaleY);
         auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.1f, 1.f, newScaleY), 2.0f);
         barFill->runAction(barScaleAction);
 
@@ -151,9 +149,6 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
         if (!barFillLine) return;
 
         auto fillSize = barFill->getContentSize();
-        //auto moveLineAnim = CCEaseInOut::create(CCMoveTo::create(0.05f, {barFill->getPositionX(), fillSize.height * newScaleY}), 2.5f);
-        //barFillLine->stopAllActions();
-        //barFillLine->runAction(moveLineAnim);
         barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
 
         auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
@@ -207,7 +202,6 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
             tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
         }
 
-        /*
         if (CCGLProgram* outlineProgram = ShaderCache::get()->getProgram("tp-outline")) {
             outlineProgram->setUniformsForBuiltins();
             tpSprite->setShaderProgram(outlineProgram);
@@ -218,7 +212,6 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
                 riderTpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
             }
         }
-        */
 
         float randomDelay = getRandomFloat(0.05f, 0.1f);
         
@@ -285,8 +278,6 @@ class $modify(TPPlayLayer, PlayLayer) {
     }
 
     void setupHasCompleted() {
-        PlayLayer::setupHasCompleted();
-
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
@@ -300,6 +291,8 @@ class $modify(TPPlayLayer, PlayLayer) {
         );
 
         plHasBar->runAction(moveInBar);
+
+        PlayLayer::setupHasCompleted();
     }
 
     void resetLevel() {
