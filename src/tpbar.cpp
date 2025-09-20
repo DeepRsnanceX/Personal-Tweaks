@@ -287,6 +287,9 @@ class $modify(TPPlayLayer, PlayLayer) {
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+        if (!plHasBar) {
+            log::info("bar doesn't seem to exist?");
+        }
         if (!plHasBar) return;
 
         log::info("bar exists");
