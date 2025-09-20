@@ -262,7 +262,10 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 };
 
 class $modify(TPPlayLayer, PlayLayer) {
-    self.setHookPriorityPost("PlayLayer::setupHasCompleted", Priority::Last);
+
+    static void onModify(auto& self) {
+        self.setHookPriorityPost("PlayLayer::setupHasCompleted", Priority::Last);
+    }
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
