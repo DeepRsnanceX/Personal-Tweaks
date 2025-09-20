@@ -283,13 +283,13 @@ class $modify(TPPlayLayer, PlayLayer) {
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
 
-        log::debug("setuphascompleted called");
+        log::info("setuphascompleted called");
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
         if (!plHasBar) return;
 
-        log::debug("bar exists");
+        log::info("bar exists");
 
         float delay = 0.25f;
         auto moveInBar = CCSequence::create(
@@ -298,11 +298,11 @@ class $modify(TPPlayLayer, PlayLayer) {
             nullptr
         );
 
-        log::debug("action made");
+        log::info("action made");
 
         plHasBar->runAction(moveInBar);
 
-        log::debug("action ran");
+        log::info("action ran");
     }
 
     void resetLevel() {
