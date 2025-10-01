@@ -61,6 +61,101 @@ ccColor3B pastelizeColor(const ccColor3B& color, float factor = 0.4f) {
     return pastelized;
 }
 
+struct CharacterAttributes {
+    float minDamage;
+    float maxDamage;
+    float maxHealth;
+    float bonusHealth = 0.f;
+    ccColor3B tabColor;
+};
+
+CharacterAttributes getCharAttributes(int stars, int isDemon, std::string character) {
+    CharacterAttributes attrs;
+    auto gm = GameManager::sharedState();
+    bool demonQualifies;
+
+    if (stars < 10) {
+        switch (stars) {
+            case 6:
+                attrs.minDamage = 10.f;
+                attrs.maxDamage = 20.f;
+                break;
+            case 7:
+                attrs.minDamage = 15.f;
+                attrs.maxDamage = 30.f;
+                break;
+            case 8:
+                attrs.minDamage = 15.f;
+                attrs.maxDamage = 35.f;
+                break;
+            case 9:
+                attrs.minDamage = 20.f;
+                attrs.maxDamage = 40.f;
+                break;
+            default:
+                attrs.minDamage = 25.f;
+                attrs.maxDamage = 45.f;
+                break;
+        }
+    } else {
+        switch (isDemon) {
+            case 3: // easy demon
+                attrs.minDamage = 30.f;
+                attrs.maxDamage = 60.f;
+                break;
+            case 4: // medium demon
+                attrs.minDamage = 35.f;
+                attrs.maxDamage = 65.f;
+                demonQualifies = true;
+                break;
+            case 0: // hard demon
+                attrs.minDamage = 40.f;
+                attrs.maxDamage = 70.f;
+                demonQualifies = true;
+                break;
+            case 5: // insane demon
+                attrs.minDamage = 45.f;
+                attrs.maxDamage = 75.f;
+                demonQualifies = true;
+                break;
+            case 6: // extreme demon
+                attrs.minDamage = 50.f;
+                attrs.maxDamage = 80.f;
+                demonQualifies = true;
+                break;
+            default:
+                attrs.minDamage = 35.f;
+                attrs.maxDamage = 65.f;
+                demonQualifies = true;
+                break;
+        }
+    }
+
+    if (demonQualifies) attrs.bonusHealth = 40.f;
+
+    if (character == "kris") {
+        attrs.tabColor = ccColor3B({0, 255, 255});
+        attrs.maxHealth = 160.f + attrs.bonusHealth;
+    } else if (character == "susie") {
+        attrs.tabColor = ccColor3B({255, 0, 255});
+        attrs.maxHealth = 190.f + attrs.bonusHealth;
+    } else if (character == "ralsei") {
+        attrs.tabColor = ccColor3B({0, 255, 0});
+        attrs.maxHealth = 140.f + attrs.bonusHealth;
+    } else if (character == "noelle") {
+        attrs.tabColor = ccColor3B({255, 255, 0});
+        attrs.maxHealth = 90.f + attrs.bonusHealth;
+    } else if (character == "player") {
+        attrs.tabColor = gm->colorForIdx(gm->getPlayerColor());
+        attrs.maxHealth = 100.f;
+    } else if (character == "true-player") {
+        attrs.tabColor = gm->colorForIdx(gm->getPlayerColor());
+        attrs.maxHealth = 1.f;
+    }
+
+    return attrs;
+}
+
 float getRandomHPFloat(float min, float max) {
     static std::random_device rd;
     static std::mt19937 gen(rd());
@@ -89,6 +184,17 @@ $on_mod(Loaded){
 		"",
 
 		{ Keybind::create(KEY_C, Modifier::None) },
+
+		Mod::get()->getName()
+	});
+
+    BindManager::get()->registerBindable({
+		"defend-key"_spr,
+		"Defend keybind",
+
+		"",
+
+		{ Keybind::create(KEY_Q, Modifier::None) },
 
 		Mod::get()->getName()
 	});
@@ -135,6 +241,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         // VARIABLES
         bool isTabHidden = false;
         bool hasDied = false;
+        GJGameLevel* currentLevel = nullptr;
     };
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
@@ -146,50 +253,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto gm = GameManager::sharedState();
         auto fmod = FMODAudioEngine::sharedEngine();
+        CharacterAttributes charAttrs = getCharAttributes(level->m_stars, level->m_demonDifficulty, chosenChar);
 
-        switch (int what = getNumberForChar(chosenChar)) {
-            case 1:
-                fields->tabColor = ccColor3B({0, 255, 255});
-                break;
-            case 2:
-                fields->tabColor = ccColor3B({255, 0, 255});
-                break;
-            case 3:
-                fields->tabColor = ccColor3B({0, 255, 0});
-                break;
-            case 4:
-                fields->tabColor = ccColor3B({255, 255, 0});
-                break;
-            case 5:
-                fields->tabColor = gm->colorForIdx(gm->getPlayerColor());
-                break;
-            case 6:
-                fields->tabColor = gm->colorForIdx(gm->getPlayerColor());
-                break;
-        }
-
-        switch (int wtf = getNumberForChar(chosenChar)) {
-            case 1: // kris
-                fields->maxHP = 160.f;
-                break;
-            case 2: // susie
-                fields->maxHP = 190.f;
-                break;
-            case 3: // ralsei
-                fields->maxHP = 140.f;
-                break;
-            case 4: // noelle
-                fields->maxHP = 90.f;
-                break;
-            case 5: // player
-                fields->maxHP = 100.f;
-                break;
-            case 6: // real player
-                fields->maxHP = 1.f;
-                break;
-        }
-
+        fields->tabColor = charAttrs.tabColor;
+        fields->maxHP = charAttrs.maxHealth;
         fields->currentHP = fields->maxHP;
+        fields->currentLevel = level;
 
         if (chosenChar == "player" || chosenChar == "true-player") {
             fields->nameLabel = CCSprite::createWithSpriteFrameName("nameLabel_player.png"_spr);
@@ -372,6 +441,13 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             return ListenerResult::Propagate;
         }, "heal-prayer-key"_spr);
 
+        this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+            if (event->isDown()) {
+                DeltaPlayLayer::playerDefendKeybindVer();
+            }
+            return ListenerResult::Propagate;
+        }, "defend-key"_spr);
+
         return true;
     }
 
@@ -507,7 +583,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
 
-        if (chosenChar != "player" || chosenChar != "true-player") return;
+        bool validChars = chosenChar == "player" || chosenChar == "true-player";
+
+        if (!validChars) return;
         if (!fields->charIcon) return;
 
         auto frame = getGamemodeFrame(m_player1);
@@ -552,6 +630,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
+        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
 
         if (obj == m_anticheatSpike) {
             return PlayLayer::destroyPlayer(player, obj);
@@ -560,11 +639,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         if (!player->m_isDead && !hpCooldown) {
             if (fields->currentHP > 0) {
 
-                float damageAmount = getRandomHPFloat(10.f, 40.f);
+                float damageAmount = getRandomHPFloat(charAttrs.minDamage, charAttrs.maxDamage);
 
                 // Apply defense reduction if defending
                 if (fields->isDefending && fields->defendHitsLeft > 0) {
-                    damageAmount *= 0.6f; // 40% damage reduction
+                    damageAmount *= 0.4f;
                     fields->defendHitsLeft--;
                     
                     // End defense if no hits left
@@ -748,6 +827,21 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         
         auto menuItem = static_cast<CCMenuItemSpriteExtra*>(sender);
         auto sprite = static_cast<CCSprite*>(menuItem->getNormalImage());
+        buttonTintEffect(sprite);
+        
+        // Delay the actual action
+        fmod->playEffect("snd_select.ogg"_spr);
+        this->scheduleOnce(schedule_selector(DeltaPlayLayer::delayedDefendAction), 0.3f);
+    }
+
+    void playerDefendKeybindVer() {
+        auto fields = m_fields.self();
+        auto fmod = FMODAudioEngine::sharedEngine();
+        
+        auto tab = this->getChildByID("deltarune-ui-node"_spr);
+        auto menu = static_cast<CCMenu*>(tab->getChildByID("buttons-menu"_spr));
+        auto sprextra = static_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("defend-btn"_spr));
+        auto sprite = static_cast<CCSprite*>(sprextra->getChildByID("defend-spr"_spr));
         buttonTintEffect(sprite);
         
         // Delay the actual action
