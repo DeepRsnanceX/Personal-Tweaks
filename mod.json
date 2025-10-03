@@ -25,6 +25,66 @@
 			"default": "kris",
 			"one-of": ["kris", "susie", "ralsei", "noelle", "player", "true-player"]
 		},
+		"misc-title": {
+			"type": "title",
+			"name": "Misc",
+			"description": "Settings for miscelaneous features."
+		},
+		"nomirror": {
+			"type": "bool",
+			"name": "No Mirror Portal",
+			"description": "Fixes the horrendously annoying, unintented and game ruining bug where the mirror portal exists.",
+			"default": false
+		},
+		"garage-select-anim": {
+			"type": "bool",
+			"name": "Garage: Icon Select Animation",
+			"description": "Enables a small scaling animation + a sound when selecting icons in the Icon Kit.",
+			"default": false
+		},
+		"ballrot-bug": {
+			"type": "bool",
+			"name": "Gameplay: Ball Rotation Bug",
+			"description": "Replicates the Ball Rotation Bug from older GD versions. \nThis feature is taken from QOLMod.",
+			"default": false
+		},
+		"iconlist-ft": {
+			"type": "bool",
+			"name": "Icon Listing Features",
+			"description": "Enables a set of buttons in the Icon Kit that allow you to create icon lists and export them to a file. ONLY WORKS WITH MOREICONS ICONS!!! \nPretty niche feature only for myself.",
+			"default": false
+		},
+		"icon-renderer": {
+			"type": "title",
+			"name": "Icon Renderer",
+			"description": "Settings for the Icon Renderer feature, which allows you to render icons as .png images directly in-game."
+		},
+		"enable-renderer": {
+			"type": "bool",
+			"name": "Renderer Features",
+			"description": "Enables the Icon Renderer Features on the Icon Kit.",
+			"default": true
+		},
+		"renders-path": {
+			"type": "folder",
+			"name": "Renders Folder",
+			"description": "Where to save the Icon Renders to. Defaults to this mod's config directory.",
+			"default": "{mod_config_dir}/renders"
+		},
+		"bg-color": {
+			"type": "rgba",
+			"name": "Render Background Color",
+			"description": "Defines the BG color to use for the renders. Defaults to transparent (which is best, honestly)",
+			"default": [0, 0, 0, 0]
+		},
+		"max-per-row": {
+			"type": "int",
+			"name": "BATCH - Max Icons per Row",
+			"description": "Defines the max amount of icons per row when rendering a batch of multiple icons.",
+			"default": 8,
+			"min": 1,
+			"max": 50
+		},
 		"randomizer-title": {
 			"type": "title",
 			"name": "Icon Randomizer",
@@ -347,87 +407,6 @@
 			"min": 60,
 			"max": 1080,
 			"default": 60
-		},
-		"misc-title": {
-			"type": "title",
-			"name": "Misc",
-			"description": "Settings for miscelaneous features."
-		},
-		"garage-select-anim": {
-			"type": "bool",
-			"name": "Garage: Icon Select Animation",
-			"description": "Enables a small scaling animation + a sound when selecting icons in the Icon Kit.",
-			"default": false
-		},
-		"ballrot-bug": {
-			"type": "bool",
-			"name": "Gameplay: Ball Rotation Bug",
-			"description": "Replicates the Ball Rotation Bug from older GD versions. \nThis feature is taken from QOLMod.",
-			"default": false
-		},
-		"iconlist-ft": {
-			"type": "bool",
-			"name": "Icon Listing Features",
-			"description": "Enables a set of buttons in the Icon Kit that allow you to create icon lists and export them to a file. ONLY WORKS WITH MOREICONS ICONS!!! \nPretty niche feature only for myself.",
-			"default": false
-		},
-		"icon-renderer": {
-			"type": "title",
-			"name": "Icon Renderer",
-			"description": "Settings for the Icon Renderer feature, which allows you to render icons as .png images directly in-game."
-		},
-		"enable-renderer": {
-			"type": "bool",
-			"name": "Renderer Features",
-			"description": "Enables the Icon Renderer Features on the Icon Kit.",
-			"default": true
-		},
-		"renders-path": {
-			"type": "folder",
-			"name": "Renders Folder",
-			"description": "Where to save the Icon Renders to. Defaults to this mod's config directory.",
-			"default": "{mod_config_dir}/renders"
-		},
-		"bg-color": {
-			"type": "rgba",
-			"name": "Render Background Color",
-			"description": "Defines the BG color to use for the renders. Defaults to transparent (which is best, honestly)",
-			"default": [0, 0, 0, 0]
-		},
-		"max-per-row": {
-			"type": "int",
-			"name": "BATCH - Max Icons per Row",
-			"description": "Defines the max amount of icons per row when rendering a batch of multiple icons.",
-			"default": 8,
-			"min": 1,
-			"max": 50
-		},
-		"noclip-totem": {
-			"type": "title",
-			"name": "Totem of Undying animation",
-			"description": "Settings for the Totem animation when dying with noclip on."
-		},
-		"enable-totem": {
-			"type": "bool",
-			"name": "Enable Totem Animation",
-			"description": "Enable the totem animation when dying with noclip on.",
-			"default": false
-		},
-		"totem-cooldown": {
-			"type": "float",
-			"name": "Totem Cooldown",
-			"description": "The cooldown for how often can the totem animation be played. Higher cooldown means less totem animations, even if you're constantly dying.",
-			"default": 0.5,
-			"min": 0.1,
-			"max": 2.0
-		},
-		"totem-scale": {
-			"type": "float",
-			"name": "Totem Scale",
-			"description": "The scale of the totem animation on screen. Higher scale means bigger totem. Around 2.7 mimics the size of the Vanilla animation.",
-			"default": 1.0,
-			"min": 0.3,
-			"max": 4.0
 		},
 		"icon-stuff-title": {
 			"type": "title",

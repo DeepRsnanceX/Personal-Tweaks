@@ -1,16 +1,29 @@
 #include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <geode/modify/GJBaseGameLayer.hpp>
+#include <Geode/modify/OptionsLayer.hpp>
+#include <Geode/modify/PauseLayer.hpp>
 
 using namespace geode::prelude;
 
 auto doAnimation = Mod::get()->getSettingValue<bool>("garage-select-anim");
+auto noMirror = Mod::get()->getSettingValue<bool>("nomirror");
 
 $on_mod(Loaded){
     listenForSettingChanges("garage-select-anim", [](bool value) {
         doAnimation = value;
     });
+    listenForSettingChanges("nomirror", [](bool value) {
+        noMirror = value;
+    });
 }
+
+class $modify(FuckYouMirrorPortal, GJBaseGameLayer) {
+    void toggleFlipped(bool p0, bool p1) {
+        if (!noMirror) GJBaseGameLayer::toggleFlipped(p0, p1);
+    }
+};
 
 class $modify(StupidGarageLayer, GJGarageLayer){
     static void onModify(auto& self) {
@@ -46,7 +59,44 @@ class $modify(StupidGarageLayer, GJGarageLayer){
             fakeAssGlow->runAction(bounceDef2);
         }
 
-        fmod->playEffect("click_stereo.ogg"_spr);
+        //fmod->playEffect("click_stereo.ogg"_spr);
 
     }
+};
+
+#define GET_SLIDER(sender) geode::cast::typeinfo_cast<SliderThumb*>(sender); if (!slider) return
+
+class $modify(AllowLowVolumeOLHook, OptionsLayer) {
+    void musicSliderChanged(cocos2d::CCObject* sender) {
+        auto slider = GET_SLIDER(sender);
+        auto value = slider->getValue();
+        auto* audioEngine = FMODAudioEngine::sharedEngine();
+        float originalVolume = audioEngine->getBackgroundMusicVolume();
+        audioEngine->setBackgroundMusicVolume(value);
+
+        if (originalVolume <= 0.f && value > 0.f) GameManager::get()->playMenuMusic();
+    }
+
+    void sfxSliderChanged(cocos2d::CCObject* sender) {
+        auto slider = GET_SLIDER(sender);
+        auto value = slider->getValue();
+        FMODAudioEngine::sharedEngine()->setEffectsVolume(value);
+    }
+};
+
+class $modify(AllowLowVolumePLHook, PauseLayer) {
+    void musicSliderChanged(cocos2d::CCObject* sender) {
+        auto slider = GET_SLIDER(sender);
+        auto value = slider->getValue();
+        FMODAudioEngine::sharedEngine()->setBackgroundMusicVolume(value);
+    }
+
+    // Function is merged with the one in OptionsLayer on Windows
+    #if !(defined(GEODE_IS_WINDOWS) && GEODE_COMP_GD_VERSION == 22060)
+    void sfxSliderChanged(cocos2d::CCObject* sender) {
+        auto slider = GET_SLIDER(sender);
+        auto value = slider->getValue();
+        FMODAudioEngine::sharedEngine()->setEffectsVolume(value);
+    }
+    #endif
 };
