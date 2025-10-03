@@ -434,14 +434,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         menu->setPosition({nodeSize.width / 2.f, 0.f});
 
-        this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+        this->addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
             if (event->isDown()) {
                 DeltaPlayLayer::healPrayerKeybindVer();
             }
             return ListenerResult::Propagate;
         }, "heal-prayer-key"_spr);
 
-        this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+        this->addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
             if (event->isDown()) {
                 DeltaPlayLayer::playerDefendKeybindVer();
             }

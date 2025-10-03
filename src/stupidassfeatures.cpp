@@ -1,7 +1,7 @@
 #include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/PlayLayer.hpp>
-#include <geode/modify/GJBaseGameLayer.hpp>
+#include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/OptionsLayer.hpp>
 #include <Geode/modify/PauseLayer.hpp>
 
