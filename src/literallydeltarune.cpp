@@ -260,6 +260,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->currentHP = fields->maxHP;
         fields->currentLevel = level;
 
+        fields->hpOverlay->getTexture()->setAliasTexParameters();
+        fields->hpBarFill->getTexture()->setAliasTexParameters();
+        fields->tabTop->getTexture()->setAliasTexParameters();
+        fields->tabBottom->getTexture()->setAliasTexParameters();
+        fields->defendIcon->getTexture()->setAliasTexParameters();
+        fields->downSpr->getTexture()->setAliasTexParameters();
+        fields->healSpr->getTexture()->setAliasTexParameters();
+
         if (chosenChar == "player" || chosenChar == "true-player") {
             fields->nameLabel = CCSprite::createWithSpriteFrameName("nameLabel_player.png"_spr);
 

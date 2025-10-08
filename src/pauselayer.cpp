@@ -1,3 +1,4 @@
+/*
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/ui/GeodeUI.hpp>
@@ -46,3 +47,4 @@ class $modify(MyPauseLayer, PauseLayer) {
         menu->updateLayout();
     }
 };
+*/

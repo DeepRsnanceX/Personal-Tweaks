@@ -2,6 +2,8 @@
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/modify/GJGarageLayer.hpp>
+#include <Geode/ui/GeodeUI.hpp>
+#include <Geode/ui/BasedButtonSprite.hpp>
 
 using namespace geode::prelude;
 
@@ -41,6 +43,19 @@ bool CustomSettingsPopup::setup() {
     auto customColorsSection = createCustomColorsSection();
     customColorsSection->setPosition({centerX, topY - 130.0f});
     this->m_mainLayer->addChild(customColorsSection);
+
+    // Mod settings button
+    auto optionsBtn02Spr = CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png");
+    auto optionsBtn02Btn = CCMenuItemSpriteExtra::create(optionsBtn02Spr, this, menu_selector(CustomSettingsPopup::onModSettings));
+    auto optionsBtnMenu = CCMenu::create();
+
+    optionsBtnMenu->setContentSize(optionsBtn02Spr->getContentSize());
+    optionsBtn02Btn->setPosition({optionsBtnMenu->getContentSize().width / 2.0f, optionsBtnMenu->getContentSize().height / 2.0f});
+    
+    optionsBtnMenu->addChild(optionsBtn02Btn);
+    optionsBtnMenu->setScale(0.8f);
+    optionsBtnMenu->setPosition({-20.f, -20.f});
+    this->m_mainLayer->addChild(optionsBtnMenu);
      
     return true;
 }
@@ -214,6 +229,10 @@ void CustomSettingsPopup::onOpenColors(CCObject*) {
 }
 void CustomSettingsPopup::onOpenParticles(CCObject*) {
     ParticlesPopup::create()->show();
+}
+
+void CustomSettingsPopup::onModSettings(CCObject*) {
+    geode::openSettingsPopup(Mod::get());
 }
  
 CCMenuItemToggler* CustomSettingsPopup::createToggler(std::string settingId, CCPoint position) {
@@ -678,8 +697,8 @@ class $modify(CustomMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
         
-        auto settingsSprite = CCSprite::create("PTMenuAccess.png"_spr);
-        settingsSprite->setScale(0.8f);
+        auto spr = CCSprite::create("myChudDaughter.gif"_spr);
+        auto settingsSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::MediumAlt);
         
         auto settingsBtn = CCMenuItemSpriteExtra::create(
             settingsSprite,
@@ -706,8 +725,8 @@ class $modify(CustomPauseLayer, PauseLayer) {
     void customSetup() {
         PauseLayer::customSetup();
         
-        auto settingsSprite = CCSprite::create("PTMenuAccess.png"_spr);
-        settingsSprite->setScale(0.7f);
+        auto spr = CCSprite::create("myChudDaughter.gif"_spr);
+        auto settingsSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::Small);
         
         auto settingsBtn = CCMenuItemSpriteExtra::create(
             settingsSprite,
@@ -733,8 +752,8 @@ class $modify(CustomGarageLayer, GJGarageLayer) {
     bool init() {
         if (!GJGarageLayer::init()) return false;
         
-        auto settingsSprite = CCSprite::create("PTMenuAccess.png"_spr);
-        settingsSprite->setScale(0.7f);
+        auto spr = CCSprite::create("myChudDaughter.gif"_spr);
+        auto settingsSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::Small);
         
         auto settingsBtn = CCMenuItemSpriteExtra::create(
             settingsSprite,
@@ -744,10 +763,20 @@ class $modify(CustomGarageLayer, GJGarageLayer) {
         
         settingsBtn->setPosition({-200.0f, 100.0f});
         
-        auto menu = CCMenu::create();
-        menu->addChild(settingsBtn);
-        menu->setPosition(CCDirector::sharedDirector()->getWinSize() / 2);
-        this->addChild(menu);
+        auto menu = this->getChildByID("shards-menu");
+
+        if (menu) {
+            menu->addChild(settingsBtn);
+        } else {
+            auto menuFr = CCMenu::create();
+            menuFr->setContentSize(settingsSprite->getContentSize());
+            menuFr->setID("personal-tweaks-garage-menu"_spr);
+            menuFr->setPosition({20.f, 20.f});
+
+            settingsBtn->setPosition({menuFr->getContentSize().width / 2.0f, menuFr->getContentSize().height / 2.0f});
+
+            this->addChild(menuFr);
+        }
         
         return true;
         

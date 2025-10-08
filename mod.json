@@ -21,7 +21,7 @@
 		"tab-character": {
 			"type": "string",
 			"name": "Deltarune - Tab Character",
-			"description": "The character to use in the Deltarune styled tab. Doesn't affect HP values, everyone has max 100 and everyone will take fully random damage",
+			"description": "The character to use in the Deltarune styled tab. Affects max HP value. If the current level is a demon, max HP gets a +40 bonus (putting the delta warriors in their Ch4 health values).",
 			"default": "kris",
 			"one-of": ["kris", "susie", "ralsei", "noelle", "player", "true-player"]
 		},

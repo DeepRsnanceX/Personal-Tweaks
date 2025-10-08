@@ -31,6 +31,7 @@ protected:
     void onOpenRGBExtras(CCObject* sender);
     void onOpenColors(CCObject* sender);
     void onOpenParticles(CCObject* sender);
+    void onModSettings(CCObject* sender);
     
     // RGB callbacks
     void onRGBToggle(CCObject* sender);
