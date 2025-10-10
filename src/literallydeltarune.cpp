@@ -1213,10 +1213,8 @@ class $modify(DeltaruneStatsGarage, GJGarageLayer) {
         if (!statMenu) return true;
 
         auto playerLv = StatsDisplayAPI::getNewItem("player-level"_spr, CCSprite::createWithSpriteFrameName("LVLabel.png"_spr), Mod::get()->getSavedValue<int>("player-lv", 0));
-        auto playerMagic = StatsDisplayAPI::getNewItem("player-magic"_spr, CCSprite::createWithSpriteFrameName("magicIcon.png"_spr), getCharAttributes(0, 0, chosenChar).magicLv);
 
         statMenu->addChild(playerLv);
-        statMenu->addChild(playerMagic);
         statMenu->updateLayout();
 
         auto resetBtnSpr = CCSprite::createWithSpriteFrameName("GJ_trashBtn_001.png");
