@@ -709,6 +709,10 @@
 		"geode.custom-keybinds": {
 			"importance": "required",
 			"version": ">=1.10.0"
+		},
+		"capeling.garage-stats-menu": {
+			"importance": "required",
+			"version": ">=v1.0.1"
 		}
 	},
 	"id": "saritahhh.personal_tweaks",

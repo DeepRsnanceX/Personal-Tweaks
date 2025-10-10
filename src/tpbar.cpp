@@ -67,6 +67,9 @@ CCNode* createTpBar() {
     tpPercentLabel->setID("tp-bar-percent-label"_spr);
     percentSimbol->setID("tp-bar-percent-simbol"_spr);
 
+    barTop->getTexture()->setAliasTexParameters();
+    tpTextSprite->getTexture()->setAliasTexParameters();
+
     barTop->setZOrder(4);
     tpFillerLine->setZOrder(3);
     barFill->setZOrder(2);
@@ -375,7 +378,7 @@ class $modify(TPPlayerObject, PlayerObject) {
         
         float dontGoAllTheWayDown = 0.f;
         float minDrain = currentScaleY * 0.1f;
-        float maxDrain = currentScaleY;
+        float maxDrain = currentScaleY * 0.7f;
         float drainAmount = getRandomFloat(minDrain, maxDrain);
         
         float newScaleY = currentScaleY - drainAmount;

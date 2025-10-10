@@ -1,6 +1,9 @@
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
+#include <Geode/modify/EndLevelLayer.hpp>
+#include <Geode/modify/GJGarageLayer.hpp>
 #include <geode.custom-keybinds/include/Keybinds.hpp>
+#include <capeling.garage-stats-menu/include/StatsDisplayAPI.h>
 #include <random>
 
 using namespace geode::prelude;
@@ -66,13 +69,18 @@ struct CharacterAttributes {
     float maxDamage;
     float maxHealth;
     float bonusHealth = 0.f;
+    int magicLv = 1;
     ccColor3B tabColor;
 };
 
 CharacterAttributes getCharAttributes(int stars, int isDemon, std::string character) {
     CharacterAttributes attrs;
     auto gm = GameManager::sharedState();
-    bool demonQualifies;
+    auto statsManager = GameStatsManager::sharedState();
+    int playerStars = statsManager->getStat("6");
+    bool demonQualifies = false;
+
+    attrs.magicLv = std::clamp(playerStars / 1000, 1, 25);
 
     if (stars < 10) {
         switch (stars) {
@@ -147,7 +155,9 @@ CharacterAttributes getCharAttributes(int stars, int isDemon, std::string charac
         attrs.maxHealth = 90.f + attrs.bonusHealth;
     } else if (character == "player") {
         attrs.tabColor = gm->colorForIdx(gm->getPlayerColor());
-        attrs.maxHealth = 100.f;
+        int playerLv = Mod::get()->getSavedValue<int>("player-lv", 0);
+        int bonus = 20 * playerLv;
+        attrs.maxHealth = 50.f + bonus;
     } else if (character == "true-player") {
         attrs.tabColor = gm->colorForIdx(gm->getPlayerColor());
         attrs.maxHealth = 1.f;
@@ -231,6 +241,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         float currentHP = 100.f;
         float maxHP = 100.f;
         float lastDamage = 0.f;
+        float magicBonus = 0.f;
 
         // DEFENDING SYSTEM
         CCSprite* defendIcon = CCSprite::createWithSpriteFrameName("defendIconGlobal.png"_spr);
@@ -965,9 +976,24 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     void delayedHealAction(float dt) {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
+        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
 
         // Check for enough TP (32% at least)
         float currentTP = getCurrentTPPercentage();
+
+        if (m_player1->m_isSpider || m_player1->m_isDart) { 
+            fields->magicBonus = 6.f;
+        } else if (m_player1->m_isBird || m_player1->m_isRobot) {
+            fields->magicBonus = 5.f;
+        } else if (m_player1->m_isSwing) {
+            fields->magicBonus = 7.f;
+        } else if (m_player1->m_isShip) {
+            fields->magicBonus = 3.f;
+        } else if (m_player1->m_isBall) {
+            fields->magicBonus = 4.f;
+        } else {
+            fields->magicBonus = 1.f;
+        }
 
         // Deduct 32% TP
         auto plHasBar = this->getChildByID("tp-bar-container"_spr);
@@ -1005,7 +1031,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         }
 
         // Get random heal amount
-        float healAmount = getRandomHPFloat(15.f, 40.f);
+        int fullMagicLv = charAttrs.magicLv + static_cast<int>(fields->magicBonus);
+        float healAmount = fullMagicLv * 5.f;
         fields->currentHP += healAmount;
         
         bool reachedMax = false;
@@ -1109,4 +1136,105 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fmod->playEffect("snd_heal_c.ogg"_spr);
     }
 
+};
+
+class $modify(DeltaEndLevelLayer, EndLevelLayer) {
+    struct Fields {
+        CCLabelBMFont* strongerLabel = nullptr;
+        bool gotStronger = false;
+    };
+
+    void customSetup() {
+        EndLevelLayer::customSetup();
+
+        auto accManager = GJAccountManager::get();
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto fields = m_fields.self();
+        auto mainLayer = this->getChildByID("main-layer");
+        auto lvlCompleteText = mainLayer->getChildByID("level-complete-text");
+
+        int starsProgress = Mod::get()->getSavedValue<int>("stars-progress", 0);
+
+        Mod::get()->setSavedValue<int>("stars-progress", starsProgress + m_stars);
+
+        int newStars = Mod::get()->getSavedValue<int>("stars-progress", 0);
+        int starsLeft = 500 - newStars;
+
+        if (starsLeft <= 0) fields->gotStronger = true;
+
+        std::string gotStronger = fmt::format("* {} got stronger.", accManager->m_username);
+        std::string notYetStronger = fmt::format("* {} LEFT.", starsLeft);
+        std::string strongerLabelText = (fields->gotStronger) ? gotStronger : notYetStronger;
+
+        fields->strongerLabel = CCLabelBMFont::create(strongerLabelText.c_str(), "deltarune.fnt"_spr);
+        fields->strongerLabel->setOpacity(0);
+        fields->strongerLabel->setScale(0.6f);
+        fields->strongerLabel->setPosition({winSize.width / 2.f, lvlCompleteText->getPositionY() - 20.f});
+
+        mainLayer->addChild(fields->strongerLabel);
+    }
+
+    void lvlUpStuff(float dt) {
+        auto fields = m_fields.self();
+        int currentLevel = Mod::get()->getSavedValue<int>("player-lv", 0);
+
+        auto showLabel = CCEaseIn::create(CCFadeIn::create(0.4f), 2.f);
+
+        if (fields->gotStronger) {
+            Mod::get()->setSavedValue<int>("stars-progress", 0);
+            Mod::get()->setSavedValue<int>("player-lv", currentLevel + 1);
+
+            FMODAudioEngine::sharedEngine()->playEffect("gettingStronger.ogg"_spr);
+        }
+
+        fields->strongerLabel->runAction(showLabel);
+        
+    }
+
+    void showLayer(bool p0) {
+        EndLevelLayer::showLayer(p0);
+
+        auto fields = m_fields.self();
+
+        this->scheduleOnce(schedule_selector(DeltaEndLevelLayer::lvlUpStuff), 0.3f);
+    }
+};
+
+class $modify(DeltaruneStatsGarage, GJGarageLayer) {
+    void resetPlayerLevel(CCObject* sender) {
+        Mod::get()->setSavedValue<int>("player-lv", 0);
+    }
+
+    bool init() {
+        if (!GJGarageLayer::init()) return false;
+        
+        if (!enableDeltarune) return true;
+        auto statMenu = this->getChildByID("capeling.garage-stats-menu/stats-menu");
+        if (!statMenu) return true;
+
+        auto playerLv = StatsDisplayAPI::getNewItem("player-level"_spr, CCSprite::createWithSpriteFrameName("LVLabel.png"_spr), Mod::get()->getSavedValue<int>("player-lv", 0));
+        auto playerMagic = StatsDisplayAPI::getNewItem("player-magic"_spr, CCSprite::createWithSpriteFrameName("magicIcon.png"_spr), getCharAttributes(0, 0, chosenChar).magicLv);
+
+        statMenu->addChild(playerLv);
+        statMenu->addChild(playerMagic);
+        statMenu->updateLayout();
+
+        auto resetBtnSpr = CCSprite::createWithSpriteFrameName("GJ_trashBtn_001.png");
+        auto resetBtn = CCMenuItemSpriteExtra::create(
+            resetBtnSpr,
+            this,
+            menu_selector(DeltaruneStatsGarage::resetPlayerLevel)
+        );
+        auto godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit = CCMenu::create();
+        godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit->setContentSize(resetBtnSpr->getContentSize());
+        godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit->addChild(resetBtn);
+        godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit->setID("reset-lv-btn"_spr);
+        godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit->setPosition({-50.f, -200.f});
+
+        resetBtn->setPosition({godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit->getContentSize().width / 2.f, godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit->getContentSize().height / 2.f});
+
+        this->addChild(godIFuckingHateThatTheseNeedToBeOnAMenuFuckingHellFuckingShit);
+
+        return true;
+    }
 };
