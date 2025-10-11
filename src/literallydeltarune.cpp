@@ -1238,7 +1238,7 @@ class $modify(DeltaEndLevelLayer, EndLevelLayer) {
         Mod::get()->setSavedValue<int>("stars-progress", starsProgress + m_stars);
 
         int newStars = Mod::get()->getSavedValue<int>("stars-progress", 0);
-        int starsLeft = 500 - newStars;
+        int starsLeft = 100 - newStars;
 
         if (starsLeft <= 0) fields->gotStronger = true;
 
