@@ -129,125 +129,127 @@ $on_mod(Loaded) {
 class $modify(TPBaseLayer, GJBaseGameLayer) {
 
     void doTheWhateverThing() {
-        auto playLayer = PlayLayer::get();
-        auto fmod = FMODAudioEngine::sharedEngine();
-
-        if (!playLayer) return;
-
-        tpCooldown = true;
-        this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTP), 0.125f);
-
-        fmod->playEffect("snd_graze.ogg"_spr);
-
-        auto plHasBar = playLayer->getChildByID("tp-bar-container"_spr);
-        if (!plHasBar) return;
-
-        // increase bar
-        auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
-        if (!barFill) return;
-
-        float currentScaleY = barFill->getScaleY();
-
-        float newScaleY = currentScaleY + getRandomFloat(0.01f, 0.09f);
-        if (newScaleY > 1.f) newScaleY = 1.f;
-        auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.1f, 1.f, newScaleY), 2.0f);
-        barFill->runAction(barScaleAction);
-
-        auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
-        if (!barFillLine) return;
-
-        auto fillSize = barFill->getContentSize();
-        barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
-
-        auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
-        if (!theLabel) return;
-
-        float tpAmountFloat = newScaleY * 100.f;
-        int tpAmount = static_cast<int>(tpAmountFloat);
-        auto tpString = fmt::format("{}", tpAmount);
-
-        if (tpAmount == 100) {
-            tpString = "MAX";
-            theLabel->setScale(0.6f);
-        } else {
-            theLabel->setScale(0.7f);
-        }
-
-        theLabel->setString(tpString.c_str(), true);
-
-        // -----------------------
-        // all player stuff
-        // -----------------------
-
-        PlayerObject* targetPlayer = isPlayer2 ? m_player2 : m_player1;
-        if (!targetPlayer) return;
-        
-        auto tpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("tp-effect-sprite"_spr));
-        auto riderTpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("rider-tp-effect-sprite"_spr));
-        if (!tpSprite || !riderTpSprite) return;
-
-        float tpSpriteExtraScale = 0.3f;
-        
-        if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
-            tpSprite->setDisplayFrame(targetPlayer->m_vehicleSprite->displayFrame());
-            tpSprite->setScale(1.f + tpSpriteExtraScale);
-            tpSprite->setPosition(targetPlayer->m_vehicleSprite->getPosition());
-
-            riderTpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
-            riderTpSprite->setScale(targetPlayer->m_iconSprite->getScale() + tpSpriteExtraScale * targetPlayer->m_iconSprite->getScale());
-            riderTpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
-
-        } else if (targetPlayer->m_isRobot || targetPlayer->m_isSpider) {
-            auto mainSprite = targetPlayer->m_isRobot ? targetPlayer->m_robotSprite : targetPlayer->m_spiderSprite;
-            auto headSprite = mainSprite->m_headSprite;
-            
-            tpSprite->setDisplayFrame(headSprite->displayFrame());
-            tpSprite->setScale(1.f + tpSpriteExtraScale);
-            tpSprite->setPosition(headSprite->getPosition());
-        } else {
-            tpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
-            tpSprite->setScale(1.f + tpSpriteExtraScale);
-            tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
-        }
-
-        if (CCGLProgram* outlineProgram = ShaderCache::get()->getProgram("tp-outline")) {
-            outlineProgram->setUniformsForBuiltins();
-            tpSprite->setShaderProgram(outlineProgram);
-            outlineProgram->use();
-            tpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
-            if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
-                riderTpSprite->setShaderProgram(outlineProgram);
-                riderTpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
-            }
-        }
-
-        float randomDelay = getRandomFloat(0.05f, 0.1f);
-        
-        auto actionThing = CCSequence::create(
-            CCFadeIn::create(0.f),
-            CCDelayTime::create(randomDelay),
-            CCEaseOut::create(CCFadeOut::create(0.3f), 2.f),
-            nullptr
-        );
-
-        auto riderActionThing = CCSequence::create(
-            CCFadeIn::create(0.f),
-            CCDelayTime::create(randomDelay),
-            CCEaseOut::create(CCFadeOut::create(0.3f), 2.f),
-            nullptr
-        );
-
-        tpSprite->stopAllActions();
-        tpSprite->runAction(actionThing);
-
-        if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
-            riderTpSprite->stopAllActions();
-            riderTpSprite->runAction(riderActionThing);
-        } else {
-            riderTpSprite->setOpacity(0);
-        }
-
-    }
+	    auto playLayer = PlayLayer::get();
+	    auto fmod = FMODAudioEngine::sharedEngine();
+	
+	    if (!playLayer) return;
+	
+	    tpCooldown = true;
+	    this->scheduleOnce(schedule_selector(SarahsTweaks::cooldownTP), 0.125f);
+	
+	    fmod->playEffect("snd_graze.ogg"_spr);
+	
+	    auto uiLayer = UILayer::get();
+	    if (!uiLayer) return;
+	    
+	    auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
+	    if (!plHasBar) return;
+	
+	    // increase bar
+	    auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
+	    if (!barFill) return;
+	
+	    float currentScaleY = barFill->getScaleY();
+	
+	    float newScaleY = currentScaleY + getRandomFloat(0.01f, 0.09f);
+	    if (newScaleY > 1.f) newScaleY = 1.f;
+	    auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.1f, 1.f, newScaleY), 2.0f);
+	    barFill->runAction(barScaleAction);
+	
+	    auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
+	    if (!barFillLine) return;
+	
+	    auto fillSize = barFill->getContentSize();
+	    barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY});
+	
+	    auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
+	    if (!theLabel) return;
+	
+	    float tpAmountFloat = newScaleY * 100.f;
+	    int tpAmount = static_cast<int>(tpAmountFloat);
+	    auto tpString = fmt::format("{}", tpAmount);
+	
+	    if (tpAmount == 100) {
+	        tpString = "MAX";
+	        theLabel->setScale(0.6f);
+	    } else {
+	        theLabel->setScale(0.7f);
+	    }
+	
+	    theLabel->setString(tpString.c_str(), true);
+	
+	    // -----------------------
+	    // all player stuff
+	    // -----------------------
+	
+	    PlayerObject* targetPlayer = isPlayer2 ? m_player2 : m_player1;
+	    if (!targetPlayer) return;
+	    
+	    auto tpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("tp-effect-sprite"_spr));
+	    auto riderTpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("rider-tp-effect-sprite"_spr));
+	    if (!tpSprite || !riderTpSprite) return;
+	
+	    float tpSpriteExtraScale = 0.3f;
+	    
+	    if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
+	        tpSprite->setDisplayFrame(targetPlayer->m_vehicleSprite->displayFrame());
+	        tpSprite->setScale(1.f + tpSpriteExtraScale);
+	        tpSprite->setPosition(targetPlayer->m_vehicleSprite->getPosition());
+	
+	        riderTpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
+	        riderTpSprite->setScale(targetPlayer->m_iconSprite->getScale() + tpSpriteExtraScale * targetPlayer->m_iconSprite->getScale());
+	        riderTpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
+	
+	    } else if (targetPlayer->m_isRobot || targetPlayer->m_isSpider) {
+	        auto mainSprite = targetPlayer->m_isRobot ? targetPlayer->m_robotSprite : targetPlayer->m_spiderSprite;
+	        auto headSprite = mainSprite->m_headSprite;
+	        
+	        tpSprite->setDisplayFrame(headSprite->displayFrame());
+	        tpSprite->setScale(1.f + tpSpriteExtraScale);
+	        tpSprite->setPosition(headSprite->getPosition());
+	    } else {
+	        tpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
+	        tpSprite->setScale(1.f + tpSpriteExtraScale);
+	        tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
+	    }
+	
+	    if (CCGLProgram* outlineProgram = ShaderCache::get()->getProgram("tp-outline")) {
+	        outlineProgram->setUniformsForBuiltins();
+	        tpSprite->setShaderProgram(outlineProgram);
+	        outlineProgram->use();
+	        tpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
+	        if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
+	            riderTpSprite->setShaderProgram(outlineProgram);
+	            riderTpSprite->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
+	        }
+	    }
+	
+	    float randomDelay = getRandomFloat(0.05f, 0.1f);
+	    
+	    auto actionThing = CCSequence::create(
+	        CCFadeIn::create(0.f),
+	        CCDelayTime::create(randomDelay),
+	        CCEaseOut::create(CCFadeOut::create(0.3f), 2.f),
+	        nullptr
+	    );
+	
+	    auto riderActionThing = CCSequence::create(
+	        CCFadeIn::create(0.f),
+	        CCDelayTime::create(randomDelay),
+	        CCEaseOut::create(CCFadeOut::create(0.3f), 2.f),
+	        nullptr
+	    );
+	
+	    tpSprite->stopAllActions();
+	    tpSprite->runAction(actionThing);
+	
+	    if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
+	        riderTpSprite->stopAllActions();
+	        riderTpSprite->runAction(riderActionThing);
+	    } else {
+	        riderTpSprite->setOpacity(0);
+	    }
+	}
 
     void collisionCheckObjects(PlayerObject* player, gd::vector<GameObject*>* objs, int myAss, float v1) {
 		GJBaseGameLayer::collisionCheckObjects(player, objs, myAss, v1);
@@ -353,50 +355,50 @@ class $modify(TPPlayerObject, PlayerObject) {
     }
 
     void switchedToMode(GameObjectType p0) {
-        PlayerObject::switchedToMode(p0);
-
-        if (!enableDeltaruneMod) return;
-        
-        auto playLayer = PlayLayer::get();
-        if (!playLayer) return;
-        
-        auto plHasBar = playLayer->getChildByID("tp-bar-container"_spr);
-        if (!plHasBar) return;
-        
-        auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
-        if (!barFill) return;
-        
-        float currentScaleY = barFill->getScaleY();
-        
-        if (currentScaleY <= 0.f) return;
-        
-        float dontGoAllTheWayDown = 0.f;
-        float minDrain = currentScaleY * 0.1f;
-        float maxDrain = currentScaleY * 0.7f;
-        float drainAmount = getRandomFloat(minDrain, maxDrain);
-        
-        float newScaleY = currentScaleY - drainAmount;
-        if (newScaleY < 0.f) newScaleY = 0.f;
-        if (newScaleY < 0.f) dontGoAllTheWayDown = 1.f;
-        
-        auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.25f, 1.f, newScaleY), 2.0f);
-        barFill->runAction(barScaleAction);
-        
-        auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
-        if (!barFillLine) return;
-
-        auto fillSize = barFill->getContentSize();
-        //auto moveLineAnim = CCEaseInOut::create(CCMoveTo::create(0.1f, {barFill->getPositionX(), fillSize.height * newScaleY}), 2.0f);
-        //barFillLine->runAction(moveLineAnim);
-        barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY + dontGoAllTheWayDown});
-        
-        auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
-        if (!theLabel) return;
-
-        float tpAmountFloat = newScaleY * 100.f;
-        int tpAmount = static_cast<int>(tpAmountFloat);
-        auto tpString = fmt::format("{}", tpAmount);
-        theLabel->setString(tpString.c_str(), true);
-
-    }
+	    PlayerObject::switchedToMode(p0);
+	
+	    if (!enableDeltaruneMod) return;
+	    
+	    auto playLayer = PlayLayer::get();
+	    if (!playLayer) return;
+	    
+	    auto uiLayer = UILayer::get();
+	    if (!uiLayer) return;
+	    
+	    auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
+	    if (!plHasBar) return;
+	    
+	    auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
+	    if (!barFill) return;
+	    
+	    float currentScaleY = barFill->getScaleY();
+	    
+	    if (currentScaleY <= 0.f) return;
+	    
+	    float dontGoAllTheWayDown = 0.f;
+	    float minDrain = currentScaleY * 0.1f;
+	    float maxDrain = currentScaleY * 0.7f;
+	    float drainAmount = getRandomFloat(minDrain, maxDrain);
+	    
+	    float newScaleY = currentScaleY - drainAmount;
+	    if (newScaleY < 0.f) newScaleY = 0.f;
+	    if (newScaleY < 0.f) dontGoAllTheWayDown = 1.f;
+	    
+	    auto barScaleAction = CCEaseInOut::create(CCScaleTo::create(0.25f, 1.f, newScaleY), 2.0f);
+	    barFill->runAction(barScaleAction);
+	    
+	    auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
+	    if (!barFillLine) return;
+	
+	    auto fillSize = barFill->getContentSize();
+	    barFillLine->setPosition({barFill->getPositionX(), fillSize.height * newScaleY + dontGoAllTheWayDown});
+	    
+	    auto theLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
+	    if (!theLabel) return;
+	
+	    float tpAmountFloat = newScaleY * 100.f;
+	    int tpAmount = static_cast<int>(tpAmountFloat);
+	    auto tpString = fmt::format("{}", tpAmount);
+	    theLabel->setString(tpString.c_str(), true);
+	}
 };
