@@ -271,67 +271,61 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 };
 
 class $modify(TPPlayLayer, PlayLayer) {
-
-    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
-        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
-        
-        if (!enableDeltaruneMod) return true;
-
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-        auto barNode = createTpBar();
-        this->addChild(barNode);
-
-        if (!barNode) return true;
-        barNode->setPosition({-10.f, winSize.height / 2.f});
-        barNode->setZOrder(20);
-
-        return true;
-    }
-
     void setupHasCompleted() {
-        PlayLayer::setupHasCompleted();
-
-        if (!enableDeltaruneMod) return;
-
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-        auto plHasBar = this->getChildByID("tp-bar-container"_spr);
-        if (!plHasBar) return;
-
-        float delay = 0.25f;
-        auto moveInBar = CCSequence::create(
-            CCDelayTime::create(delay),
-            CCEaseOut::create(CCMoveTo::create(0.3f, {45.f, winSize.height / 2.f}), 3.f),
-            nullptr
-        );
-
-        plHasBar->runAction(moveInBar);
-
-    }
+	    PlayLayer::setupHasCompleted();
+	
+	    if (!enableDeltaruneMod) return;
+	
+	    auto winSize = CCDirector::sharedDirector()->getWinSize();
+	    auto uiLayer = UILayer::get();
+	    
+	    if (!uiLayer) return;
+	    
+	    auto barNode = createTpBar();
+	    if (!barNode) return;
+	    
+	    uiLayer->addChild(barNode);
+	
+	    barNode->setPosition({-10.f, winSize.height / 2.f});
+	    barNode->setZOrder(20);
+	
+	    float delay = 0.25f;
+	    auto moveInBar = CCSequence::create(
+	        CCDelayTime::create(delay),
+	        CCEaseOut::create(CCMoveTo::create(0.3f, {45.f, winSize.height / 2.f}), 3.f),
+	        nullptr
+	    );
+	
+	    barNode->runAction(moveInBar);
+	}
 
     void resetLevel() {
-        PlayLayer::resetLevel();
-
-        if (!enableDeltaruneMod) return;
-
-        auto plHasBar = this->getChildByID("tp-bar-container"_spr);
-        if (!plHasBar) return;
-
-        auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
-        if (!barFill) return;
-
-        barFill->setScaleY(0.f);
-
-        auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
-        if (!barFillLine) return;
-        auto fillSize = barFill->getContentSize();
-        barFillLine->setPosition({barFill->getPositionX(), 1.f});
-
-        auto percentLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
-        if (!percentLabel) return;
-        percentLabel->setString("0", true);
-
-        tpCooldown = false;
-    }
+	    PlayLayer::resetLevel();
+	
+	    if (!enableDeltaruneMod) return;
+	
+	    auto uiLayer = UILayer::get();
+	    if (!uiLayer) return;
+	    
+	    auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
+	    if (!plHasBar) return;
+	
+	    auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
+	    if (!barFill) return;
+	
+	    barFill->setScaleY(0.f);
+	
+	    auto barFillLine = plHasBar->getChildByID("tp-bar-filler-line"_spr);
+	    if (!barFillLine) return;
+	    auto fillSize = barFill->getContentSize();
+	    barFillLine->setPosition({barFill->getPositionX(), 1.f});
+	
+	    auto percentLabel = static_cast<CCLabelBMFont*>(plHasBar->getChildByID("tp-bar-percent-label"_spr));
+	    if (!percentLabel) return;
+	    percentLabel->setString("0", true);
+	
+	    tpCooldown = false;
+	}
 };
 
 class $modify(TPPlayerObject, PlayerObject) {
