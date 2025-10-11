@@ -258,6 +258,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         GJGameLevel* currentLevel = nullptr;
     };
 
+    /*
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
 	    if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 	
@@ -270,6 +271,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	    
 	    return true;
 	}
+    */
 
 	void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
@@ -281,16 +283,15 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto gm = GameManager::sharedState();
         auto fmod = FMODAudioEngine::sharedEngine();
         auto uiLayer = UILayer::get();
+        auto baseLayer = GJBaseGameLayer::get();
         
-        if (!uiLayer) {
-			log::info("uiLayer not found.");
-			return;
-		}
+        if (!uiLayer) return;
 
-		if (!fields->currentLevel) {
-			log::info("wtf y el nibel");
-			return;
-		}
+        fields->currentLevel = baseLayer->m_level;
+        if (!fields->currentLevel) {
+            log::info("PQ CARAJO AUN NO HAY NIVELO");
+            return;
+        }
         
         CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
 
