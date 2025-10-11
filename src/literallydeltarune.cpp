@@ -282,7 +282,15 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto fmod = FMODAudioEngine::sharedEngine();
         auto uiLayer = UILayer::get();
         
-        if (!uiLayer || !fields->currentLevel) return;
+        if (!uiLayer) {
+			log::info("uiLayer not found.");
+			return;
+		}
+
+		if (!fields->currentLevel) {
+			log::info("wtf y el nibel");
+			return;
+		}
         
         CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
 
