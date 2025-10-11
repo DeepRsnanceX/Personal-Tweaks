@@ -222,16 +222,16 @@ $on_mod(Loaded){
 
 class $modify(DeltaPlayLayer, PlayLayer) {
     struct Fields {
-        CCSprite* downSpr = CCSprite::create("downMsg.png"_spr);
-        CCSprite* healSpr = CCSprite::create("revivedText.png"_spr);
+        CCSprite* downSpr = nullptr;
+        CCSprite* healSpr = nullptr;
 
         // TAB ESSENTIALS
         ccColor3B tabColor = ccColor3B({255, 255, 255});
-        CCSprite* tabTop = CCSprite::createWithSpriteFrameName("deltaTab_top.png"_spr);
-        CCSprite* tabBottom = CCSprite::create("linesTabLoop.gif"_spr);
+        CCSprite* tabTop = nullptr;
+        CCSprite* tabBottom = nullptr;
         // TAB ELEMENTS
-        CCSprite* hpOverlay = CCSprite::createWithSpriteFrameName("hpUI.png"_spr);
-        CCSprite* hpBarFill = CCSprite::createWithSpriteFrameName("hpBarFiller.png"_spr);
+        CCSprite* hpOverlay = nullptr;
+        CCSprite* hpBarFill = nullptr;
         CCSprite* nameLabel = nullptr;
         CCSprite* charIcon = nullptr;
         CCSprite* hurtIcon = nullptr;
@@ -247,7 +247,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         float magicBonus = 0.f;
 
         // DEFENDING SYSTEM
-        CCSprite* defendIcon = CCSprite::createWithSpriteFrameName("defendIconGlobal.png"_spr);
+        CCSprite* defendIcon = nullptr;
         int defendHitsLeft = 0;
         bool isDefending = false;
         bool tabHiddenByDefend = false;
@@ -272,234 +272,243 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	}
 
 	void setupHasCompleted() {
-	    PlayLayer::setupHasCompleted();
-	
-	    if (!enableDeltarune) return;
-	    
-	    auto fields = m_fields.self();
-	    auto winSize = CCDirector::sharedDirector()->getWinSize();
-	    auto gm = GameManager::sharedState();
-	    auto fmod = FMODAudioEngine::sharedEngine();
-	    auto uiLayer = UILayer::get();
-	    
-	    if (!uiLayer || !fields->currentLevel) return;
-	    
-	    CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
-	
-	    fields->tabColor = charAttrs.tabColor;
-	    fields->maxHP = charAttrs.maxHealth;
-	    fields->currentHP = fields->maxHP;
-	
-	    fields->hpOverlay->getTexture()->setAliasTexParameters();
-	    fields->hpBarFill->getTexture()->setAliasTexParameters();
-	    fields->tabTop->getTexture()->setAliasTexParameters();
-	    fields->tabBottom->getTexture()->setAliasTexParameters();
-	    fields->defendIcon->getTexture()->setAliasTexParameters();
-	    fields->downSpr->getTexture()->setAliasTexParameters();
-	    fields->healSpr->getTexture()->setAliasTexParameters();
-	
-	    if (chosenChar == "player" || chosenChar == "true-player") {
-	        fields->nameLabel = CCSprite::createWithSpriteFrameName("nameLabel_player.png"_spr);
-	
-	        fields->charIcon = CCSprite::createWithSpriteFrame(m_player1->m_iconSprite->displayFrame());
-	        fields->charIcon->setPosition({13.25f, 25.75f});
-	        fields->charIcon->setScale(0.4f);
-	        fields->charIcon->setColor(pastelizeColor(fields->tabColor));
-	    } else {
-	        std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
-	        fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
-	
-	        std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
-	        fields->nameLabel = CCSprite::createWithSpriteFrameName(labelFilename.c_str());
-	        
-	        std::string hurtFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
-	        fields->hurtIcon = CCSprite::createWithSpriteFrameName(hurtFilename.c_str());
-	    }
-	
-	    // Create HP label
-	    fields->hpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
-	    fields->hpLabel->setID("hp-label"_spr);
-	    fields->hpLabel->setAlignment(kCCTextAlignmentRight);
-	    fields->hpLabel->setAnchorPoint({1.f, 1.f});
-	
-	    // Create Max HP label
-	    fields->maxHpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
-	    fields->maxHpLabel->setID("max-hp-label"_spr);
-	    fields->maxHpLabel->setAlignment(kCCTextAlignmentRight);
-	    fields->maxHpLabel->setAnchorPoint({1.f, 1.f});
-	    fields->maxHpLabel->updateLabel();
-	
-	    // Create damage label (stays on PlayLayer)
-	    fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
-	    fields->damageLabel->setID("damage-label"_spr);
-	    fields->damageLabel->setOpacity(0);
-	
-	    // Create healing label (stays on PlayLayer)
-	    fields->healingLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
-	    fields->healingLabel->setID("healing-label"_spr);
-	    fields->healingLabel->setOpacity(0);
-	    fields->healingLabel->setColor({0, 255, 0});
-	
-	    auto containerNode = CCNode::create();
-	    containerNode->setContentSize(fields->tabTop->getContentSize());
-	    containerNode->setID("deltarune-ui-node"_spr);
-	    containerNode->setAnchorPoint({0.5f, 0.f});
-	    containerNode->setScale(1.3f);
-	
-	    fields->tabTop->setID("tab-top"_spr);
-	    fields->tabBottom->setID("tab-bottom"_spr);
-	    fields->charIcon->setID("character-icon"_spr);
-	    fields->nameLabel->setID("character-name"_spr);
-	    fields->hpBarFill->setID("hp-bar-filler"_spr);
-	    fields->defendIcon->setID("defend-icon"_spr);
-	
-	    fields->tabBottom->setAnchorPoint({0.5f, 0.f});
-	    fields->hpBarFill->setAnchorPoint({0.f, 0.5f});
-	
-	    fields->tabTop->setColor(fields->tabColor);
-	    fields->tabBottom->setColor(fields->tabColor);
-	    fields->hpBarFill->setColor(fields->tabColor);
-	    fields->defendIcon->setColor(pastelizeColor(fields->tabColor));
-	
-	    containerNode->addChild(fields->tabTop);
-	    containerNode->addChild(fields->tabBottom);
-	    containerNode->addChild(fields->charIcon);
-	    containerNode->addChild(fields->nameLabel);
-	    containerNode->addChild(fields->hpOverlay);
-	    containerNode->addChild(fields->hpBarFill);
-	    containerNode->addChild(fields->hpLabel);
-	    containerNode->addChild(fields->maxHpLabel);
-	    containerNode->addChild(fields->defendIcon);
-	
-	    auto nodeSize = containerNode->getContentSize();
-	
-	    fields->tabTop->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-	    fields->tabBottom->setPosition({nodeSize.width / 2.f, 0.f});
-	    fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-	    fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-	    fields->defendIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-	    fields->hpBarFill->setPosition({64.05f, 22.7f});
-	    fields->hpLabel->setPosition({80.f, 31.5f});
-	    fields->maxHpLabel->setPosition({102.5f, 31.5f});
-	
-	    bool invalidForMidPos = chosenChar == "player" || chosenChar == "true-player";
-	    if (!invalidForMidPos) fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-	
-	    if (fields->hurtIcon) {
-	        fields->hurtIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-	        containerNode->addChild(fields->hurtIcon);
-	        fields->hurtIcon->setID("hurt-icon");
-	        fields->hurtIcon->setVisible(false);
-	    }
-	
-	    if (chosenChar == "true-player") {
-	        fields->hpLabel->setColor({255, 255, 0});
-	        fields->maxHpLabel->setColor({255, 255, 0});
-	    }
-	
-	    fields->hpBarFill->setZOrder(2);
-	
-	    // Add to UILayer instead of PlayLayer
-	    uiLayer->addChild(containerNode);
-	
-	    containerNode->setPosition({winSize.width / 2.f, -50.f});
-	    containerNode->setZOrder(50);
-	
-	    // Setup down sprite
-	    fields->downSpr->setColor({ 255, 0, 0 });
-	    fields->downSpr->setOpacity(0);
-	    fields->downSpr->setPosition({0.f, 5.f});
-	    fields->downSpr->setZOrder(1000);
-	    fields->downSpr->setID("down-sprite"_spr);
-	
-	    fields->healSpr->setColor({0, 255, 0});
-	    fields->healSpr->setOpacity(0);
-	    fields->healSpr->setPosition({0.f, 5.f});
-	    fields->healSpr->setZOrder(1000);
-	    fields->healSpr->setID("heal-sprite"_spr);
-	
-	    auto mainNode = this->getChildByID("main-node");
-	    auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
-	
-	    if (bLayer) {
-	        bLayer->addChild(fields->downSpr);
-	    }
-	
-	    this->addChild(fields->healSpr);
-	    this->addChild(fields->damageLabel);
-	    this->addChild(fields->healingLabel);
-	
-	    auto menu = CCMenu::create();
-	
-	    // heal button
-	    auto healSpr = CCSprite::createWithSpriteFrameName("magicBtn.png"_spr);
-	    auto healRealBtn = CCMenuItemSpriteExtra::create(
-	        healSpr,
-	        this,
-	        menu_selector(DeltaPlayLayer::healPrayer)
-	    );
-	
-	    // defend button
-	    auto defendSpr = CCSprite::createWithSpriteFrameName("defendBtn.png"_spr);
-	    auto defendRealBtn = CCMenuItemSpriteExtra::create(
-	        defendSpr,
-	        this,
-	        menu_selector(DeltaPlayLayer::playerDefend)
-	    );
-	
-	    healSpr->setColor({255, 127, 39});
-	    defendSpr->setColor({255, 127, 39});
-	
-	    healSpr->setID("heal-spr"_spr);
-	    defendSpr->setID("defend-spr"_spr);
-	
-	    healRealBtn->setID("heal-btn"_spr);
-	    defendRealBtn->setID("defend-btn"_spr);
-	
-	    menu->addChild(healRealBtn);
-	    menu->addChild(defendRealBtn);
-	
-	    menu->setLayout(
-	        RowLayout::create()
-	            ->setGap(2.f)
-	            ->setAxisAlignment(AxisAlignment::Center)
-	            ->setAxisReverse(false)
-	            ->setCrossAxisOverflow(true)
-	            ->setAutoGrowAxis(5.f)
-	    );
-	    menu->setAnchorPoint({0.5f, 0.f});
-	    menu->setID("buttons-menu"_spr);
-	
-	    containerNode->addChild(menu);
-	
-	    menu->setPosition({nodeSize.width / 2.f, 0.f});
-	
-	    this->addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
-	        if (event->isDown()) {
-	            DeltaPlayLayer::healPrayerKeybindVer();
-	        }
-	        return ListenerResult::Propagate;
-	    }, "heal-prayer-key"_spr);
-	
-	    this->addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
-	        if (event->isDown()) {
-	            DeltaPlayLayer::playerDefendKeybindVer();
-	        }
-	        return ListenerResult::Propagate;
-	    }, "defend-key"_spr);
-	
-	    // Animate tab entering
-	    float delay = 0.25f;
-	    this->scheduleOnce(schedule_selector(DeltaPlayLayer::delayStartSound), delay);
-	
-	    auto enterAction = CCSequence::create(
-	        CCDelayTime::create(delay),
-	        CCEaseOut::create(CCMoveTo::create(0.3f, {winSize.width / 2.f, 0.f}), 2.f),
-	        nullptr
-	    );
-	
-	    containerNode->runAction(enterAction);
-	}
+        PlayLayer::setupHasCompleted();
+
+        if (!enableDeltarune) return;
+        
+        auto fields = m_fields.self();
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto gm = GameManager::sharedState();
+        auto fmod = FMODAudioEngine::sharedEngine();
+        auto uiLayer = UILayer::get();
+        
+        if (!uiLayer || !fields->currentLevel) return;
+        
+        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
+
+        fields->tabColor = charAttrs.tabColor;
+        fields->maxHP = charAttrs.maxHealth;
+        fields->currentHP = fields->maxHP;
+
+        // NOW create the sprites
+        fields->downSpr = CCSprite::create("downMsg.png"_spr);
+        fields->healSpr = CCSprite::create("revivedText.png"_spr);
+        fields->tabTop = CCSprite::createWithSpriteFrameName("deltaTab_top.png"_spr);
+        fields->tabBottom = CCSprite::create("linesTabLoop.gif"_spr);
+        fields->hpOverlay = CCSprite::createWithSpriteFrameName("hpUI.png"_spr);
+        fields->hpBarFill = CCSprite::createWithSpriteFrameName("hpBarFiller.png"_spr);
+        fields->defendIcon = CCSprite::createWithSpriteFrameName("defendIconGlobal.png"_spr);
+
+        fields->hpOverlay->getTexture()->setAliasTexParameters();
+        fields->hpBarFill->getTexture()->setAliasTexParameters();
+        fields->tabTop->getTexture()->setAliasTexParameters();
+        fields->tabBottom->getTexture()->setAliasTexParameters();
+        fields->defendIcon->getTexture()->setAliasTexParameters();
+        fields->downSpr->getTexture()->setAliasTexParameters();
+        fields->healSpr->getTexture()->setAliasTexParameters();
+
+        if (chosenChar == "player" || chosenChar == "true-player") {
+            fields->nameLabel = CCSprite::createWithSpriteFrameName("nameLabel_player.png"_spr);
+
+            fields->charIcon = CCSprite::createWithSpriteFrame(m_player1->m_iconSprite->displayFrame());
+            fields->charIcon->setPosition({13.25f, 25.75f});
+            fields->charIcon->setScale(0.4f);
+            fields->charIcon->setColor(pastelizeColor(fields->tabColor));
+        } else {
+            std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
+            fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
+
+            std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
+            fields->nameLabel = CCSprite::createWithSpriteFrameName(labelFilename.c_str());
+            
+            std::string hurtFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
+            fields->hurtIcon = CCSprite::createWithSpriteFrameName(hurtFilename.c_str());
+        }
+
+        // Create HP label
+        fields->hpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
+        fields->hpLabel->setID("hp-label"_spr);
+        fields->hpLabel->setAlignment(kCCTextAlignmentRight);
+        fields->hpLabel->setAnchorPoint({1.f, 1.f});
+
+        // Create Max HP label
+        fields->maxHpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
+        fields->maxHpLabel->setID("max-hp-label"_spr);
+        fields->maxHpLabel->setAlignment(kCCTextAlignmentRight);
+        fields->maxHpLabel->setAnchorPoint({1.f, 1.f});
+        fields->maxHpLabel->updateLabel();
+
+        // Create damage label (stays on PlayLayer)
+        fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
+        fields->damageLabel->setID("damage-label"_spr);
+        fields->damageLabel->setOpacity(0);
+
+        // Create healing label (stays on PlayLayer)
+        fields->healingLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
+        fields->healingLabel->setID("healing-label"_spr);
+        fields->healingLabel->setOpacity(0);
+        fields->healingLabel->setColor({0, 255, 0});
+
+        auto containerNode = CCNode::create();
+        containerNode->setContentSize(fields->tabTop->getContentSize());
+        containerNode->setID("deltarune-ui-node"_spr);
+        containerNode->setAnchorPoint({0.5f, 0.f});
+        containerNode->setScale(1.3f);
+
+        fields->tabTop->setID("tab-top"_spr);
+        fields->tabBottom->setID("tab-bottom"_spr);
+        fields->charIcon->setID("character-icon"_spr);
+        fields->nameLabel->setID("character-name"_spr);
+        fields->hpBarFill->setID("hp-bar-filler"_spr);
+        fields->defendIcon->setID("defend-icon"_spr);
+
+        fields->tabBottom->setAnchorPoint({0.5f, 0.f});
+        fields->hpBarFill->setAnchorPoint({0.f, 0.5f});
+
+        fields->tabTop->setColor(fields->tabColor);
+        fields->tabBottom->setColor(fields->tabColor);
+        fields->hpBarFill->setColor(fields->tabColor);
+        fields->defendIcon->setColor(pastelizeColor(fields->tabColor));
+
+        containerNode->addChild(fields->tabTop);
+        containerNode->addChild(fields->tabBottom);
+        containerNode->addChild(fields->charIcon);
+        containerNode->addChild(fields->nameLabel);
+        containerNode->addChild(fields->hpOverlay);
+        containerNode->addChild(fields->hpBarFill);
+        containerNode->addChild(fields->hpLabel);
+        containerNode->addChild(fields->maxHpLabel);
+        containerNode->addChild(fields->defendIcon);
+
+        auto nodeSize = containerNode->getContentSize();
+
+        fields->tabTop->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        fields->tabBottom->setPosition({nodeSize.width / 2.f, 0.f});
+        fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        fields->defendIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        fields->hpBarFill->setPosition({64.05f, 22.7f});
+        fields->hpLabel->setPosition({80.f, 31.5f});
+        fields->maxHpLabel->setPosition({102.5f, 31.5f});
+
+        bool invalidForMidPos = chosenChar == "player" || chosenChar == "true-player";
+        if (!invalidForMidPos) fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+
+        if (fields->hurtIcon) {
+            fields->hurtIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+            containerNode->addChild(fields->hurtIcon);
+            fields->hurtIcon->setID("hurt-icon");
+            fields->hurtIcon->setVisible(false);
+        }
+
+        if (chosenChar == "true-player") {
+            fields->hpLabel->setColor({255, 255, 0});
+            fields->maxHpLabel->setColor({255, 255, 0});
+        }
+
+        fields->hpBarFill->setZOrder(2);
+
+        // Add to UILayer instead of PlayLayer
+        uiLayer->addChild(containerNode);
+
+        containerNode->setPosition({winSize.width / 2.f, -50.f});
+        containerNode->setZOrder(50);
+
+        // Setup down sprite
+        fields->downSpr->setColor({ 255, 0, 0 });
+        fields->downSpr->setOpacity(0);
+        fields->downSpr->setPosition({0.f, 5.f});
+        fields->downSpr->setZOrder(1000);
+        fields->downSpr->setID("down-sprite"_spr);
+
+        fields->healSpr->setColor({0, 255, 0});
+        fields->healSpr->setOpacity(0);
+        fields->healSpr->setPosition({0.f, 5.f});
+        fields->healSpr->setZOrder(1000);
+        fields->healSpr->setID("heal-sprite"_spr);
+
+        auto mainNode = this->getChildByID("main-node");
+        auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
+
+        if (bLayer) {
+            bLayer->addChild(fields->downSpr);
+        }
+
+        this->addChild(fields->healSpr);
+        this->addChild(fields->damageLabel);
+        this->addChild(fields->healingLabel);
+
+        auto menu = CCMenu::create();
+
+        // heal button
+        auto healSpr = CCSprite::createWithSpriteFrameName("magicBtn.png"_spr);
+        auto healRealBtn = CCMenuItemSpriteExtra::create(
+            healSpr,
+            this,
+            menu_selector(DeltaPlayLayer::healPrayer)
+        );
+
+        // defend button
+        auto defendSpr = CCSprite::createWithSpriteFrameName("defendBtn.png"_spr);
+        auto defendRealBtn = CCMenuItemSpriteExtra::create(
+            defendSpr,
+            this,
+            menu_selector(DeltaPlayLayer::playerDefend)
+        );
+
+        healSpr->setColor({255, 127, 39});
+        defendSpr->setColor({255, 127, 39});
+
+        healSpr->setID("heal-spr"_spr);
+        defendSpr->setID("defend-spr"_spr);
+
+        healRealBtn->setID("heal-btn"_spr);
+        defendRealBtn->setID("defend-btn"_spr);
+
+        menu->addChild(healRealBtn);
+        menu->addChild(defendRealBtn);
+
+        menu->setLayout(
+            RowLayout::create()
+                ->setGap(2.f)
+                ->setAxisAlignment(AxisAlignment::Center)
+                ->setAxisReverse(false)
+                ->setCrossAxisOverflow(true)
+                ->setAutoGrowAxis(5.f)
+        );
+        menu->setAnchorPoint({0.5f, 0.f});
+        menu->setID("buttons-menu"_spr);
+
+        containerNode->addChild(menu);
+
+        menu->setPosition({nodeSize.width / 2.f, 0.f});
+
+        this->addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+            if (event->isDown()) {
+                DeltaPlayLayer::healPrayerKeybindVer();
+            }
+            return ListenerResult::Propagate;
+        }, "heal-prayer-key"_spr);
+
+        this->addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+            if (event->isDown()) {
+                DeltaPlayLayer::playerDefendKeybindVer();
+            }
+            return ListenerResult::Propagate;
+        }, "defend-key"_spr);
+
+        // Animate tab entering
+        float delay = 0.25f;
+        this->scheduleOnce(schedule_selector(DeltaPlayLayer::delayStartSound), delay);
+
+        auto enterAction = CCSequence::create(
+            CCDelayTime::create(delay),
+            CCEaseOut::create(CCMoveTo::create(0.3f, {winSize.width / 2.f, 0.f}), 2.f),
+            nullptr
+        );
+
+        containerNode->runAction(enterAction);
+    }
 
     void resetLevel() {
 	    PlayLayer::resetLevel();
