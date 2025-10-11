@@ -287,6 +287,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         
         if (!uiLayer) return;
 
+		if (!baseLayer) {
+			log::info("si no hay baseLayer literalmente odio todo");
+			return;
+		}
+
         fields->currentLevel = baseLayer->m_level;
         if (!fields->currentLevel) {
             log::info("PQ CARAJO AUN NO HAY NIVELO");
