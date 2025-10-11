@@ -177,7 +177,10 @@ float getCurrentTPPercentage() {
     auto playLayer = PlayLayer::get();
     if (!playLayer) return 0.f;
     
-    auto plHasBar = playLayer->getChildByID("tp-bar-container"_spr);
+    auto uiLayer = UILayer::get();
+    if (!uiLayer) return 0.f;
+    
+    auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
     if (!plHasBar) return 0.f;
     
     auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
