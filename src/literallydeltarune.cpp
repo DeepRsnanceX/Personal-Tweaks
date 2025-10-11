@@ -1147,11 +1147,14 @@ class $modify(DeltaEndLevelLayer, EndLevelLayer) {
     void customSetup() {
         EndLevelLayer::customSetup();
 
+        if (!enableDeltarune) return;
+
         auto accManager = GJAccountManager::get();
         auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto x = winSize.width / 2.f;
+        auto y = winSize.height / 2.f;
         auto fields = m_fields.self();
         auto mainLayer = this->getChildByID("main-layer");
-        auto lvlCompleteText = mainLayer->getChildByID("level-complete-text");
 
         int starsProgress = Mod::get()->getSavedValue<int>("stars-progress", 0);
 
@@ -1169,7 +1172,7 @@ class $modify(DeltaEndLevelLayer, EndLevelLayer) {
         fields->strongerLabel = CCLabelBMFont::create(strongerLabelText.c_str(), "deltarune.fnt"_spr);
         fields->strongerLabel->setOpacity(0);
         fields->strongerLabel->setScale(0.6f);
-        fields->strongerLabel->setPosition({winSize.width / 2.f, lvlCompleteText->getPositionY() - 20.f});
+        fields->strongerLabel->setPosition({x, y + 55.f});
 
         mainLayer->addChild(fields->strongerLabel);
     }
@@ -1193,8 +1196,7 @@ class $modify(DeltaEndLevelLayer, EndLevelLayer) {
 
     void showLayer(bool p0) {
         EndLevelLayer::showLayer(p0);
-
-        auto fields = m_fields.self();
+        if (!enableDeltarune) return;
 
         this->scheduleOnce(schedule_selector(DeltaEndLevelLayer::lvlUpStuff), 0.3f);
     }
