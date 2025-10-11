@@ -299,6 +299,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->hpBarFill = CCSprite::createWithSpriteFrameName("hpBarFiller.png"_spr);
         fields->defendIcon = CCSprite::createWithSpriteFrameName("defendIconGlobal.png"_spr);
 
+		fields->defendIcon->setVisible(false);
+
         fields->hpOverlay->getTexture()->setAliasTexParameters();
         fields->hpBarFill->getTexture()->setAliasTexParameters();
         fields->tabTop->getTexture()->setAliasTexParameters();
@@ -309,6 +311,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         if (chosenChar == "player" || chosenChar == "true-player") {
             fields->nameLabel = CCSprite::createWithSpriteFrameName("nameLabel_player.png"_spr);
+			fields->nameLabel->getTexture()->setAliasTexParameters();
 
             fields->charIcon = CCSprite::createWithSpriteFrame(m_player1->m_iconSprite->displayFrame());
             fields->charIcon->setPosition({13.25f, 25.75f});
@@ -323,6 +326,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             
             std::string hurtFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
             fields->hurtIcon = CCSprite::createWithSpriteFrameName(hurtFilename.c_str());
+
+			fields->charIcon->getTexture()->setAliasTexParameters();
+			fields->nameLabel->getTexture()->setAliasTexParameters();
+			fields->hurtIcon->getTexture()->setAliasTexParameters();
         }
 
         // Create HP label
