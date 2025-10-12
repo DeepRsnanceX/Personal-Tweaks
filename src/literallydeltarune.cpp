@@ -82,7 +82,10 @@ CharacterAttributes getCharAttributes(int stars, int isDemon, std::string charac
 
     attrs.magicLv = std::clamp(playerStars / 1000, 1, 25);
 
-    if (stars < 10) {
+    if (stars == 12022004) {
+        attrs.minDamage = 20.f;
+        attrs.maxDamage = 40.f;
+    } else if (stars < 10) {
         switch (stars) {
             case 6:
                 attrs.minDamage = 10.f;
@@ -258,7 +261,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         // FUCK ANDROID
         GJGameLevel* currentLevel = nullptr;
-        
+        int levelStars = 12022004;
+        int levelDemon = 3;
     };
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
@@ -285,12 +289,14 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         
         if (!uiLayer) return;
 
-        if (!fields->currentLevel) {
-            log::info("pq no hay nibel amigo estoy hasta la berga");
-            return;
+        if (fields->currentLevel) {
+            fields->levelStars = fields->currentLevel->m_stars;
+            fields->levelDemon = fields->currentLevel->m_demonDifficulty;
+        } else {
+            log::warn("level not found! ur probably in a main level lol");
         }
         
-        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
+        CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
 
         fields->tabColor = charAttrs.tabColor;
         fields->maxHP = charAttrs.maxHealth;
@@ -689,7 +695,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	        return PlayLayer::destroyPlayer(player, obj);
 	    }
 	    
-	    CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
+	    CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
 	
 	    if (obj == m_anticheatSpike) {
 	        return PlayLayer::destroyPlayer(player, obj);
@@ -1050,7 +1056,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     void delayedHealAction(float dt) {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
-        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
+        CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
 
         // Check for enough TP (32% at least)
         float currentTP = getCurrentTPPercentage();
