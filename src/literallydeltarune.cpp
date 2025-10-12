@@ -900,6 +900,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         
         auto menuItem = static_cast<CCMenuItemSpriteExtra*>(sender);
         auto sprite = static_cast<CCSprite*>(menuItem->getNormalImage());
+
+        if (fields->isDefending) {
+            fmod->playEffect("snd_cantselect_1.ogg"_spr);
+            return;
+        }
+
         buttonTintEffect(sprite);
         
         // Delay the actual action
@@ -925,6 +931,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 		
         auto sprite = static_cast<CCSprite*>(sprextra->getChildByID("defend-spr"_spr));
     	if (!sprite) return;
+
+        if (fields->isDefending) {
+            fmod->playEffect("snd_cantselect_1.ogg"_spr);
+            return;
+        }
 		
         buttonTintEffect(sprite);
         
