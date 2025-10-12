@@ -310,8 +310,8 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         if (fields->currentLevel) {
             fields->levelStars = fields->currentLevel->m_stars;
             fields->levelDemon = fields->currentLevel->m_demonDifficulty;
-            log::info(fmt::format("DeltaPlayLayer::setupHasCompleted - currentLevel present (stars={}, demon={})",
-                                fields->levelStars, fields->levelDemon).c_str());
+            log::info("DeltaPlayLayer::setupHasCompleted - currentLevel present (stars={}, demon={})",
+                                fields->levelStars, fields->levelDemon);
         } else {
             log::warn("DeltaPlayLayer::setupHasCompleted - currentLevel missing; using placeholder levelStars/levelDemon");
         }
@@ -446,15 +446,15 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         } else {
             std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
             fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
-            if (!fields->charIcon) log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - failed to create {}", iconFilename).c_str());
+            if (!fields->charIcon) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create {}", iconFilename);
 
             std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
             fields->nameLabel = CCSprite::createWithSpriteFrameName(labelFilename.c_str());
-            if (!fields->nameLabel) log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - failed to create {}", labelFilename).c_str());
+            if (!fields->nameLabel) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create {}", labelFilename);
 
             std::string hurtFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
             fields->hurtIcon = CCSprite::createWithSpriteFrameName(hurtFilename.c_str());
-            if (!fields->hurtIcon) log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - failed to create {}", hurtFilename).c_str());
+            if (!fields->hurtIcon) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create {}", hurtFilename);
 
             if (fields->charIcon && fields->charIcon->getTexture()) fields->charIcon->getTexture()->setAliasTexParameters();
             if (fields->nameLabel && fields->nameLabel->getTexture()) fields->nameLabel->getTexture()->setAliasTexParameters();
