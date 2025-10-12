@@ -278,151 +278,238 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
 	void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
+        log::info("DeltaPlayLayer::setupHasCompleted - enter");
 
-        if (!enableDeltarune) return;
-        
+        if (!enableDeltarune) {
+            log::info("DeltaPlayLayer::setupHasCompleted - deltarune disabled");
+            return;
+        }
+
         auto fields = m_fields.self();
+        if (!fields) {
+            log::error("DeltaPlayLayer::setupHasCompleted - m_fields.self() returned null; aborting");
+            return;
+        }
+
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto gm = GameManager::sharedState();
+        if (!gm) {
+            log::warn("DeltaPlayLayer::setupHasCompleted - GameManager::sharedState() returned null");
+        }
         auto fmod = FMODAudioEngine::sharedEngine();
+        if (!fmod) {
+            log::warn("DeltaPlayLayer::setupHasCompleted - FMODAudioEngine::sharedEngine() returned null");
+        }
         auto uiLayer = UILayer::get();
-        
-        if (!uiLayer) return;
-
-        if (!fields->levelStars) {
-            log::info("SOMEHOW THERE'S NO FUCKING STARS???");
+        if (!uiLayer) {
+            log::warn("DeltaPlayLayer::setupHasCompleted - UILayer::get() returned null; aborting");
             return;
         }
 
-        if (!fields->levelDemon) {
-            log::info("there's no demon. wtf.");
-            return;
-        }
-
+        // level fields - prefer currentLevel but tolerate missing
         if (fields->currentLevel) {
             fields->levelStars = fields->currentLevel->m_stars;
             fields->levelDemon = fields->currentLevel->m_demonDifficulty;
+            log::info(fmt::format("DeltaPlayLayer::setupHasCompleted - currentLevel present (stars={}, demon={})",
+                                fields->levelStars, fields->levelDemon).c_str());
         } else {
-            log::warn("level not found! ur probably in a main level lol");
-            return;
+            log::warn("DeltaPlayLayer::setupHasCompleted - currentLevel missing; using placeholder levelStars/levelDemon");
         }
-        
+
+        // verify levelStars/levelDemon presence (they might be placeholders already)
+        if (!fields->levelStars) {
+            log::info("DeltaPlayLayer::setupHasCompleted - levelStars == 0 (or falsy)");
+        }
+        if (!fields->levelDemon && fields->levelDemon != 0) {
+            log::info("DeltaPlayLayer::setupHasCompleted - levelDemon falsy");
+        }
+
         CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
 
         fields->tabColor = charAttrs.tabColor;
         fields->maxHP = charAttrs.maxHealth;
         fields->currentHP = fields->maxHP;
 
-        // NOW create the sprites
+        // NOW create the sprites (create then validate)
         fields->downSpr = CCSprite::create("downMsg.png"_spr);
+        if (!fields->downSpr) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create downSpr");
+
         fields->healSpr = CCSprite::create("revivedText.png"_spr);
+        if (!fields->healSpr) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create healSpr");
+
         fields->tabTop = CCSprite::createWithSpriteFrameName("deltaTab_top.png"_spr);
+        if (!fields->tabTop) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create tabTop");
+
         fields->tabBottom = CCSprite::create("linesTabLoop.gif"_spr);
+        if (!fields->tabBottom) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create tabBottom");
+
         fields->hpOverlay = CCSprite::createWithSpriteFrameName("hpUI.png"_spr);
+        if (!fields->hpOverlay) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create hpOverlay");
+
         fields->hpBarFill = CCSprite::createWithSpriteFrameName("hpBarFiller.png"_spr);
+        if (!fields->hpBarFill) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create hpBarFill");
+
         fields->defendIcon = CCSprite::createWithSpriteFrameName("defendIconGlobal.png"_spr);
+        if (!fields->defendIcon) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create defendIcon");
+        else fields->defendIcon->setVisible(false);
 
-		fields->defendIcon->setVisible(false);
+        // Alias tex params only when texture exists
+        auto safeSetAlias = [&](CCSprite* s, char const* name) {
+            if (!s) {
+                log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - {} is null; skipping setAlias", name).c_str());
+                return;
+            }
+            auto tex = s->getTexture();
+            if (!tex) {
+                log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - {}->getTexture() null; skipping alias", name).c_str());
+                return;
+            }
+            tex->setAliasTexParameters();
+        };
 
-        fields->hpOverlay->getTexture()->setAliasTexParameters();
-        fields->hpBarFill->getTexture()->setAliasTexParameters();
-        fields->tabTop->getTexture()->setAliasTexParameters();
-        fields->tabBottom->getTexture()->setAliasTexParameters();
-        fields->defendIcon->getTexture()->setAliasTexParameters();
-        fields->downSpr->getTexture()->setAliasTexParameters();
-        fields->healSpr->getTexture()->setAliasTexParameters();
+        safeSetAlias(fields->hpOverlay, "hpOverlay");
+        safeSetAlias(fields->hpBarFill, "hpBarFill");
+        safeSetAlias(fields->tabTop, "tabTop");
+        safeSetAlias(fields->tabBottom, "tabBottom");
+        safeSetAlias(fields->defendIcon, "defendIcon");
+        safeSetAlias(fields->downSpr, "downSpr");
+        safeSetAlias(fields->healSpr, "healSpr");
 
+        // Character icon/name/hurt creation with m_player1 checks
         if (chosenChar == "player" || chosenChar == "true-player") {
             fields->nameLabel = CCSprite::createWithSpriteFrameName("nameLabel_player.png"_spr);
-			fields->nameLabel->getTexture()->setAliasTexParameters();
+            if (!fields->nameLabel) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create nameLabel_player");
 
-            fields->charIcon = CCSprite::createWithSpriteFrame(m_player1->m_iconSprite->displayFrame());
-            fields->charIcon->setPosition({13.25f, 25.75f});
-            fields->charIcon->setScale(0.4f);
-            fields->charIcon->setColor(pastelizeColor(fields->tabColor));
+            if (fields->nameLabel && fields->nameLabel->getTexture())
+                fields->nameLabel->getTexture()->setAliasTexParameters();
+
+            if (m_player1 && m_player1->m_iconSprite) {
+                auto frame = m_player1->m_iconSprite->displayFrame();
+                if (frame) {
+                    fields->charIcon = CCSprite::createWithSpriteFrame(frame);
+                } else {
+                    log::warn("DeltaPlayLayer::setupHasCompleted - m_player1->m_iconSprite->displayFrame() returned null");
+                }
+            } else {
+                log::warn("DeltaPlayLayer::setupHasCompleted - m_player1 or m_player1->m_iconSprite is null; falling back to default player icon");
+            }
+
+            if (!fields->charIcon) {
+                // fallback sprite to avoid null-pointer later
+                fields->charIcon = CCSprite::createWithSpriteFrameName("error.png"_spr);
+                if (!fields->charIcon) log::error("DeltaPlayLayer::setupHasCompleted - fallback charIcon creation also failed");
+            }
+
+            if (fields->charIcon) {
+                fields->charIcon->setPosition({13.25f, 25.75f});
+                fields->charIcon->setScale(0.4f);
+                fields->charIcon->setColor(pastelizeColor(fields->tabColor));
+                if (fields->charIcon->getTexture())
+                    fields->charIcon->getTexture()->setAliasTexParameters();
+            }
         } else {
             std::string iconFilename = fmt::format("{}Icon_idle.png"_spr, chosenChar);
             fields->charIcon = CCSprite::createWithSpriteFrameName(iconFilename.c_str());
+            if (!fields->charIcon) log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - failed to create {}", iconFilename).c_str());
 
             std::string labelFilename = fmt::format("nameLabel_{}.png"_spr, chosenChar);
             fields->nameLabel = CCSprite::createWithSpriteFrameName(labelFilename.c_str());
-            
+            if (!fields->nameLabel) log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - failed to create {}", labelFilename).c_str());
+
             std::string hurtFilename = fmt::format("{}Icon_hurt.png"_spr, chosenChar);
             fields->hurtIcon = CCSprite::createWithSpriteFrameName(hurtFilename.c_str());
+            if (!fields->hurtIcon) log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - failed to create {}", hurtFilename).c_str());
 
-			fields->charIcon->getTexture()->setAliasTexParameters();
-			fields->nameLabel->getTexture()->setAliasTexParameters();
-			fields->hurtIcon->getTexture()->setAliasTexParameters();
+            if (fields->charIcon && fields->charIcon->getTexture()) fields->charIcon->getTexture()->setAliasTexParameters();
+            if (fields->nameLabel && fields->nameLabel->getTexture()) fields->nameLabel->getTexture()->setAliasTexParameters();
+            if (fields->hurtIcon && fields->hurtIcon->getTexture()) fields->hurtIcon->getTexture()->setAliasTexParameters();
         }
 
         // Create HP label
         fields->hpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
-        fields->hpLabel->setID("hp-label"_spr);
-        fields->hpLabel->setAlignment(kCCTextAlignmentRight);
-        fields->hpLabel->setAnchorPoint({1.f, 1.f});
+        if (!fields->hpLabel) log::error("DeltaPlayLayer::setupHasCompleted - failed to create hpLabel");
+        else {
+            fields->hpLabel->setID("hp-label"_spr);
+            fields->hpLabel->setAlignment(kCCTextAlignmentRight);
+            fields->hpLabel->setAnchorPoint({1.f, 1.f});
+        }
 
         // Create Max HP label
         fields->maxHpLabel = CCLabelBMFont::create(fmt::format("{}", static_cast<int>(fields->maxHP)).c_str(), "hpNumbers.fnt"_spr);
-        fields->maxHpLabel->setID("max-hp-label"_spr);
-        fields->maxHpLabel->setAlignment(kCCTextAlignmentRight);
-        fields->maxHpLabel->setAnchorPoint({1.f, 1.f});
-        fields->maxHpLabel->updateLabel();
+        if (!fields->maxHpLabel) log::error("DeltaPlayLayer::setupHasCompleted - failed to create maxHpLabel");
+        else {
+            fields->maxHpLabel->setID("max-hp-label"_spr);
+            fields->maxHpLabel->setAlignment(kCCTextAlignmentRight);
+            fields->maxHpLabel->setAnchorPoint({1.f, 1.f});
+            fields->maxHpLabel->updateLabel();
+        }
 
         // Create damage label (stays on PlayLayer)
         fields->damageLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
-        fields->damageLabel->setID("damage-label"_spr);
-        fields->damageLabel->setOpacity(0);
+        if (!fields->damageLabel) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create damageLabel");
+        else {
+            fields->damageLabel->setID("damage-label"_spr);
+            fields->damageLabel->setOpacity(0);
+        }
 
         // Create healing label (stays on PlayLayer)
         fields->healingLabel = CCLabelBMFont::create("0", "damageFont.fnt"_spr);
-        fields->healingLabel->setID("healing-label"_spr);
-        fields->healingLabel->setOpacity(0);
-        fields->healingLabel->setColor({0, 255, 0});
+        if (!fields->healingLabel) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create healingLabel");
+        else {
+            fields->healingLabel->setID("healing-label"_spr);
+            fields->healingLabel->setOpacity(0);
+            fields->healingLabel->setColor({0, 255, 0});
+        }
 
         auto containerNode = CCNode::create();
-        containerNode->setContentSize(fields->tabTop->getContentSize());
+        if (!containerNode) {
+            log::error("DeltaPlayLayer::setupHasCompleted - failed to create containerNode; aborting to avoid crashes");
+            return;
+        }
+        containerNode->setContentSize(fields->tabTop ? fields->tabTop->getContentSize() : CCSizeZero);
         containerNode->setID("deltarune-ui-node"_spr);
         containerNode->setAnchorPoint({0.5f, 0.f});
         containerNode->setScale(1.3f);
 
-        fields->tabTop->setID("tab-top"_spr);
-        fields->tabBottom->setID("tab-bottom"_spr);
-        fields->charIcon->setID("character-icon"_spr);
-        fields->nameLabel->setID("character-name"_spr);
-        fields->hpBarFill->setID("hp-bar-filler"_spr);
-        fields->defendIcon->setID("defend-icon"_spr);
+        if (fields->tabTop) fields->tabTop->setID("tab-top"_spr);
+        if (fields->tabBottom) fields->tabBottom->setID("tab-bottom"_spr);
+        if (fields->charIcon) fields->charIcon->setID("character-icon"_spr);
+        if (fields->nameLabel) fields->nameLabel->setID("character-name"_spr);
+        if (fields->hpBarFill) fields->hpBarFill->setID("hp-bar-filler"_spr);
+        if (fields->defendIcon) fields->defendIcon->setID("defend-icon"_spr);
 
-        fields->tabBottom->setAnchorPoint({0.5f, 0.f});
-        fields->hpBarFill->setAnchorPoint({0.f, 0.5f});
+        if (fields->tabBottom) fields->tabBottom->setAnchorPoint({0.5f, 0.f});
+        if (fields->hpBarFill) fields->hpBarFill->setAnchorPoint({0.f, 0.5f});
 
-        fields->tabTop->setColor(fields->tabColor);
-        fields->tabBottom->setColor(fields->tabColor);
-        fields->hpBarFill->setColor(fields->tabColor);
-        fields->defendIcon->setColor(pastelizeColor(fields->tabColor));
+        if (fields->tabTop) fields->tabTop->setColor(fields->tabColor);
+        if (fields->tabBottom) fields->tabBottom->setColor(fields->tabColor);
+        if (fields->hpBarFill) fields->hpBarFill->setColor(fields->tabColor);
+        if (fields->defendIcon) fields->defendIcon->setColor(pastelizeColor(fields->tabColor));
 
-        containerNode->addChild(fields->tabTop);
-        containerNode->addChild(fields->tabBottom);
-        containerNode->addChild(fields->charIcon);
-        containerNode->addChild(fields->nameLabel);
-        containerNode->addChild(fields->hpOverlay);
-        containerNode->addChild(fields->hpBarFill);
-        containerNode->addChild(fields->hpLabel);
-        containerNode->addChild(fields->maxHpLabel);
-        containerNode->addChild(fields->defendIcon);
+        // Add children only when they exist
+        if (fields->tabTop) containerNode->addChild(fields->tabTop);
+        if (fields->tabBottom) containerNode->addChild(fields->tabBottom);
+        if (fields->charIcon) containerNode->addChild(fields->charIcon);
+        if (fields->nameLabel) containerNode->addChild(fields->nameLabel);
+        if (fields->hpOverlay) containerNode->addChild(fields->hpOverlay);
+        if (fields->hpBarFill) containerNode->addChild(fields->hpBarFill);
+        if (fields->hpLabel) containerNode->addChild(fields->hpLabel);
+        if (fields->maxHpLabel) containerNode->addChild(fields->maxHpLabel);
+        if (fields->defendIcon) containerNode->addChild(fields->defendIcon);
 
         auto nodeSize = containerNode->getContentSize();
 
-        fields->tabTop->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-        fields->tabBottom->setPosition({nodeSize.width / 2.f, 0.f});
-        fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-        fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-        fields->defendIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
-        fields->hpBarFill->setPosition({64.05f, 22.7f});
-        fields->hpLabel->setPosition({80.f, 31.5f});
-        fields->maxHpLabel->setPosition({102.5f, 31.5f});
+        if (fields->tabTop) fields->tabTop->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        if (fields->tabBottom) fields->tabBottom->setPosition({nodeSize.width / 2.f, 0.f});
+        if (fields->nameLabel) fields->nameLabel->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        if (fields->hpOverlay) fields->hpOverlay->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        if (fields->defendIcon) fields->defendIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        if (fields->hpBarFill) fields->hpBarFill->setPosition({64.05f, 22.7f});
+        if (fields->hpLabel) fields->hpLabel->setPosition({80.f, 31.5f});
+        if (fields->maxHpLabel) fields->maxHpLabel->setPosition({102.5f, 31.5f});
 
         bool invalidForMidPos = chosenChar == "player" || chosenChar == "true-player";
-        if (!invalidForMidPos) fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
+        if (!invalidForMidPos && fields->charIcon) fields->charIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
 
         if (fields->hurtIcon) {
             fields->hurtIcon->setPosition({nodeSize.width / 2.f, nodeSize.height / 2.f});
@@ -432,11 +519,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         }
 
         if (chosenChar == "true-player") {
-            fields->hpLabel->setColor({255, 255, 0});
-            fields->maxHpLabel->setColor({255, 255, 0});
+            if (fields->hpLabel) fields->hpLabel->setColor({255, 255, 0});
+            if (fields->maxHpLabel) fields->maxHpLabel->setColor({255, 255, 0});
         }
 
-        fields->hpBarFill->setZOrder(2);
+        if (fields->hpBarFill) fields->hpBarFill->setZOrder(2);
 
         // Add to UILayer instead of PlayLayer
         uiLayer->addChild(containerNode);
@@ -444,74 +531,92 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         containerNode->setPosition({winSize.width / 2.f, -50.f});
         containerNode->setZOrder(50);
 
-        // Setup down sprite
-        fields->downSpr->setColor({ 255, 0, 0 });
-        fields->downSpr->setOpacity(0);
-        fields->downSpr->setPosition({0.f, 5.f});
-        fields->downSpr->setZOrder(1000);
-        fields->downSpr->setID("down-sprite"_spr);
-
-        fields->healSpr->setColor({0, 255, 0});
-        fields->healSpr->setOpacity(0);
-        fields->healSpr->setPosition({0.f, 5.f});
-        fields->healSpr->setZOrder(1000);
-        fields->healSpr->setID("heal-sprite"_spr);
-
-        auto mainNode = this->getChildByID("main-node");
-        auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
-
-        if (bLayer) {
-            bLayer->addChild(fields->downSpr);
+        // Setup down sprite safely
+        if (fields->downSpr) {
+            fields->downSpr->setColor({ 255, 0, 0 });
+            fields->downSpr->setOpacity(0);
+            fields->downSpr->setPosition({0.f, 5.f});
+            fields->downSpr->setZOrder(1000);
+            fields->downSpr->setID("down-sprite"_spr);
         }
 
-        this->addChild(fields->healSpr);
-        this->addChild(fields->damageLabel);
-        this->addChild(fields->healingLabel);
+        if (fields->healSpr) {
+            fields->healSpr->setColor({0, 255, 0});
+            fields->healSpr->setOpacity(0);
+            fields->healSpr->setPosition({0.f, 5.f});
+            fields->healSpr->setZOrder(1000);
+            fields->healSpr->setID("heal-sprite"_spr);
+        }
+
+        auto mainNode = this->getChildByID("main-node");
+        if (!mainNode) {
+            log::warn("DeltaPlayLayer::setupHasCompleted - main-node not found");
+        } else {
+            auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
+            if (bLayer && fields->downSpr) {
+                bLayer->addChild(fields->downSpr);
+            } else if (!bLayer) {
+                log::warn("DeltaPlayLayer::setupHasCompleted - batch-layer not found");
+            }
+        }
+
+        if (fields->healSpr) this->addChild(fields->healSpr);
+        if (fields->damageLabel) this->addChild(fields->damageLabel);
+        if (fields->healingLabel) this->addChild(fields->healingLabel);
 
         auto menu = CCMenu::create();
+        if (!menu) {
+            log::error("DeltaPlayLayer::setupHasCompleted - failed to create menu; aborting");
+            return;
+        }
 
         // heal button
         auto healSpr = CCSprite::createWithSpriteFrameName("magicBtn.png"_spr);
+        if (!healSpr) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create healSpr button sprite");
         auto healRealBtn = CCMenuItemSpriteExtra::create(
             healSpr,
             this,
             menu_selector(DeltaPlayLayer::healPrayer)
         );
+        if (!healRealBtn) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create healRealBtn");
 
         // defend button
         auto defendSpr = CCSprite::createWithSpriteFrameName("defendBtn.png"_spr);
+        if (!defendSpr) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create defendSpr button sprite");
         auto defendRealBtn = CCMenuItemSpriteExtra::create(
             defendSpr,
             this,
             menu_selector(DeltaPlayLayer::playerDefend)
         );
+        if (!defendRealBtn) log::warn("DeltaPlayLayer::setupHasCompleted - failed to create defendRealBtn");
 
-        healSpr->setColor({255, 127, 39});
-        defendSpr->setColor({255, 127, 39});
+        if (healSpr) healSpr->setColor({255, 127, 39});
+        if (defendSpr) defendSpr->setColor({255, 127, 39});
 
-        healSpr->setID("heal-spr"_spr);
-        defendSpr->setID("defend-spr"_spr);
+        if (healSpr) healSpr->setID("heal-spr"_spr);
+        if (defendSpr) defendSpr->setID("defend-spr"_spr);
 
-        healRealBtn->setID("heal-btn"_spr);
-        defendRealBtn->setID("defend-btn"_spr);
+        if (healRealBtn) healRealBtn->setID("heal-btn"_spr);
+        if (defendRealBtn) defendRealBtn->setID("defend-btn"_spr);
 
-        menu->addChild(healRealBtn);
-        menu->addChild(defendRealBtn);
+        if (menu && healRealBtn) menu->addChild(healRealBtn);
+        if (menu && defendRealBtn) menu->addChild(defendRealBtn);
 
-        menu->setLayout(
-            RowLayout::create()
-                ->setGap(2.f)
-                ->setAxisAlignment(AxisAlignment::Center)
-                ->setAxisReverse(false)
-                ->setCrossAxisOverflow(true)
-                ->setAutoGrowAxis(5.f)
-        );
-        menu->setAnchorPoint({0.5f, 0.f});
-        menu->setID("buttons-menu"_spr);
-
-        containerNode->addChild(menu);
-
-        menu->setPosition({nodeSize.width / 2.f, 0.f});
+        // Layout set - guard in case RowLayout APIs fail
+        if (menu) {
+            menu->setLayout(
+                RowLayout::create()
+                    ->setGap(2.f)
+                    ->setAxisAlignment(AxisAlignment::Center)
+                    ->setAxisReverse(false)
+                    ->setCrossAxisOverflow(true)
+                    ->setAutoGrowAxis(5.f)
+            );
+            menu->setAnchorPoint({0.5f, 0.f});
+            menu->setID("buttons-menu"_spr);
+            containerNode->addChild(menu);
+            menu->setPosition({nodeSize.width / 2.f, 0.f});
+        }
 
         this->addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
             if (event->isDown()) {
@@ -537,7 +642,9 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             nullptr
         );
 
-        containerNode->runAction(enterAction);
+        if (containerNode) containerNode->runAction(enterAction);
+
+        log::info("DeltaPlayLayer::setupHasCompleted - exit (setup complete)");
     }
 
     void resetLevel() {
