@@ -771,7 +771,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	                    auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
 	                    if (bLayer) {
 	                        auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
-	                        auto screenPos = bLayer->convertToNodeSpace(worldPos);
+	                        auto screenPos = this->convertToNodeSpace(worldPos);
 	                        
 	                        fields->downSpr->setPosition(screenPos);
 	                        fields->downSpr->setOpacity(255);
@@ -960,7 +960,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	    }
 	    
 	    // Gain 16% TP
-	    auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+	    auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
 	    if (plHasBar) {
 	        auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
 	        if (barFill) {
@@ -1070,7 +1070,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         }
 
         // Deduct 32% TP
-        auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+        auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
         if (plHasBar) {
             auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
             if (barFill) {
