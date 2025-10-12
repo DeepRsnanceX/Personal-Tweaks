@@ -255,7 +255,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         // VARIABLES
         bool isTabHidden = false;
         bool hasDied = false;
+
+        // FUCK ANDROID
         GJGameLevel* currentLevel = nullptr;
+        
     };
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
