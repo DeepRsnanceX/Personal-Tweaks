@@ -295,6 +295,16 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         } else {
             log::warn("level not found! ur probably in a main level lol");
         }
+
+        if (!fields->levelStars) {
+            log::info("SOMEHOW THERE'S NO FUCKING STARS???");
+            return;
+        }
+
+        if (!fields->levelDemon) {
+            log::info("there's no demon. wtf.");
+            return;
+        }
         
         CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
 
