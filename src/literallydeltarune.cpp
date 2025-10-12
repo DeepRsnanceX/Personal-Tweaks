@@ -82,7 +82,11 @@ CharacterAttributes getCharAttributes(int stars, int isDemon, std::string charac
 
     attrs.magicLv = std::clamp(playerStars / 1000, 1, 25);
 
-    if (stars < 10) {
+    if (stars == 12022004) {
+        attrs.minDamage = 20.f;
+        attrs.maxDamage = 40.f;
+        log::warn("we're using placeholder values!! you're either on a main level or something went pretty wrong.");
+    } else if (stars < 10) {
         switch (stars) {
             case 6:
                 attrs.minDamage = 10.f;
@@ -255,23 +259,23 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         // VARIABLES
         bool isTabHidden = false;
         bool hasDied = false;
+
+        // FUCK ANDROID
         GJGameLevel* currentLevel = nullptr;
+        int levelStars = 12022004;
+        int levelDemon = 3;
     };
 
-    /*
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
 	    if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 	
 	    if (!enableDeltarune) return true;
 	    
 	    auto fields = m_fields.self();
-	    
-	    // Only store the level reference in init
 	    fields->currentLevel = level;
 	    
 	    return true;
 	}
-    */
 
 	void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
@@ -283,17 +287,19 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto gm = GameManager::sharedState();
         auto fmod = FMODAudioEngine::sharedEngine();
         auto uiLayer = UILayer::get();
-        auto baseLayer = GJBaseGameLayer::get();
         
         if (!uiLayer) return;
 
-        fields->currentLevel = baseLayer->m_level;
-        if (!fields->currentLevel) {
-            log::info("PQ CARAJO AUN NO HAY NIVELO");
-            return;
+        if (fields->currentLevel) {
+            fields->levelStars = fields->currentLevel->m_stars;
+            fields->levelDemon = fields->currentLevel->m_demonDifficulty;
+            log::info("star and demon values fetched from level successfully!");
+        } else {
+            log::warn("level not found! ur probably in a main level lol");
+            log::info("using placeholder values...");
         }
         
-        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
+        CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
 
         fields->tabColor = charAttrs.tabColor;
         fields->maxHP = charAttrs.maxHealth;
@@ -443,13 +449,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->healSpr->setZOrder(1000);
         fields->healSpr->setID("heal-sprite"_spr);
 
-        auto mainNode = this->getChildByID("main-node");
-        auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
-
-        if (bLayer) {
-            bLayer->addChild(fields->downSpr);
-        }
-
+        this->addChild(fields->downSpr);
         this->addChild(fields->healSpr);
         this->addChild(fields->damageLabel);
         this->addChild(fields->healingLabel);
@@ -692,7 +692,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	        return PlayLayer::destroyPlayer(player, obj);
 	    }
 	    
-	    CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
+	    CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
 	
 	    if (obj == m_anticheatSpike) {
 	        return PlayLayer::destroyPlayer(player, obj);
@@ -774,7 +774,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	                    auto bLayer = static_cast<CCLayer*>(mainNode->getChildByID("batch-layer"));
 	                    if (bLayer) {
 	                        auto worldPos = bLayer->convertToWorldSpace(playerWorldPos);
-	                        auto screenPos = bLayer->convertToNodeSpace(worldPos);
+	                        auto screenPos = this->convertToNodeSpace(worldPos);
 	                        
 	                        fields->downSpr->setPosition(screenPos);
 	                        fields->downSpr->setOpacity(255);
@@ -963,7 +963,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	    }
 	    
 	    // Gain 16% TP
-	    auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+	    auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
 	    if (plHasBar) {
 	        auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
 	        if (barFill) {
@@ -1053,7 +1053,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     void delayedHealAction(float dt) {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
-        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
+        auto uiLayer = UILayer::get();
+        CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
+
+        if (!uiLayer) return;
 
         // Check for enough TP (32% at least)
         float currentTP = getCurrentTPPercentage();
@@ -1073,7 +1076,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         }
 
         // Deduct 32% TP
-        auto plHasBar = this->getChildByID("tp-bar-container"_spr);
+        auto plHasBar = uiLayer->getChildByID("tp-bar-container"_spr);
         if (plHasBar) {
             auto barFill = plHasBar->getChildByID("tp-bar-fill"_spr);
             if (barFill) {
