@@ -354,26 +354,62 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         else fields->defendIcon->setVisible(false);
 
         // Alias tex params only when texture exists
-        auto safeSetAlias = [&](CCSprite* s, char const* name) {
-            if (!s) {
-                log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - {} is null; skipping setAlias", name).c_str());
-                return;
-            }
-            auto tex = s->getTexture();
-            if (!tex) {
-                log::warn(fmt::format("DeltaPlayLayer::setupHasCompleted - {}->getTexture() null; skipping alias", name).c_str());
-                return;
-            }
-            tex->setAliasTexParameters();
-        };
+        // (avoid capturing fields in a lambda — check each sprite directly)
+        if (fields->hpOverlay) {
+            auto tex = fields->hpOverlay->getTexture();
+            if (tex) tex->setAliasTexParameters();
+            else log::warn("DeltaPlayLayer::setupHasCompleted - hpOverlay->getTexture() null; skipping alias");
+        } else {
+            log::warn("DeltaPlayLayer::setupHasCompleted - hpOverlay is null; skipping alias");
+        }
 
-        safeSetAlias(fields->hpOverlay, "hpOverlay");
-        safeSetAlias(fields->hpBarFill, "hpBarFill");
-        safeSetAlias(fields->tabTop, "tabTop");
-        safeSetAlias(fields->tabBottom, "tabBottom");
-        safeSetAlias(fields->defendIcon, "defendIcon");
-        safeSetAlias(fields->downSpr, "downSpr");
-        safeSetAlias(fields->healSpr, "healSpr");
+        if (fields->hpBarFill) {
+            auto tex = fields->hpBarFill->getTexture();
+            if (tex) tex->setAliasTexParameters();
+            else log::warn("DeltaPlayLayer::setupHasCompleted - hpBarFill->getTexture() null; skipping alias");
+        } else {
+            log::warn("DeltaPlayLayer::setupHasCompleted - hpBarFill is null; skipping alias");
+        }
+
+        if (fields->tabTop) {
+            auto tex = fields->tabTop->getTexture();
+            if (tex) tex->setAliasTexParameters();
+            else log::warn("DeltaPlayLayer::setupHasCompleted - tabTop->getTexture() null; skipping alias");
+        } else {
+            log::warn("DeltaPlayLayer::setupHasCompleted - tabTop is null; skipping alias");
+        }
+
+        if (fields->tabBottom) {
+            auto tex = fields->tabBottom->getTexture();
+            if (tex) tex->setAliasTexParameters();
+            else log::warn("DeltaPlayLayer::setupHasCompleted - tabBottom->getTexture() null; skipping alias");
+        } else {
+            log::warn("DeltaPlayLayer::setupHasCompleted - tabBottom is null; skipping alias");
+        }
+
+        if (fields->defendIcon) {
+            auto tex = fields->defendIcon->getTexture();
+            if (tex) tex->setAliasTexParameters();
+            else log::warn("DeltaPlayLayer::setupHasCompleted - defendIcon->getTexture() null; skipping alias");
+        } else {
+            log::warn("DeltaPlayLayer::setupHasCompleted - defendIcon is null; skipping alias");
+        }
+
+        if (fields->downSpr) {
+            auto tex = fields->downSpr->getTexture();
+            if (tex) tex->setAliasTexParameters();
+            else log::warn("DeltaPlayLayer::setupHasCompleted - downSpr->getTexture() null; skipping alias");
+        } else {
+            log::warn("DeltaPlayLayer::setupHasCompleted - downSpr is null; skipping alias");
+        }
+
+        if (fields->healSpr) {
+            auto tex = fields->healSpr->getTexture();
+            if (tex) tex->setAliasTexParameters();
+            else log::warn("DeltaPlayLayer::setupHasCompleted - healSpr->getTexture() null; skipping alias");
+        } else {
+            log::warn("DeltaPlayLayer::setupHasCompleted - healSpr is null; skipping alias");
+        }
 
         // Character icon/name/hurt creation with m_player1 checks
         if (chosenChar == "player" || chosenChar == "true-player") {
