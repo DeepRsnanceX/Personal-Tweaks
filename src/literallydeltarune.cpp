@@ -304,6 +304,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
             fields->levelDemon = fields->currentLevel->m_demonDifficulty;
         } else {
             log::warn("level not found! ur probably in a main level lol");
+            return;
         }
         
         CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
