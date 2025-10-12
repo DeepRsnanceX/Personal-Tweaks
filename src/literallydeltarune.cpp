@@ -258,20 +258,16 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         GJGameLevel* currentLevel = nullptr;
     };
 
-    /*
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
 	    if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 	
 	    if (!enableDeltarune) return true;
 	    
 	    auto fields = m_fields.self();
-	    
-	    // Only store the level reference in init
 	    fields->currentLevel = level;
 	    
 	    return true;
 	}
-    */
 
 	void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
@@ -283,13 +279,11 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto gm = GameManager::sharedState();
         auto fmod = FMODAudioEngine::sharedEngine();
         auto uiLayer = UILayer::get();
-        auto baseLayer = GJBaseGameLayer::get();
         
         if (!uiLayer) return;
 
-        fields->currentLevel = baseLayer->m_level;
         if (!fields->currentLevel) {
-            log::info("PQ CARAJO AUN NO HAY NIVELO");
+            log::info("pq no hay nibel amigo estoy hasta la berga");
             return;
         }
         
