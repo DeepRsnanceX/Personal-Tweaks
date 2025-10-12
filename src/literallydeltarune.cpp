@@ -85,6 +85,7 @@ CharacterAttributes getCharAttributes(int stars, int isDemon, std::string charac
     if (stars == 12022004) {
         attrs.minDamage = 20.f;
         attrs.maxDamage = 40.f;
+        log::warn("we're using placeholder values!! you're either on a main level or something went pretty wrong.");
     } else if (stars < 10) {
         switch (stars) {
             case 6:
@@ -292,8 +293,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         if (fields->currentLevel) {
             fields->levelStars = fields->currentLevel->m_stars;
             fields->levelDemon = fields->currentLevel->m_demonDifficulty;
+            log::info("star and demon values fetched from level successfully!");
         } else {
             log::warn("level not found! ur probably in a main level lol");
+            log::info("using placeholder values...");
         }
         
         CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
@@ -1050,7 +1053,10 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     void delayedHealAction(float dt) {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
+        auto uiLayer = UILayer::get();
         CharacterAttributes charAttrs = getCharAttributes(fields->levelStars, fields->levelDemon, chosenChar);
+
+        if (!uiLayer) return;
 
         // Check for enough TP (32% at least)
         float currentTP = getCurrentTPPercentage();
