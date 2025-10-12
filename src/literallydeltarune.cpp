@@ -81,10 +81,8 @@ CharacterAttributes getCharAttributes(int stars, int isDemon, std::string charac
     bool demonQualifies = false;
 
     attrs.magicLv = std::clamp(playerStars / 1000, 1, 25);
-	if (stars == 12022004) { // workaround to check if on a main level
-		attrs.minDamage = 20.f;
-		attrs.maxDamage = 40.f;
-    } else if (stars < 10) {
+
+    if (stars < 10) {
         switch (stars) {
             case 6:
                 attrs.minDamage = 10.f;
@@ -260,6 +258,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         GJGameLevel* currentLevel = nullptr;
     };
 
+    /*
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
 	    if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 	
@@ -272,6 +271,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	    
 	    return true;
 	}
+    */
 
 	void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
@@ -283,21 +283,17 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         auto gm = GameManager::sharedState();
         auto fmod = FMODAudioEngine::sharedEngine();
         auto uiLayer = UILayer::get();
-
-		int starsToPass;
-		int demonDiff;
+        auto baseLayer = GJBaseGameLayer::get();
         
         if (!uiLayer) return;
 
-		if (fields->currentLevel) {
-			starsToPass = fields->currentLevel->m_stars;
-			demonDiff = fields->currentLevel->m_demonDifficulty;
-		} else {
-			starsToPass = 12022004;
-			demonDiff = 3;
-		}
+        fields->currentLevel = baseLayer->m_level;
+        if (!fields->currentLevel) {
+            log::info("PQ CARAJO AUN NO HAY NIVELO");
+            return;
+        }
         
-        CharacterAttributes charAttrs = getCharAttributes(starsToPass, demonDiff, chosenChar);
+        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
 
         fields->tabColor = charAttrs.tabColor;
         fields->maxHP = charAttrs.maxHealth;
@@ -691,23 +687,12 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 	    auto fields = m_fields.self();
 	    auto fmod = FMODAudioEngine::sharedEngine();
 	    auto uiLayer = UILayer::get();
-
-		int starsToPass;
-		int demonDiff;
 	    
-	    if (!uiLayer) {
+	    if (!fields->currentLevel || !uiLayer) {
 	        return PlayLayer::destroyPlayer(player, obj);
 	    }
-
-		if (fields->currentLevel) {
-			starsToPass = fields->currentLevel->m_stars;
-			demonDiff = fields->currentLevel->m_demonDifficulty;
-		} else {
-			starsToPass = 12022004;
-			demonDiff = 3;
-		}
 	    
-	    CharacterAttributes charAttrs = getCharAttributes(starsToPass, demonDiff, chosenChar);
+	    CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
 	
 	    if (obj == m_anticheatSpike) {
 	        return PlayLayer::destroyPlayer(player, obj);
@@ -1068,18 +1053,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
     void delayedHealAction(float dt) {
         auto fields = m_fields.self();
         auto fmod = FMODAudioEngine::sharedEngine();
-		int starsToPass;
-		int demonDiff;
-
-		if (fields->currentLevel) {
-			starsToPass = fields->currentLevel->m_stars;
-			demonDiff = fields->currentLevel->m_demonDifficulty;
-		} else {
-			starsToPass = 12022004;
-			demonDiff = 3;
-		}
-		
-        CharacterAttributes charAttrs = getCharAttributes(starsToPass, demonDiff, chosenChar);
+        CharacterAttributes charAttrs = getCharAttributes(fields->currentLevel->m_stars, fields->currentLevel->m_demonDifficulty, chosenChar);
 
         // Check for enough TP (32% at least)
         float currentTP = getCurrentTPPercentage();
