@@ -1,5 +1,5 @@
 {
-	"geode": "4.8.0",
+	"geode": "4.9.0",
 	"gd": {
 		"win": "2.2074",
 		"android": "2.2074",
@@ -24,6 +24,70 @@
 			"description": "The character to use in the Deltarune styled tab. Affects max HP value. If the current level is a demon, max HP gets a +40 bonus (putting the delta warriors in their Ch4 health values).",
 			"default": "kris",
 			"one-of": ["kris", "susie", "ralsei", "noelle", "player", "true-player"]
+		},
+		"enable-soul": {
+			"type": "bool",
+			"name": "Deltarune - Soul Mode",
+			"description": "Replaces the player icon with the soul.",
+			"default": false
+		},
+		"legacy-title":{
+			"type": "title",
+			"name": "Legacy Settings",
+			"description": "The game if it was still good."
+		},
+		"use-legacytrail": {
+			"type": "bool",
+			"name": "Enable Legacy Trail",
+			"description": "Enables the legacy trail function. This is the same as Eclipse, so if u have that disable this.",
+			"default": false
+		},
+		"max-points": {
+			"type": "int",
+			"name": "Trail: Max Points",
+			"description": "The maximum amount of points the trail can have. \nThis feature is taken from Eclipse.",
+			"min": 2,
+			"max": 20,
+			"default": 15
+		},
+		"segment-tuner": {
+			"type": "float",
+			"name": "Trail: Min Segment Tuning",
+			"description": "Setting that essentially acts as a fine-tuner helper for the trail's Min Segment Distance property. Use this to control the minSeg property to your liking. Lower makes cutting more frequent, while higher makes it less frequent.",
+			"default": 1.0,
+			"min": 0.1,
+			"max": 10,
+			"control": {
+				"arrows": true,
+				"big-arrows": true,
+				"slider": true,
+				"input": false,
+				"slider-step": 0.1,
+				"arrow-step": 1,
+				"big-arrow-step": 0.5
+			}
+		},
+		"pos-skip-rate": {
+			"type": "int",
+			"name": "Trail: Pos Skip Rate",
+			"description": "Something something i'll write later",
+			"min": 1,
+			"max": 20,
+			"default": 1
+		},
+		"legacy-pulse": {
+			"type": "bool",
+			"name": "Enable Legacy Pulse",
+			"description": "Enable the legacy pulse. \nThis feature is taken from Eclipse.",
+			"default": false
+		},
+		"pulse-fps": {
+			"type": "int",
+			"name": "Pulse: FPS",
+			"description": "The FPS the legacy pulse should emulate.",
+			"min": 60,
+			"max": 1080,
+			"default": 60
 		},
 		"misc-title": {
 			"type": "title",
@@ -369,44 +433,6 @@
 				"arrow-step": 0.01
 			},
 			"enable-if": "rgb-col2"
-		},
-		"trail-title":{
-			"type": "title",
-			"name": "Legacy Trail",
-			"description": "The trail if it was still good."
-		},
-		"use-legacytrail": {
-			"type": "bool",
-			"name": "Enable Legacy Trail",
-			"description": "Enables the legacy trail function. This is the same as Eclipse, so if u have that disable this.",
-			"default": false
-		},
-		"max-points":{
-			"type": "int",
-			"name": "Trail: Max Points",
-			"description": "The maximum amount of points the trail can have. \nThis feature is taken from Eclipse.",
-			"min": 2,
-			"max": 20,
-			"default": 15
-		},
-		"pulse-title": {
-			"type": "title",
-			"name": "Legacy Pulse",
-			"description": "The pulse if it was still good."
-		},
-		"legacy-pulse": {
-			"type": "bool",
-			"name": "Enable Legacy Pulse",
-			"description": "Enable the legacy pulse. \nThis feature is taken from Eclipse.",
-			"default": false
-		},
-		"pulse-fps": {
-			"type": "int",
-			"name": "Pulse: FPS",
-			"description": "The FPS the legacy pulse should emulate.",
-			"min": 60,
-			"max": 1080,
-			"default": 60
 		},
 		"icon-stuff-title": {
 			"type": "title",

@@ -19,6 +19,65 @@ $on_mod(Loaded){
     });
 }
 
+class $modify(StupidPlayerObject, PlayerObject) {
+    struct Fields {
+        CCSprite* p_soulSpr = nullptr;
+        CCSprite* p_grazeSpr = nullptr;
+    };
+
+    bool init(int player, int ship, GJBaseGameLayer* gameLayer, CCLayer* layer, bool playLayer) {
+        if (!PlayerObject::init(player, ship, gameLayer, layer, playLayer)) return false;
+        
+        if (!Mod::get()->getSettingValue<bool>("enable-soul")) return true;
+        auto fields = m_fields.self();
+
+        fields->p_soulSpr = CCSprite::createWithSpriteFrameName("soulBase.png"_spr);
+        fields->p_soulSpr->setScale(1.5f);
+        fields->p_soulSpr->setID("soul-sprite"_spr);
+        this->addChild(fields->p_soulSpr);
+
+        m_mainLayer->setVisible(false);
+        m_robotSprite->setVisible(false);
+        m_spiderSprite->setVisible(false);
+
+        if (Mod::get()->getSettingValue<bool>("enable-soul")) {
+            fields->p_grazeSpr = CCSprite::createWithSpriteFrameName("soulGraze.png"_spr);
+            fields->p_grazeSpr->setID("soul-graze-sprite"_spr);
+            fields->p_grazeSpr->setOpacity(0);
+
+            fields->p_soulSpr->addChild(fields->p_grazeSpr);
+
+            fields->p_grazeSpr->setPosition({fields->p_soulSpr->getContentSize().width / 2.f, fields->p_soulSpr->getContentSize().height / 2.f});
+        }
+
+        return true;
+    }
+
+    void update(float p0) {
+        PlayerObject::update(p0);
+
+        if (!Mod::get()->getSettingValue<bool>("enable-soul")) return;
+        auto fields = m_fields.self();
+        if (!fields->p_soulSpr) return;
+
+        float targetScale;
+
+        if (m_isDart) {
+            targetScale = 1.0f;
+        } else if (m_isSpider) {
+            targetScale = 1.5f;
+        } else {
+            targetScale = 1.6f;
+        }
+
+        this->setRotation(0);
+        fields->p_soulSpr->setColor(m_playerColor1);
+        fields->p_soulSpr->setScale(targetScale);
+
+        if (m_ghostTrail) m_ghostTrail->m_iconSprite = fields->p_soulSpr;
+    }
+};
+
 class $modify(FuckYouMirrorPortal, GJBaseGameLayer) {
     void toggleFlipped(bool p0, bool p1) {
         if (!noMirror) GJBaseGameLayer::toggleFlipped(p0, p1);

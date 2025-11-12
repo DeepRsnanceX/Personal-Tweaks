@@ -2,8 +2,9 @@
 
 using namespace geode::prelude;
 
-float trailMaxPts = Mod::get()->getSettingValue<int64_t>("max-points");
+int trailMaxPts = Mod::get()->getSettingValue<int64_t>("max-points");
 bool isLegacyTrailEnabled = Mod::get()->getSettingValue<bool>("use-legacytrail");
+float minSegTuner = Mod::get()->getSettingValue<double>("segment-tuner");
 
 $on_mod(Loaded){
 	listenForSettingChanges("max-points", [](int value) {
@@ -12,12 +13,19 @@ $on_mod(Loaded){
 	listenForSettingChanges("use-legacytrail", [](bool value) {
 		isLegacyTrailEnabled = value;
 	});
+	listenForSettingChanges("segment-tuner", [](double value) {
+		minSegTuner = value;
+	});
 }
 
 class $modify(LegacyTrailCCMSHook, cocos2d::CCMotionStreak) {
+	struct Fields {
+		int positionUpdateCounter = 0;
+		CCPoint lastSetPosition = {0, 0};
+		bool hasStoredPosition = false;
+	};
 
 	bool initWithFade(float fade, float minSeg, float stroke, const cocos2d::ccColor3B& color, cocos2d::CCTexture2D* texture) {
-
 		if (!isLegacyTrailEnabled) {
             return CCMotionStreak::initWithFade(fade, minSeg, stroke, color, texture);
         }
@@ -30,14 +38,14 @@ class $modify(LegacyTrailCCMSHook, cocos2d::CCMotionStreak) {
 		m_tPositionR = cocos2d::CCPoint{ .0f, .0f };
 		m_bFastMode = true;
 		m_fMinSeg = (minSeg == -1.f) ? stroke / 5.0f : minSeg;
+		
+		m_fMinSeg *= minSegTuner;
 		m_fMinSeg *= m_fMinSeg;
 
 		m_fStroke = stroke;
 		m_fFadeDelta = 1.0f / fade;
 
-		//float maxPoints = 6;
 		m_uMaxPoints = trailMaxPts;
-
 		m_uNuPoints = 0;
 
 		m_pPointState = std::allocator<float>().allocate(sizeof(float) * m_uMaxPoints);
@@ -60,7 +68,36 @@ class $modify(LegacyTrailCCMSHook, cocos2d::CCMotionStreak) {
 
 		this->scheduleUpdate();
 
+		m_fields->hasStoredPosition = false;
+
 		return true;
 	}
+	
+	/*
+	void update(float delta) {
+		if (!isLegacyTrailEnabled || Mod::get()->getSettingValue<int>("pos-skip-rate") <= 1.0f) {
+			CCMotionStreak::update(delta);
+			return;
+		}
+
+		auto fld = m_fields.self();
+		auto pl = PlayLayer::get();
+		if (!pl) return;
+		
+		fld->positionUpdateCounter++;
+		int skipRate = Mod::get()->getSettingValue<int>("pos-skip-rate");
+		
+		if (fld->positionUpdateCounter % skipRate != 0 && fld->hasStoredPosition) {
+			CCPoint parent = this->getParent()->getPosition();
+			this->getParent()->setPosition(fld->lastSetPosition);
+			CCMotionStreak::update(delta);
+			this->getParent()->setPosition(parent);
+		} else {
+			fld->lastSetPosition = this->getParent()->getPosition();
+			fld->hasStoredPosition = true;
+			CCMotionStreak::update(delta);
+		}
+	}
+	*/
 	
 };

@@ -182,36 +182,43 @@ class $modify(TPBaseLayer, GJBaseGameLayer) {
 	    // all player stuff
 	    // -----------------------
 	
+		float tpSpriteExtraScale = 0.3f;
 	    PlayerObject* targetPlayer = isPlayer2 ? m_player2 : m_player1;
 	    if (!targetPlayer) return;
 	    
 	    auto tpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("tp-effect-sprite"_spr));
 	    auto riderTpSprite = static_cast<CCSprite*>(targetPlayer->m_mainLayer->getChildByID("rider-tp-effect-sprite"_spr));
+
+		if (Mod::get()->getSettingValue<bool>("enable-soul")) {
+			auto soul = targetPlayer->getChildByID("soul-sprite"_spr);
+			tpSprite = static_cast<CCSprite*>(soul->getChildByID("soul-graze-sprite"_spr));
+			tpSpriteExtraScale = 0.f;
+		}
 	    if (!tpSprite || !riderTpSprite) return;
-	
-	    float tpSpriteExtraScale = 0.3f;
 	    
-	    if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
-	        tpSprite->setDisplayFrame(targetPlayer->m_vehicleSprite->displayFrame());
-	        tpSprite->setScale(1.f + tpSpriteExtraScale);
-	        tpSprite->setPosition(targetPlayer->m_vehicleSprite->getPosition());
-	
-	        riderTpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
-	        riderTpSprite->setScale(targetPlayer->m_iconSprite->getScale() + tpSpriteExtraScale * targetPlayer->m_iconSprite->getScale());
-	        riderTpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
-	
-	    } else if (targetPlayer->m_isRobot || targetPlayer->m_isSpider) {
-	        auto mainSprite = targetPlayer->m_isRobot ? targetPlayer->m_robotSprite : targetPlayer->m_spiderSprite;
-	        auto headSprite = mainSprite->m_headSprite;
-	        
-	        tpSprite->setDisplayFrame(headSprite->displayFrame());
-	        tpSprite->setScale(1.f + tpSpriteExtraScale);
-	        tpSprite->setPosition(headSprite->getPosition());
-	    } else {
-	        tpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
-	        tpSprite->setScale(1.f + tpSpriteExtraScale);
-	        tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
-	    }
+		if (!Mod::get()->getSettingValue<bool>("enable-soul")) {
+			if (targetPlayer->m_isBird || targetPlayer->m_isShip) {
+				tpSprite->setDisplayFrame(targetPlayer->m_vehicleSprite->displayFrame());
+				tpSprite->setScale(1.f + tpSpriteExtraScale);
+				tpSprite->setPosition(targetPlayer->m_vehicleSprite->getPosition());
+		
+				riderTpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
+				riderTpSprite->setScale(targetPlayer->m_iconSprite->getScale() + tpSpriteExtraScale * targetPlayer->m_iconSprite->getScale());
+				riderTpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
+		
+			} else if (targetPlayer->m_isRobot || targetPlayer->m_isSpider) {
+				auto mainSprite = targetPlayer->m_isRobot ? targetPlayer->m_robotSprite : targetPlayer->m_spiderSprite;
+				auto headSprite = mainSprite->m_headSprite;
+				
+				tpSprite->setDisplayFrame(headSprite->displayFrame());
+				tpSprite->setScale(1.f + tpSpriteExtraScale);
+				tpSprite->setPosition(headSprite->getPosition());
+			} else {
+				tpSprite->setDisplayFrame(targetPlayer->m_iconSprite->displayFrame());
+				tpSprite->setScale(1.f + tpSpriteExtraScale);
+				tpSprite->setPosition(targetPlayer->m_iconSprite->getPosition());
+			}
+		}
 	
 	    if (CCGLProgram* outlineProgram = ShaderCache::get()->getProgram("tp-outline")) {
 	        outlineProgram->setUniformsForBuiltins();

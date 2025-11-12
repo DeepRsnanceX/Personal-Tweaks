@@ -669,6 +669,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
 
         if (!validChars) return;
         if (!fields->charIcon) return;
+        if (!fields->defendIcon) return;
 
         auto frame = getGamemodeFrame(m_player1);
         fields->charIcon->setDisplayFrame(frame);
@@ -679,6 +680,7 @@ class $modify(DeltaPlayLayer, PlayLayer) {
         fields->tabBottom->setColor(fields->tabColor);
         fields->hpBarFill->setColor(fields->tabColor);
         fields->charIcon->setColor(pastelizeColor(fields->tabColor));
+        fields->defendIcon->setColor(pastelizeColor(fields->tabColor));
     }
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) override {
@@ -1262,7 +1264,7 @@ class $modify(DeltaEndLevelLayer, EndLevelLayer) {
 
         fields->strongerLabel = CCLabelBMFont::create(strongerLabelText.c_str(), "deltarune.fnt"_spr);
         fields->strongerLabel->setOpacity(0);
-        fields->strongerLabel->setScale(0.6f);
+        fields->strongerLabel->setScale(0.55f);
         fields->strongerLabel->setPosition({x, y + 55.f});
 
         mainLayer->addChild(fields->strongerLabel);
@@ -1278,6 +1280,9 @@ class $modify(DeltaEndLevelLayer, EndLevelLayer) {
             Mod::get()->setSavedValue<int>("stars-progress", 0);
             Mod::get()->setSavedValue<int>("player-lv", currentLevel + 1);
 
+            auto tintToRed = CCEaseIn::create(CCTintTo::create(0.45f, {255}, {0}, {0}), 2.f);
+            fields->strongerLabel->runAction(tintToRed);
+
             FMODAudioEngine::sharedEngine()->playEffect("gettingStronger.ogg"_spr);
         }
 
@@ -1289,7 +1294,7 @@ class $modify(DeltaEndLevelLayer, EndLevelLayer) {
         EndLevelLayer::showLayer(p0);
         if (!enableDeltarune) return;
 
-        this->scheduleOnce(schedule_selector(DeltaEndLevelLayer::lvlUpStuff), 0.3f);
+        this->scheduleOnce(schedule_selector(DeltaEndLevelLayer::lvlUpStuff), 0.4f);
     }
 };
 
