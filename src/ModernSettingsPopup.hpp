@@ -1,4 +1,3 @@
-// ModernSettingsPopup.hpp
 #pragma once
 
 #include <Geode/Geode.hpp>

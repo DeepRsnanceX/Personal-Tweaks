@@ -1,4 +1,3 @@
-// ModernSettingsPopup.cpp
 #include "ModernSettingsPopup.hpp"
 #include "ShaderCache.h"
 
