@@ -1,11 +1,14 @@
 #include "CustomSettingsPopup.hpp"
+#include "ModernSettingsPopup.hpp"
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/ui/GeodeUI.hpp>
 #include <Geode/ui/BasedButtonSprite.hpp>
+#include <geode.custom-keybinds/include/Keybinds.hpp>
 
 using namespace geode::prelude;
+using namespace keybinds;
 
 // ===== MAIN POPUP =====
 
@@ -693,9 +696,12 @@ void LiveRandomizerPopup::onDelaySlider(CCObject* sender) {
 // ----------------------
 
 // Add button to MenuLayer
-class $modify(CustomMenuLayer, MenuLayer) {
+class $modify(ModernMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
+        
+        // Check which UI to use from settings
+        bool useModernUI = Mod::get()->getSettingValue<bool>("use-modern-ui");
         
         auto spr = CCSprite::create("myChudDaughter.gif"_spr);
         auto settingsSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::MediumAlt);
@@ -703,7 +709,9 @@ class $modify(CustomMenuLayer, MenuLayer) {
         auto settingsBtn = CCMenuItemSpriteExtra::create(
             settingsSprite,
             this,
-            menu_selector(CustomMenuLayer::onOpenSettings)
+            useModernUI ? 
+                menu_selector(ModernMenuLayer::onOpenModernSettings) : 
+                menu_selector(ModernMenuLayer::onOpenSettings)
         );
         
         auto menu = this->getChildByID("bottom-menu");
@@ -719,11 +727,17 @@ class $modify(CustomMenuLayer, MenuLayer) {
     void onOpenSettings(CCObject*) {
         CustomSettingsPopup::create()->show();
     }
+    
+    void onOpenModernSettings(CCObject*) {
+        ModernSettingsPopup::create()->show();
+    }
 };
 
-class $modify(CustomPauseLayer, PauseLayer) {
+class $modify(ModernPauseLayer, PauseLayer) {
     void customSetup() {
         PauseLayer::customSetup();
+        
+        bool useModernUI = Mod::get()->getSettingValue<bool>("use-modern-ui");
         
         auto spr = CCSprite::create("myChudDaughter.gif"_spr);
         auto settingsSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::Small);
@@ -731,7 +745,9 @@ class $modify(CustomPauseLayer, PauseLayer) {
         auto settingsBtn = CCMenuItemSpriteExtra::create(
             settingsSprite,
             this,
-            menu_selector(CustomPauseLayer::onOpenSettings)
+            useModernUI ?
+                menu_selector(ModernPauseLayer::onOpenModernSettings) :
+                menu_selector(ModernPauseLayer::onOpenSettings)
         );
         
         settingsBtn->setPosition({-150.0f, -65.0f});
@@ -746,11 +762,17 @@ class $modify(CustomPauseLayer, PauseLayer) {
     void onOpenSettings(CCObject*) {
         CustomSettingsPopup::create()->show();
     }
+    
+    void onOpenModernSettings(CCObject*) {
+        ModernSettingsPopup::create()->show();
+    }
 };
 
-class $modify(CustomGarageLayer, GJGarageLayer) {
+class $modify(ModernGarageLayer, GJGarageLayer) {
     bool init() {
         if (!GJGarageLayer::init()) return false;
+        
+        bool useModernUI = Mod::get()->getSettingValue<bool>("use-modern-ui");
         
         auto spr = CCSprite::create("myChudDaughter.gif"_spr);
         auto settingsSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::Small);
@@ -758,7 +780,9 @@ class $modify(CustomGarageLayer, GJGarageLayer) {
         auto settingsBtn = CCMenuItemSpriteExtra::create(
             settingsSprite,
             this,
-            menu_selector(CustomGarageLayer::onOpenSettings)
+            useModernUI ?
+                menu_selector(ModernGarageLayer::onOpenModernSettings) :
+                menu_selector(ModernGarageLayer::onOpenSettings)
         );
         
         settingsBtn->setPosition({-200.0f, 100.0f});
@@ -785,7 +809,15 @@ class $modify(CustomGarageLayer, GJGarageLayer) {
     void onOpenSettings(CCObject*) {
         CustomSettingsPopup::create()->show();
     }
+    
+    void onOpenModernSettings(CCObject*) {
+        ModernSettingsPopup::create()->show();
+    }
 };
+
+void openPersonalTweaksPopupGlobal() {
+    CustomSettingsPopup::create()->show();
+}
 
 // ===== MODES POPUP =====
 ModesPopup* ModesPopup::create() {

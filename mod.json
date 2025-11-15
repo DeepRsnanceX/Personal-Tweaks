@@ -7,6 +7,12 @@
 		"ios": "2.2074"
 	},
 	"settings": {
+		"use-modern-ui": {
+            "type": "bool",
+            "default": false,
+            "name": "Use Modern UI",
+            "description": "Enable the new modern UI design (requires restart)"
+        },
 		"hichat": {
 			"type": "title",
 			"name": "Settings not in 'mod menu' yet",
@@ -72,7 +78,7 @@
 			"name": "Trail: Pos Skip Rate",
 			"description": "Something something i'll write later",
 			"min": 1,
-			"max": 20,
+			"max": 50,
 			"default": 1
 		},
 		"legacy-pulse": {
@@ -707,12 +713,25 @@
 			"resources/fonts/*.fnt",
 			"resources/animated/*.gif"
 		],
+		"fonts": {
+			"modernMain": {
+				"size": 96,
+				"path": "resources/fonts/files/SchibstedGrotesk-Regular.ttf"
+			},
+			"modernBold": {
+				"size": 128,
+				"path": "resources/fonts/files/Roboto-Medium.ttf"
+			}
+		},
 		"spritesheets": {
 			"TotemSheet": [
 				"resources/totemFrames/*.png"
 			],
 			"DeltaruneSheet": [
 				"resources/deltarune/*.png"
+			],
+			"PTUISheet": [
+				"resources/modern/*.png"
 			]
 		},
 		"sprites": [
