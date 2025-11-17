@@ -731,11 +731,12 @@
 				"resources/deltarune/*.png"
 			],
 			"PTUISheet": [
-				"resources/modern/*.png"
+				"resources/ModernSheet/*.png"
 			]
 		},
 		"sprites": [
-			"resources/*.png"
+			"resources/*.png",
+			"resources/modern/*.png"
 		]
 	},
 	"dependencies": {

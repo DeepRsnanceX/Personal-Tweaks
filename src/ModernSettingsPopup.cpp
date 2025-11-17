@@ -1,8 +1,6 @@
 #include "ModernSettingsPopup.hpp"
 #include "ShaderCache.h"
 
-extern const char* BLUR_FRAGMENT_SHADER;
-
 ModernSettingsPopup* ModernSettingsPopup::create() {
     auto ret = new ModernSettingsPopup();
     auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -16,18 +14,44 @@ ModernSettingsPopup* ModernSettingsPopup::create() {
 
 
 bool ModernSettingsPopup::setup() {
-    this->setTitle("");
+    auto size = this->m_mainLayer->getContentSize();
+    this->setTitle("SEXO");
+    this->m_noElasticity = true;
+    this->setOpacity(0);
     
-    if (auto closeBtn = this->m_closeBtn) {
-        closeBtn->setVisible(false);
+    if (this->m_closeBtn) {
+        this->m_closeBtn->setSprite(CCSprite::createWithSpriteFrameName("closeBtn.png"_spr));
+        this->m_closeBtn->updateSprite();
+
+        this->m_closeBtn->setPosition({size.width - 10.f, size.height - 10.f});
     }
-    if (auto title = this->m_title) {
-        title->setVisible(false);
-    }
+
+    if (this->m_title) this->m_title->setVisible(false);
+
+    m_blurLayer = BlurLayer::create();
+    m_blurLayer->setID("modern-popup-blur");
+    m_blurLayer->setZOrder(-100);
+    m_blurLayer->setOpacity(0);
+    this->addChild(m_blurLayer);
+    
+    m_blurLayer->runAction(CCFadeTo::create(0.2f, 200));
     
     setupSidebar();
     setupContentArea();
     switchCategory(SettingsCategory::Randomizer);
+
+    // open settings btn
+    auto optSpr = CCSprite::createWithSpriteFrameName("settingsBtn.png"_spr);
+    auto optBtn = CCMenuItemSpriteExtra::create(optSpr, this, menu_selector(ModernSettingsPopup::onModSettings));
+    auto optMenu = CCMenu::create();
+
+    optMenu->setContentSize(optSpr->getContentSize());
+    optBtn->setPosition({optMenu->getContentSize().width / 2.0f, optMenu->getContentSize().height / 2.0f});
+    
+    optMenu->addChild(optBtn);
+    optMenu->setScale(0.8f);
+    optMenu->setPosition({10.f, 10.f});
+    this->m_mainLayer->addChild(optMenu);
     
     return true;
 }
@@ -39,7 +63,7 @@ void ModernSettingsPopup::setupSidebar() {
     m_sidebar = CCNode::create();
     m_sidebar->setContentSize({sidebarWidth, size.height});
     m_sidebar->setAnchorPoint({0.0f, 0.5f});
-    m_sidebar->setPosition({-size.width / 2.0f + 20.0f, 0.0f});
+    m_sidebar->setPosition({-10.f, size.height / 2.f});
     m_sidebar->setID("sidebar");
     this->m_mainLayer->addChild(m_sidebar);
     
@@ -47,124 +71,182 @@ void ModernSettingsPopup::setupSidebar() {
     const float sidebarMidY = size.height / 2.0f;
     
     auto logo = CCSprite::createWithSpriteFrameName("modLogo.png"_spr);
-    logo->setScale(0.7f);
-    logo->setPosition({sidebarMidX, sidebarMidY + 90.0f});
+    logo->setScale(0.9f);
+    logo->setPosition({sidebarMidX, sidebarMidY + 105.0f});
     m_sidebar->addChild(logo);
     
-    auto separator = CCSprite::createWithSpriteFrameName("floorLine_001.png");
-    separator->setRotation(90.0f);
-    separator->setScaleY(0.4f);
-    separator->setPosition({sidebarMidX, sidebarMidY + 50.0f});
-    separator->setOpacity(80);
+    // sidebar separator
+    auto separator = CCSprite::createWithSpriteFrameName("floorLine_02_001.png");
+    separator->setScale(0.25f);
+    separator->setPosition({sidebarMidX, sidebarMidY + 80.0f});
+    separator->setOpacity(90);
     m_sidebar->addChild(separator);
     
+    // contents
+    struct ButtonData {
+        CCNode* normalContent;
+        CCNode* selectedContent;
+        std::string iconName;
+        std::string labelText;
+        SettingsCategory category;
+    };
+    
+    std::vector<ButtonData> buttonDataList;
+    std::vector<std::pair<std::string, std::pair<std::string, SettingsCategory>>> buttonConfigs = {
+        {"randomizerIcon", {"Randomizer", SettingsCategory::Randomizer}},
+        {"rgbIcon", {"RGB Icons", SettingsCategory::RGB}},
+        {"colorsIcon", {"Colors", SettingsCategory::Colors}},
+        {"particlesIcon", {"Particles", SettingsCategory::Particles}},
+        {"legacyIcon", {"Legacy", SettingsCategory::Legacy}}
+    };
+    
+    CCSize maxContentSize = {0, 0};
+    
+    for (const auto& [iconName, pair] : buttonConfigs) {
+        const auto& [labelText, category] = pair;
+        
+        // normal
+        auto normalContent = CCNode::create();
+        normalContent->setAnchorPoint({0.5f, 0.5f});
+        normalContent->setLayout(
+            RowLayout::create()
+                ->setGap(8.0f)
+                ->setAxisAlignment(AxisAlignment::Center)
+                ->setCrossAxisAlignment(AxisAlignment::Center)
+                ->setAutoScale(false)
+                ->setAutoGrowAxis(true)
+        );
+        
+        auto normalIcon = CCSprite::createWithSpriteFrameName(fmt::format("{}.png"_spr, iconName).c_str());
+        normalIcon->setScale(0.7f);
+        normalContent->addChild(normalIcon);
+        
+        auto normalLabel = CCLabelBMFont::create(labelText.c_str(), "modernBold.fnt"_spr);
+        normalLabel->setScale(0.35f);
+        normalLabel->setAnchorPoint({0.5f, 0.45f});
+        normalContent->addChild(normalLabel);
+        
+        normalContent->updateLayout();
+        
+        // selected
+        auto selectedContent = CCNode::create();
+        selectedContent->setAnchorPoint({0.5f, 0.5f});
+        selectedContent->setLayout(
+            RowLayout::create()
+                ->setGap(8.0f)
+                ->setAxisAlignment(AxisAlignment::Center)
+                ->setCrossAxisAlignment(AxisAlignment::Center)
+                ->setAutoScale(false)
+                ->setAutoGrowAxis(true)
+        );
+        
+        auto selectedIcon = CCSprite::createWithSpriteFrameName(fmt::format("{}Selected.png"_spr, iconName).c_str());
+        selectedIcon->setScale(0.7f);
+        selectedContent->addChild(selectedIcon);
+        
+        auto selectedLabel = CCLabelBMFont::create(labelText.c_str(), "modernBold.fnt"_spr);
+        selectedLabel->setScale(0.35f);
+        selectedLabel->setAnchorPoint({0.5f, 0.45f});
+        selectedContent->addChild(selectedLabel);
+        
+        selectedContent->updateLayout();
+        
+        // sizes
+        auto nSize = normalContent->getContentSize();
+        auto sSize = selectedContent->getContentSize();
+        maxContentSize.width = std::max({maxContentSize.width, nSize.width, sSize.width});
+        maxContentSize.height = std::max({maxContentSize.height, nSize.height, sSize.height});
+        
+        buttonDataList.push_back({normalContent, selectedContent, iconName, labelText, category});
+    }
+    
+    const float buttonWidth = maxContentSize.width + 22.0f;
+    const float buttonHeight = maxContentSize.height + 10.0f;
+    
+    // sidebar menu
     auto menu = CCMenu::create();
-    menu->setContentSize({sidebarWidth, 240.0f});
-    menu->setAnchorPoint({0.5f, 0.5f});
-    menu->setPosition({sidebarMidX, sidebarMidY - 20.0f});
+    menu->setContentSize({sidebarWidth, 0.f});
+    menu->setAnchorPoint({0.5f, 1.f});
+    menu->setPosition({sidebarMidX, sidebarMidY + 65.0f});
     menu->setID("sidebar-menu");
     menu->setLayout(
         ColumnLayout::create()
             ->setGap(10.0f)
             ->setAxisAlignment(AxisAlignment::Center)
             ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoGrowAxis(true)
+            ->setAxisReverse(true)
     );
     m_sidebar->addChild(menu);
     
-    auto randomizerBtn = createSidebarButton("randomizerIcon", "Randomizer", SettingsCategory::Randomizer);
-    menu->addChild(randomizerBtn);
-    m_categoryButtons[SettingsCategory::Randomizer] = randomizerBtn;
-    
-    auto rgbBtn = createSidebarButton("rgbIcon", "RGB Icons", SettingsCategory::RGB);
-    menu->addChild(rgbBtn);
-    m_categoryButtons[SettingsCategory::RGB] = rgbBtn;
-    
-    auto colorsBtn = createSidebarButton("colorsIcon", "Colors", SettingsCategory::Colors);
-    menu->addChild(colorsBtn);
-    m_categoryButtons[SettingsCategory::Colors] = colorsBtn;
-    
-    auto particlesBtn = createSidebarButton("particlesIcon", "Particles", SettingsCategory::Particles);
-    menu->addChild(particlesBtn);
-    m_categoryButtons[SettingsCategory::Particles] = particlesBtn;
+    for (auto& data : buttonDataList) {
+        auto normalBG = CCScale9Sprite::create("modernButtonUnselected01.png"_spr);
+        normalBG->setContentSize({buttonWidth, buttonHeight});
+        
+        auto selectedBG = CCScale9Sprite::create("modernButton01.png"_spr);
+        selectedBG->setContentSize({buttonWidth, buttonHeight});
+        selectedBG->setOpacity(255);
+        
+        data.normalContent->setAnchorPoint({0.f, 0.5f});
+        data.normalContent->setPosition({8.f, buttonHeight / 2.0f});
+        data.selectedContent->setAnchorPoint({0.f, 0.5f});
+        data.selectedContent->setPosition({8.f, buttonHeight / 2.0f});
+        
+        normalBG->addChild(data.normalContent);
+        selectedBG->addChild(data.selectedContent);
+        
+        auto button = CCMenuItemSprite::create(
+            static_cast<CCNode*>(normalBG),
+            static_cast<CCNode*>(selectedBG),
+            this,
+            menu_selector(ModernSettingsPopup::onCategoryButton)
+        );
+        button->setTag(static_cast<int>(data.category));
+        button->setID((data.iconName + "-btn").c_str());
+        button->setScale(0.8f);
+        
+        menu->addChild(button);
+        m_categoryButtons[data.category] = button;
+    }
     
     menu->updateLayout();
+
+    // separator (between sidebar and content)
+    m_areaSeparator = CCSprite::createWithSpriteFrameName("floorLine_02_001.png");
+    m_areaSeparator->setPosition({size.width / 2.f - 120.f, size.height / 2.f});
+    m_areaSeparator->setScale(0.6f);
+    m_areaSeparator->setOpacity(75);
+    m_areaSeparator->setRotation(90);
+    m_areaSeparator->setID("area-separator");
+    this->m_mainLayer->addChild(m_areaSeparator);
 }
 
 void ModernSettingsPopup::setupContentArea() {
     auto size = this->m_mainLayer->getContentSize();
     
-    const float contentWidth = 325.0f;
-    const float contentHeight = 255.0f;
+    const float contentWidth = 365.0f;
+    const float contentHeight = 260.0f;
     
     m_contentArea = CCNode::create();
     m_contentArea->setContentSize({contentWidth, contentHeight});
-    m_contentArea->setAnchorPoint({0.f, 0.5f});
-    m_contentArea->setPosition({size.width / 2.0f - 40.0f, size.height / 2.f});
+    m_contentArea->setAnchorPoint({0.5f, 0.5f});
+    m_contentArea->setPosition({size.width / 2.0f + 70.0f, size.height / 2.0f});
     m_contentArea->setID("content-area");
     this->m_mainLayer->addChild(m_contentArea);
-}
-
-CCMenuItemSprite* ModernSettingsPopup::createSidebarButton(const std::string& iconName, const std::string& labelText, SettingsCategory category) {
-    const float buttonWidth = 130.0f;
-    const float buttonHeight = 38.0f;
     
-    auto normalContent = CCNode::create();
-    normalContent->setAnchorPoint({0.5f, 0.5f});
-    normalContent->setLayout(
-        RowLayout::create()
-            ->setGap(8.0f)
-            ->setAxisAlignment(AxisAlignment::Center)
-            ->setCrossAxisAlignment(AxisAlignment::Center)
-            ->setAutoScale(false)
-    );
+    m_titleLabel = CCLabelBMFont::create("Randomizer", "modernBold.fnt"_spr);
+    m_titleLabel->setPosition({10.f, contentHeight - 20.0f});
+    m_titleLabel->setScale(0.6f);
+    m_titleLabel->setAnchorPoint({0.f, 0.5f});
+    m_titleLabel->setAlignment(kCCTextAlignmentLeft);
+    m_contentArea->addChild(m_titleLabel);
     
-    auto normalIcon = CCSprite::createWithSpriteFrameName(fmt::format("{}.png"_spr, iconName).c_str());
-    normalIcon->setScale(0.6f);
-    normalContent->addChild(normalIcon);
-    
-    auto normalLabel = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
-    normalLabel->setScale(0.45f);
-    normalLabel->setOpacity(200);
-    normalContent->addChild(normalLabel);
-    
-    normalContent->updateLayout();
-    normalContent->setPosition({buttonWidth / 2.0f, buttonHeight / 2.0f});
-    normalBG->addChild(normalContent);
-    
-    auto selectedContent = CCNode::create();
-    selectedContent->setContentSize({buttonWidth - 10.0f, buttonHeight - 10.0f});
-    selectedContent->setAnchorPoint({0.5f, 0.5f});
-    selectedContent->setLayout(
-        RowLayout::create()
-            ->setGap(8.0f)
-            ->setAxisAlignment(AxisAlignment::Center)
-            ->setCrossAxisAlignment(AxisAlignment::Center)
-            ->setAutoScale(false)
-    );
-    
-    auto selectedIcon = CCSprite::createWithSpriteFrameName(fmt::format("{}Selected.png"_spr, iconName).c_str());
-    selectedIcon->setScale(0.7f);
-    selectedContent->addChild(selectedIcon);
-    
-    auto selectedLabel = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
-    selectedLabel->setScale(0.45f);
-    selectedLabel->setOpacity(230);
-    selectedContent->addChild(selectedLabel);
-    
-    selectedContent->updateLayout();
-    selectedContent->setPosition({buttonWidth / 2.0f, buttonHeight / 2.0f});
-    selectedBG->addChild(selectedContent);
-    
-    auto button = CCMenuItemSprite::create(
-        static_cast<CCNode*>(normalBG),
-        static_cast<CCNode*>(selectedBG),
-        this,
-        menu_selector(ModernSettingsPopup::onCategoryButton)
-    );
-    button->setTag(static_cast<int>(category));
-    button->setID((iconName + "-btn").c_str());
-    
-    return button;
+    m_separator = CCSprite::createWithSpriteFrameName("floorLine_02_001.png");
+    m_separator->setPosition({contentWidth / 2.0f, contentHeight - 40.0f});
+    m_separator->setScaleX(contentWidth / m_separator->getContentSize().width * 0.9f + 0.05f);
+    m_separator->setScaleY(0.25f);
+    m_separator->setOpacity(75);
+    m_contentArea->addChild(m_separator);
 }
 
 void ModernSettingsPopup::onCategoryButton(CCObject* sender) {
@@ -187,187 +269,109 @@ void ModernSettingsPopup::switchCategory(SettingsCategory category) {
     m_currentCategory = category;
     updateCategoryButtonStates();
     
-    m_contentArea->removeAllChildren();
+    if (m_contentContainer) {
+        m_contentContainer->removeFromParent();
+        m_contentContainer = nullptr;
+    }
+    
     m_tagToSetting.clear();
     m_valueLabels.clear();
-    m_currentPage = 0;
     
     switch (category) {
         case SettingsCategory::Randomizer:
+            m_titleLabel->setString("Randomizer");
             buildRandomizerContent();
             break;
         case SettingsCategory::RGB:
+            m_titleLabel->setString("RGB Icons");
             buildRGBContent();
             break;
         case SettingsCategory::Colors:
+            m_titleLabel->setString("Icon Colors");
             buildColorsContent();
             break;
         case SettingsCategory::Particles:
+            m_titleLabel->setString("Particles");
             buildParticlesContent();
+            break;
+        case SettingsCategory::Legacy:
+            m_titleLabel->setString("Legacy");
+            buildLegacyContent();
             break;
     }
 }
 
+
 void ModernSettingsPopup::buildRandomizerContent() {
     auto size = m_contentArea->getContentSize();
-    const float midX = size.width / 2.0f;
     
-    auto title = CCLabelBMFont::create("Randomizer", "modernBold.fnt"_spr);
-    title->setPosition({midX, size.height - 25.0f});
-    title->setScale(0.7f);
-    m_contentArea->addChild(title);
-    
-    auto separator = CCSprite::createWithSpriteFrameName("floorLine_001.png");
-    separator->setPosition({midX, size.height - 45.0f});
-    separator->setScaleX(size.width / separator->getContentSize().width * 0.9f);
-    separator->setOpacity(80);
-    m_contentArea->addChild(separator);
-    
-    auto contentContainer = CCNode::create();
-    contentContainer->setContentSize({size.width - 20.0f, size.height - 60.0f});
-    contentContainer->setPosition({10.0f, 10.0f});
-    contentContainer->setAnchorPoint({0.0f, 0.0f});
-    contentContainer->setLayout(
-        ColumnLayout::create()
+    m_contentContainer = CCNode::create();
+    m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
+    m_contentContainer->setPosition({15.0f, 10.0f});
+    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setLayout(
+        RowLayout::create()
             ->setGap(15.0f)
             ->setAxisAlignment(AxisAlignment::Start)
-            ->setAxisReverse(false)
-            ->setCrossAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
             ->setGrowCrossAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::End)
     );
-    m_contentArea->addChild(contentContainer);
+    m_contentArea->addChild(m_contentContainer);
     
-    auto condSection = CCNode::create();
-    condSection->setContentSize({size.width - 40.0f, 160.0f});
+    // === LEFT COLUMN ===
+    auto leftColumn = CCNode::create();
+    leftColumn->setContentSize({0, 0});
+    leftColumn->setLayout(
+        ColumnLayout::create()
+            ->setGap(0.f)
+            ->setAxisAlignment(AxisAlignment::Even)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
+    );
     
-    auto condTitle = CCLabelBMFont::create("Conditional", "modernBold.fnt"_spr);
-    condTitle->setPosition({10.0f, 150.0f});
-    condTitle->setAnchorPoint({0.0f, 1.0f});
-    condTitle->setScale(0.5f);
-    condTitle->setOpacity(220);
-    condSection->addChild(condTitle);
+    // cond.
+    auto condTitle = createSectionTitle("Conditional");
+    leftColumn->addChild(condTitle);
     
-    auto condMenu = CCMenu::create();
-    condMenu->setContentSize(condSection->getContentSize());
-    condMenu->setPosition({0, 0});
-    condSection->addChild(condMenu);
+    leftColumn->addChild(createLabelToggleRow("Enable", "cond-ic-randomizer", 140.0f, 0.38f, 0.6f));
+    leftColumn->addChild(createLabelToggleRow("Every Gamemode", "cond-ongamemodechange", 140.0f, 0.32f, 0.55f));
+    leftColumn->addChild(createLabelToggleRow("On Death", "cond-ondeath", 140.0f, 0.32f, 0.55f));
+    leftColumn->addChild(createLabelToggleRow("On Click", "cond-onclick", 140.0f, 0.32f, 0.55f));
     
-    auto condLabels = CCNode::create();
-    condLabels->setContentSize(condSection->getContentSize());
-    condLabels->setPosition({0, 0});
-    condSection->addChild(condLabels);
+    auto spacer1 = CCNode::create();
+    spacer1->setContentSize({1, 8});
+    leftColumn->addChild(spacer1);
     
-    auto enableLabel = CCLabelBMFont::create("Enable", "modernMain.fnt"_spr);
-    enableLabel->setPosition({10.0f, 120.0f});
-    enableLabel->setAnchorPoint({0.0f, 0.5f});
-    enableLabel->setScale(0.45f);
-    enableLabel->setOpacity(200);
-    condLabels->addChild(enableLabel);
+    // live
+    auto liveTitle = createSectionTitle("Live");
+    leftColumn->addChild(liveTitle);
     
-    auto enableToggle = createToggler("cond-ic-randomizer", {condSection->getContentSize().width - 25.0f, 120.0f});
-    enableToggle->setScale(0.75f);
-    condMenu->addChild(enableToggle);
+    leftColumn->addChild(createLabelToggleRow("Enable", "live-ic-randomizer", 140.0f, 0.38f, 0.6f));
+    leftColumn->addChild(createLabelSliderRow("Delay", "random-delay", 140.0f, 0.32f));
     
-    std::vector<std::pair<std::string, std::string>> condModes = {
-        {"cond-ongamemodechange", "Every Gamemode"},
-        {"cond-ondeath", "On Death"},
-        {"cond-onclick", "On Click"}
-    };
+    leftColumn->updateLayout();
+    m_contentContainer->addChild(leftColumn);
     
-    float modeY = 85.0f;
-    for (const auto& [settingId, name] : condModes) {
-        auto label = CCLabelBMFont::create(name.c_str(), "modernMain.fnt"_spr);
-        label->setPosition({10.0f, modeY});
-        label->setAnchorPoint({0.0f, 0.5f});
-        label->setScale(0.4f);
-        label->setOpacity(180);
-        condLabels->addChild(label);
-        
-        auto toggler = createToggler(settingId, {condSection->getContentSize().width - 25.0f, modeY});
-        toggler->setScale(0.7f);
-        condMenu->addChild(toggler);
-        
-        modeY -= 25.0f;
-    }
+    // === RIGHT COLUMN ===
+    auto rightColumn = CCNode::create();
+    rightColumn->setContentSize({0, 0});
+    rightColumn->setLayout(
+        ColumnLayout::create()
+            ->setGap(-6.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
+    );
     
-    contentContainer->addChild(condSection);
+    // modes
+    auto modesTitle = createSectionTitle("Modes");
+    rightColumn->addChild(modesTitle);
     
-    auto liveSection = CCNode::create();
-    liveSection->setContentSize({size.width - 40.0f, 120.0f});
-    
-    auto liveTitle = CCLabelBMFont::create("Live", "modernBold.fnt"_spr);
-    liveTitle->setPosition({10.0f, 110.0f});
-    liveTitle->setAnchorPoint({0.0f, 1.0f});
-    liveTitle->setScale(0.5f);
-    liveTitle->setOpacity(220);
-    liveSection->addChild(liveTitle);
-    
-    auto liveMenu = CCMenu::create();
-    liveMenu->setContentSize(liveSection->getContentSize());
-    liveMenu->setPosition({0, 0});
-    liveSection->addChild(liveMenu);
-    
-    auto liveLabels = CCNode::create();
-    liveLabels->setContentSize(liveSection->getContentSize());
-    liveLabels->setPosition({0, 0});
-    liveSection->addChild(liveLabels);
-    
-    // enable
-    auto liveEnableLabel = CCLabelBMFont::create("Enable", "modernMain.fnt"_spr);
-    liveEnableLabel->setPosition({10.0f, 80.0f});
-    liveEnableLabel->setAnchorPoint({0.0f, 0.5f});
-    liveEnableLabel->setScale(0.45f);
-    liveEnableLabel->setOpacity(200);
-    liveLabels->addChild(liveEnableLabel);
-    
-    auto liveEnableToggle = createToggler("live-ic-randomizer", {liveSection->getContentSize().width - 25.0f, 80.0f});
-    liveEnableToggle->setScale(0.75f);
-    liveMenu->addChild(liveEnableToggle);
-    
-    // delay
-    auto delayLabel = CCLabelBMFont::create("Delay", "modernMain.fnt"_spr);
-    delayLabel->setPosition({10.0f, 45.0f});
-    delayLabel->setAnchorPoint({0.0f, 0.5f});
-    delayLabel->setScale(0.4f);
-    delayLabel->setOpacity(180);
-    liveLabels->addChild(delayLabel);
-    
-    const float liveMidX = liveSection->getContentSize().width / 2.0f;
-    auto delaySlider = createSlider("random-delay", {liveMidX, 20.0f}, liveSection->getContentSize().width - 40.0f);
-    liveMenu->addChild(delaySlider);
-    
-    float currentDelay = Mod::get()->getSettingValue<double>("random-delay");
-    auto delayValue = CCLabelBMFont::create((std::to_string(currentDelay).substr(0, 4) + "s").c_str(), "modernMain.fnt"_spr);
-    delayValue->setPosition({liveMidX, 5.0f});
-    delayValue->setScale(0.3f);
-    delayValue->setOpacity(150);
-    liveLabels->addChild(delayValue);
-    m_valueLabels[delaySlider->getTag()] = delayValue;
-    
-    contentContainer->addChild(liveSection);
-    
-    // === MODES SECTION ===
-    auto modesSection = CCNode::create();
-    modesSection->setContentSize({size.width - 40.0f, 160.0f});
-    
-    auto modesTitle = CCLabelBMFont::create("Modes", "modernBold.fnt"_spr);
-    modesTitle->setPosition({10.0f, 150.0f});
-    modesTitle->setAnchorPoint({0.0f, 1.0f});
-    modesTitle->setScale(0.5f);
-    modesTitle->setOpacity(220);
-    modesSection->addChild(modesTitle);
-    
-    auto modesMenu = CCMenu::create();
-    modesMenu->setContentSize(modesSection->getContentSize());
-    modesMenu->setPosition({0, 0});
-    modesSection->addChild(modesMenu);
-    
-    auto modesLabels = CCNode::create();
-    modesLabels->setContentSize(modesSection->getContentSize());
-    modesLabels->setPosition({0, 0});
-    modesSection->addChild(modesLabels);
-    
-    // icon types
     std::vector<std::pair<std::string, std::string>> iconTypes = {
         {"randomize-cube", "Cube"}, {"randomize-ship", "Ship"},
         {"randomize-ball", "Ball"}, {"randomize-ufo", "UFO"},
@@ -375,240 +379,94 @@ void ModernSettingsPopup::buildRandomizerContent() {
         {"randomize-spider", "Spider"}, {"randomize-swing", "Swing"}
     };
     
-    const int cols = 4;
-    const float modesMidX = modesSection->getContentSize().width / 2.0f;
-    const float colWidth = (modesSection->getContentSize().width - 20.0f) / cols;
-    const float startX = modesMidX - (cols * colWidth) / 2.0f + colWidth / 2.0f;
-    
-    for (size_t i = 0; i < iconTypes.size(); ++i) {
-        int row = i / cols;
-        int col = i % cols;
-        float x = startX + col * colWidth;
-        float y = 110.0f - row * 35.0f;
-        
-        auto label = CCLabelBMFont::create(iconTypes[i].second.c_str(), "modernMain.fnt"_spr);
-        label->setPosition({x, y});
-        label->setScale(0.35f);
-        label->setOpacity(180);
-        modesLabels->addChild(label);
-        
-        auto toggler = createToggler(iconTypes[i].first, {x, y - 15.0f});
-        toggler->setScale(0.65f);
-        modesMenu->addChild(toggler);
+    for (const auto& [settingId, name] : iconTypes) {
+        rightColumn->addChild(createLabelToggleRow(name, settingId, 140.0f, 0.32f, 0.55f));
     }
     
-    // color types
+    auto spacer2 = CCNode::create();
+    spacer2->setContentSize({1, 8});
+    rightColumn->addChild(spacer2);
+    
     std::vector<std::pair<std::string, std::string>> colorTypes = {
-        {"randomize-color1", "Color 1"}, {"randomize-color2", "Color 2"}, {"randomize-glowcolor", "Glow"}
+        {"randomize-color1", "Color 1"},
+        {"randomize-color2", "Color 2"},
+        {"randomize-glowcolor", "Glow"}
     };
     
-    const float colorColWidth = (modesSection->getContentSize().width - 20.0f) / 3.0f;
-    const float colorStartX = modesMidX - (3 * colorColWidth) / 2.0f + colorColWidth / 2.0f;
-    const float colorY = 30.0f;
-    
-    for (size_t i = 0; i < colorTypes.size(); ++i) {
-        float x = colorStartX + i * colorColWidth;
-        
-        auto label = CCLabelBMFont::create(colorTypes[i].second.c_str(), "modernMain.fnt"_spr);
-        label->setPosition({x, colorY});
-        label->setScale(0.35f);
-        label->setOpacity(180);
-        modesLabels->addChild(label);
-        
-        auto toggler = createToggler(colorTypes[i].first, {x, colorY - 15.0f});
-        toggler->setScale(0.65f);
-        modesMenu->addChild(toggler);
+    for (const auto& [settingId, name] : colorTypes) {
+        rightColumn->addChild(createLabelToggleRow(name, settingId, 140.0f, 0.32f, 0.55f));
     }
     
-    contentContainer->addChild(modesSection);
-    contentContainer->updateLayout();
-
-    // bottom navigation buttons
-    auto navMenu = CCMenu::create();
-    navMenu->setContentSize({size.width, 35.0f});
-    navMenu->setPosition({midX, 17.5f});
-    navMenu->setAnchorPoint({0.5f, 0.5f});
-    navMenu->setLayout(
-        RowLayout::create()
-            ->setGap(8.0f)
-            ->setAxisAlignment(AxisAlignment::Center)
-    );
-    m_contentArea->addChild(navMenu);
+    rightColumn->updateLayout();
+    m_contentContainer->addChild(rightColumn);
     
-    auto condBtn = createNavButton("Cond.");
-    navMenu->addChild(condBtn);
-    
-    auto liveBtn = createNavButton("Live");
-    navMenu->addChild(liveBtn);
-    
-    auto modesBtn = createNavButton("Modes");
-    navMenu->addChild(modesBtn);
-    
-    navMenu->updateLayout();
+    m_contentContainer->updateLayout();
 }
 
 void ModernSettingsPopup::buildRGBContent() {
     auto size = m_contentArea->getContentSize();
-    const float midX = size.width / 2.0f;
     
-    // title
-    auto title = CCLabelBMFont::create("RGB Icons", "modernBold.fnt"_spr);
-    title->setPosition({midX, size.height - 25.0f});
-    title->setScale(0.7f);
-    m_contentArea->addChild(title);
+    m_contentContainer = CCNode::create();
+    m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
+    m_contentContainer->setPosition({15.0f, 10.0f});
+    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setLayout(
+        RowLayout::create()
+            ->setGap(20.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    m_contentArea->addChild(m_contentContainer);
     
-    // separator
-    auto separator = CCSprite::createWithSpriteFrameName("floorLine_001.png");
-    separator->setPosition({midX, size.height - 45.0f});
-    separator->setScaleX(size.width / separator->getContentSize().width * 0.9f);
-    separator->setOpacity(80);
-    m_contentArea->addChild(separator);
+    // === LEFT COLUMN ===
+    auto leftColumn = CCNode::create();
+    leftColumn->setContentSize({0, 0});
+    leftColumn->setLayout(
+        ColumnLayout::create()
+            ->setGap(6.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
     
-    // main content
-    auto contentNode = CCNode::create();
-    contentNode->setContentSize({size.width - 20.0f, size.height - 60.0f});
-    contentNode->setPosition({10.0f, 10.0f});
-    contentNode->setAnchorPoint({0.0f, 0.0f});
-    m_contentArea->addChild(contentNode);
+    leftColumn->addChild(createLabelSliderRow("Speed", "rgb-speed", 140.0f, 0.35f));
     
-    auto menu = CCMenu::create();
-    menu->setContentSize(contentNode->getContentSize());
-    menu->setPosition({0, 0});
-    contentNode->addChild(menu);
+    auto spacer1 = CCNode::create();
+    spacer1->setContentSize({1, 8});
+    leftColumn->addChild(spacer1);
     
-    auto labels = CCNode::create();
-    labels->setContentSize(contentNode->getContentSize());
-    labels->setPosition({0, 0});
-    contentNode->addChild(labels);
+    // col 1 stuff
+    leftColumn->addChild(createSectionTitleWithToggle("Color 1", "rgb-col1", 140.0f));
+    leftColumn->addChild(createLabelSliderRow("Brightness", "rgb-brightness1", 140.0f, 0.32f));
+    leftColumn->addChild(createLabelSliderRow("Saturation", "rgb-saturation", 140.0f, 0.32f));
     
-    const float contentMidX = contentNode->getContentSize().width / 2.0f;
-    const float colOffset = 100.0f;
-    float currentY = contentNode->getContentSize().height - 10.0f;
+    auto spacer2 = CCNode::create();
+    spacer2->setContentSize({1, 8});
+    leftColumn->addChild(spacer2);
     
-    // col 1 & 2 radio buttons
-    auto col1Label = CCLabelBMFont::create("Col 1", "modernMain.fnt"_spr);
-    col1Label->setPosition({contentMidX - colOffset, currentY});
-    col1Label->setScale(0.45f);
-    col1Label->setOpacity(200);
-    labels->addChild(col1Label);
+    // col 2 stuff
+    leftColumn->addChild(createSectionTitleWithToggle("Color 2", "rgb-col2", 140.0f));
+    leftColumn->addChild(createLabelSliderRow("Brightness", "rgb-brightness2", 140.0f, 0.32f));
+    leftColumn->addChild(createLabelSliderRow("Saturation", "rgb-saturation2", 140.0f, 0.32f));
     
-    auto col1Radio = createRadioButton("rgb-col1", {contentMidX - colOffset - 30.0f, currentY});
-    menu->addChild(col1Radio);
+    leftColumn->updateLayout();
+    m_contentContainer->addChild(leftColumn);
     
-    auto col2Label = CCLabelBMFont::create("Col 2", "modernMain.fnt"_spr);
-    col2Label->setPosition({contentMidX + colOffset, currentY});
-    col2Label->setScale(0.45f);
-    col2Label->setOpacity(200);
-    labels->addChild(col2Label);
+    // === RIGHT COLUMN ===
+    auto rightColumn = CCNode::create();
+    rightColumn->setContentSize({0, 0});
+    rightColumn->setLayout(
+        ColumnLayout::create()
+            ->setGap(6.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
     
-    auto col2Radio = createRadioButton("rgb-col2", {contentMidX + colOffset - 30.0f, currentY});
-    menu->addChild(col2Radio);
-    
-    currentY -= 40.0f;
-    
-    // brightness sliders
-    auto bright1Label = CCLabelBMFont::create("Brightness", "modernMain.fnt"_spr);
-    bright1Label->setPosition({contentMidX - colOffset, currentY});
-    bright1Label->setScale(0.38f);
-    bright1Label->setOpacity(180);
-    labels->addChild(bright1Label);
-    
-    auto bright1Slider = createSlider("rgb-brightness1", {contentMidX - colOffset, currentY - 15.0f}, 120.0f);
-    menu->addChild(bright1Slider);
-    
-    float b1Val = Mod::get()->getSettingValue<double>("rgb-brightness1");
-    auto bright1Value = CCLabelBMFont::create(std::to_string(b1Val).substr(0,4).c_str(), "modernMain.fnt"_spr);
-    bright1Value->setPosition({contentMidX - colOffset, currentY - 30.0f});
-    bright1Value->setScale(0.28f);
-    bright1Value->setOpacity(140);
-    labels->addChild(bright1Value);
-    m_valueLabels[bright1Slider->getTag()] = bright1Value;
-    
-    auto bright2Label = CCLabelBMFont::create("Brightness", "modernMain.fnt"_spr);
-    bright2Label->setPosition({contentMidX + colOffset, currentY});
-    bright2Label->setScale(0.38f);
-    bright2Label->setOpacity(180);
-    labels->addChild(bright2Label);
-    
-    auto bright2Slider = createSlider("rgb-brightness2", {contentMidX + colOffset, currentY - 15.0f}, 120.0f);
-    menu->addChild(bright2Slider);
-    
-    float b2Val = Mod::get()->getSettingValue<double>("rgb-brightness2");
-    auto bright2Value = CCLabelBMFont::create(std::to_string(b2Val).substr(0,4).c_str(), "modernMain.fnt"_spr);
-    bright2Value->setPosition({contentMidX + colOffset, currentY - 30.0f});
-    bright2Value->setScale(0.28f);
-    bright2Value->setOpacity(140);
-    labels->addChild(bright2Value);
-    m_valueLabels[bright2Slider->getTag()] = bright2Value;
-    
-    currentY -= 55.0f;
-    
-    // saturation sliders
-    auto sat1Label = CCLabelBMFont::create("Saturation", "modernMain.fnt"_spr);
-    sat1Label->setPosition({contentMidX - colOffset, currentY});
-    sat1Label->setScale(0.38f);
-    sat1Label->setOpacity(180);
-    labels->addChild(sat1Label);
-    
-    auto sat1Slider = createSlider("rgb-saturation", {contentMidX - colOffset, currentY - 15.0f}, 120.0f);
-    menu->addChild(sat1Slider);
-    
-    float s1Val = Mod::get()->getSettingValue<double>("rgb-saturation");
-    auto sat1Value = CCLabelBMFont::create(std::to_string(s1Val).substr(0,4).c_str(), "modernMain.fnt"_spr);
-    sat1Value->setPosition({contentMidX - colOffset, currentY - 30.0f});
-    sat1Value->setScale(0.28f);
-    sat1Value->setOpacity(140);
-    labels->addChild(sat1Value);
-    m_valueLabels[sat1Slider->getTag()] = sat1Value;
-    
-    auto sat2Label = CCLabelBMFont::create("Saturation", "modernMain.fnt"_spr);
-    sat2Label->setPosition({contentMidX + colOffset, currentY});
-    sat2Label->setScale(0.38f);
-    sat2Label->setOpacity(180);
-    labels->addChild(sat2Label);
-    
-    auto sat2Slider = createSlider("rgb-saturation2", {contentMidX + colOffset, currentY - 15.0f}, 120.0f);
-    menu->addChild(sat2Slider);
-    
-    float s2Val = Mod::get()->getSettingValue<double>("rgb-saturation2");
-    auto sat2Value = CCLabelBMFont::create(std::to_string(s2Val).substr(0,4).c_str(), "modernMain.fnt"_spr);
-    sat2Value->setPosition({contentMidX + colOffset, currentY - 30.0f});
-    sat2Value->setScale(0.28f);
-    sat2Value->setOpacity(140);
-    labels->addChild(sat2Value);
-    m_valueLabels[sat2Slider->getTag()] = sat2Value;
-    
-    currentY -= 55.0f;
-    
-    // rgb Speed
-    auto speedLabel = CCLabelBMFont::create("Speed", "modernMain.fnt"_spr);
-    speedLabel->setPosition({contentMidX, currentY});
-    speedLabel->setScale(0.4f);
-    speedLabel->setOpacity(180);
-    labels->addChild(speedLabel);
-    
-    auto speedSlider = createSlider("rgb-speed", {contentMidX, currentY - 15.0f}, 220.0f);
-    menu->addChild(speedSlider);
-    
-    float speedVal = Mod::get()->getSettingValue<double>("rgb-speed");
-    auto speedValue = CCLabelBMFont::create(std::to_string(speedVal).substr(0,4).c_str(), "modernMain.fnt"_spr);
-    speedValue->setPosition({contentMidX, currentY - 30.0f});
-    speedValue->setScale(0.28f);
-    speedValue->setOpacity(140);
-    labels->addChild(speedValue);
-    m_valueLabels[speedSlider->getTag()] = speedValue;
-    
-    currentY -= 60.0f;
-    
-    // extras section title
-    auto extrasLabel = CCLabelBMFont::create("Extras", "modernBold.fnt"_spr);
-    extrasLabel->setPosition({15.0f, currentY});
-    extrasLabel->setAnchorPoint({0.0f, 0.5f});
-    extrasLabel->setScale(0.45f);
-    extrasLabel->setOpacity(200);
-    labels->addChild(extrasLabel);
-    
-    currentY -= 30.0f;
+    rightColumn->addChild(createSectionTitle("Extras"));
     
     std::vector<std::pair<std::string, std::string>> extras = {
         {"rgb-wave", "RGB Wave"},
@@ -618,120 +476,67 @@ void ModernSettingsPopup::buildRGBContent() {
         {"ignore-p2", "Ignore P2"}
     };
     
-    // layout extras in 2 columns
-    const int extraCols = 2;
-    const float extraColWidth = contentNode->getContentSize().width / extraCols;
-    
-    for (size_t i = 0; i < extras.size(); ++i) {
-        int col = i % extraCols;
-        int row = i / extraCols;
-        float x = 20.0f + col * extraColWidth;
-        float y = currentY - row * 25.0f;
-        
-        auto label = CCLabelBMFont::create(extras[i].second.c_str(), "modernMain.fnt"_spr);
-        label->setPosition({x, y});
-        label->setAnchorPoint({0.0f, 0.5f});
-        label->setScale(0.35f);
-        label->setOpacity(180);
-        labels->addChild(label);
-        
-        auto toggler = createToggler(extras[i].first, {x + extraColWidth - 40.0f, y});
-        toggler->setScale(0.65f);
-        menu->addChild(toggler);
+    for (const auto& [settingId, name] : extras) {
+        rightColumn->addChild(createLabelToggleRow(name, settingId, 140.0f, 0.32f, 0.55f));
     }
     
-    currentY -= 65.0f;
+    auto spacer3 = CCNode::create();
+    spacer3->setContentSize({1, 8});
+    rightColumn->addChild(spacer3);
     
-    // p2 Distance slider
-    auto p2DistLabel = CCLabelBMFont::create("Col2 Distance", "modernMain.fnt"_spr);
-    p2DistLabel->setPosition({contentMidX, currentY});
-    p2DistLabel->setScale(0.38f);
-    p2DistLabel->setOpacity(180);
-    labels->addChild(p2DistLabel);
+    rightColumn->addChild(createLabelSliderRow("Col2 Distance", "p2-distance", 140.0f, 0.32f));
     
-    auto p2DistSlider = createSlider("p2-distance", {contentMidX, currentY - 15.0f}, 200.0f);
-    menu->addChild(p2DistSlider);
+    rightColumn->updateLayout();
+    m_contentContainer->addChild(rightColumn);
     
-    float p2Dist = Mod::get()->getSettingValue<double>("p2-distance");
-    auto p2DistValue = CCLabelBMFont::create(std::to_string(p2Dist).substr(0,4).c_str(), "modernMain.fnt"_spr);
-    p2DistValue->setPosition({midX, currentY - 35.0f});
-    p2DistValue->setScale(0.3f);
-    p2DistValue->setOpacity(140);
-    labels->addChild(p2DistValue);
-    m_valueLabels[p2DistSlider->getTag()] = p2DistValue;
-
-    // bottom navigation
-    auto navMenu = CCMenu::create();
-    navMenu->setContentSize({size.width, 35.0f});
-    navMenu->setPosition({midX, 17.5f});
-    navMenu->setAnchorPoint({0.5f, 0.5f});
-    navMenu->setLayout(
-        RowLayout::create()
-            ->setGap(8.0f)
-            ->setAxisAlignment(AxisAlignment::Center)
-    );
-    m_contentArea->addChild(navMenu);
-    
-    auto mainBtn = createNavButton("Main");
-    navMenu->addChild(mainBtn);
-    
-    auto extrasBtn = createNavButton("Extras");
-    navMenu->addChild(extrasBtn);
-    
-    navMenu->updateLayout();
+    m_contentContainer->updateLayout();
 }
 
 void ModernSettingsPopup::buildColorsContent() {
     auto size = m_contentArea->getContentSize();
-    const float midX = size.width / 2.0f;
     
-    // title
-    auto title = CCLabelBMFont::create("Icon Colors", "modernBold.fnt"_spr);
-    title->setPosition({midX, size.height - 20.0f});
-    title->setScale(0.6f);
-    m_contentArea->addChild(title);
+    m_contentContainer = CCNode::create();
+    m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
+    m_contentContainer->setPosition({15.0f, 10.0f});
+    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setLayout(
+        ColumnLayout::create()
+            ->setGap(10.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    m_contentArea->addChild(m_contentContainer);
     
-    // separator
-    auto separator = CCSprite::createWithSpriteFrameName("floorLine_001.png");
-    separator->setPosition({midX, size.height - 35.0f});
-    separator->setScaleX(size.width / separator->getContentSize().width * 0.85f);
-    separator->setOpacity(70);
-    m_contentArea->addChild(separator);
+    m_contentContainer->addChild(createLabelToggleRow("Enable", "enable-customcolors", size.width - 30.0f, 0.38f, 0.65f));
     
-    auto mainContainer = CCNode::create();
-    mainContainer->setContentSize({280.0f, 240.0f});
-    mainContainer->setPosition({midX, 50.0f});
-    mainContainer->setAnchorPoint({0.5f, 0.0f});
-    mainContainer->setScale(0.88f);
-    m_contentArea->addChild(mainContainer);
+    auto playersRow = CCNode::create();
+    playersRow->setContentSize({0, 0});
+    playersRow->setLayout(
+        RowLayout::create()
+            ->setGap(15.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
     
-    auto menu = CCMenu::create();
-    menu->setContentSize(mainContainer->getContentSize());
-    menu->setPosition({0, 0});
-    mainContainer->addChild(menu);
+    // === PLAYER 1 COLUMN ===
+    auto p1Column = CCNode::create();
+    p1Column->setContentSize({0, 0});
+    p1Column->setLayout(
+        ColumnLayout::create()
+            ->setGap(5.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
     
-    auto labels = CCNode::create();
-    labels->setContentSize(mainContainer->getContentSize());
-    labels->setPosition({0, 0});
-    mainContainer->addChild(labels);
-    
-    const float containerMidX = mainContainer->getContentSize().width / 2.0f;
-    const float containerMidY = mainContainer->getContentSize().height / 2.0f;
-    
-    auto enableLabel = CCLabelBMFont::create("Enable", "modernMain.fnt"_spr);
-    enableLabel->setPosition({containerMidX, mainContainer->getContentSize().height - 15.0f});
-    enableLabel->setScale(0.5f);
-    enableLabel->setOpacity(200);
-    labels->addChild(enableLabel);
-    
-    auto enableToggler = createToggler("enable-customcolors", {containerMidX, mainContainer->getContentSize().height - 30.0f});
-    enableToggler->setScale(0.75f);
-    menu->addChild(enableToggler);
-    
-    // colums
-    const float colOffset = 65.0f;
-    const float startY = mainContainer->getContentSize().height - 60.0f;
-    const float rowGap = 25.0f;
+    auto p1Header = CCLabelBMFont::create("Player 1", "modernBold.fnt"_spr);
+    p1Header->setScale(0.4f);
+    p1Header->setOpacity(200);
+    p1Column->addChild(p1Header);
     
     std::vector<std::pair<std::string, std::string>> p1Colors = {
         {"p1-primary", "Col 1"}, {"p1-secondary", "Col 2"}, {"p1-glow", "Glow"},
@@ -739,284 +544,546 @@ void ModernSettingsPopup::buildColorsContent() {
         {"p1-dashfire", "Dash"}, {"p1-ufodome", "Dome"}
     };
     
+    static const std::array<std::string, 5> toggleSettings = {
+        "tint-wave", "tint-trail", "tint-ghost-trail", "tint-dashfire", "tint-ufodome"
+    };
+    
+    for (size_t i = 0; i < p1Colors.size(); ++i) {
+        bool hasToggle = i >= 3;
+        p1Column->addChild(createLabelColorRow(
+            p1Colors[i].second,
+            p1Colors[i].first,
+            70.0f,
+            hasToggle ? (toggleSettings[i - 3] + "-p1") : "",
+            0.32f
+        ));
+    }
+    
+    p1Column->updateLayout();
+    playersRow->addChild(p1Column);
+    
+    // === PLAYER 2 COLUMN ===
+    auto p2Column = CCNode::create();
+    p2Column->setContentSize({0, 0});
+    p2Column->setLayout(
+        ColumnLayout::create()
+            ->setGap(5.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto p2Header = CCLabelBMFont::create("Player 2", "modernBold.fnt"_spr);
+    p2Header->setScale(0.4f);
+    p2Header->setOpacity(200);
+    p2Column->addChild(p2Header);
+    
     std::vector<std::pair<std::string, std::string>> p2Colors = {
         {"p2-primary", "Col 1"}, {"p2-secondary", "Col 2"}, {"p2-glow", "Glow"},
         {"p2-wave", "Wave"}, {"p2-trail", "Trail"}, {"p2-ghost-trail", "Ghost"},
         {"p2-dashfire", "Dash"}, {"p2-ufodome", "Dome"}
     };
     
-    // headers
-    auto p1Header = CCLabelBMFont::create("Player 1", "modernBold.fnt"_spr);
-    p1Header->setPosition({containerMidX - colOffset, startY});
-    p1Header->setScale(0.45f);
-    p1Header->setOpacity(200);
-    labels->addChild(p1Header);
-    
-    auto p2Header = CCLabelBMFont::create("Player 2", "modernBold.fnt"_spr);
-    p2Header->setPosition({containerMidX + colOffset, startY});
-    p2Header->setScale(0.45f);
-    p2Header->setOpacity(200);
-    labels->addChild(p2Header);
-    
-    for (size_t i = 0; i < p1Colors.size(); ++i) {
-        float y = startY - 25.0f - (float)i * rowGap;
-        
-        // P1
-        auto p1Label = CCLabelBMFont::create(p1Colors[i].second.c_str(), "modernMain.fnt"_spr);
-        p1Label->setPosition({containerMidX - colOffset - 30.0f, y});
-        p1Label->setAnchorPoint({1.0f, 0.5f});
-        p1Label->setScale(0.4f);
-        p1Label->setOpacity(170);
-        labels->addChild(p1Label);
-        
-        auto p1ColorBtn = createColorPickerButton(p1Colors[i].first, {containerMidX - colOffset - 8.0f, y}, false);
-        menu->addChild(p1ColorBtn);
-        
-        // P2
-        auto p2Label = CCLabelBMFont::create(p2Colors[i].second.c_str(), "modernMain.fnt"_spr);
-        p2Label->setPosition({containerMidX + colOffset - 30.0f, y});
-        p2Label->setAnchorPoint({1.0f, 0.5f});
-        p2Label->setScale(0.4f);
-        p2Label->setOpacity(170);
-        labels->addChild(p2Label);
-        
-        auto p2ColorBtn = createColorPickerButton(p2Colors[i].first, {containerMidX + colOffset - 8.0f, y}, false);
-        menu->addChild(p2ColorBtn);
-        
-        // togglers
-        if (i >= 3) {
-            static const std::array<std::string, 5> mapTog = {"tint-wave", "tint-trail", "tint-ghost-trail", "tint-dashfire", "tint-ufodome"};
-            auto settingId = mapTog[i - 3];
-            
-            auto t1 = createToggler((settingId + "-p1").c_str(), {containerMidX - colOffset + 15.0f, y});
-            t1->setScale(0.6f);
-            menu->addChild(t1);
-            
-            auto t2 = createToggler((settingId + "-p2").c_str(), {containerMidX + colOffset + 15.0f, y});
-            t2->setScale(0.6f);
-            menu->addChild(t2);
-        }
+    for (size_t i = 0; i < p2Colors.size(); ++i) {
+        bool hasToggle = i >= 3;
+        p2Column->addChild(createLabelColorRow(
+            p2Colors[i].second,
+            p2Colors[i].first,
+            70.0f,
+            hasToggle ? (toggleSettings[i - 3] + "-p2") : "",
+            0.32f
+        ));
     }
+    
+    p2Column->updateLayout();
+    playersRow->addChild(p2Column);
+    
+    playersRow->updateLayout();
+    m_contentContainer->addChild(playersRow);
+    
+    m_contentContainer->updateLayout();
 }
 
 void ModernSettingsPopup::buildParticlesContent() {
     auto size = m_contentArea->getContentSize();
     
-    // title
-    auto title = CCLabelBMFont::create("Particles", "modernBold.fnt"_spr);
-    title->setPosition({size.width / 2.0f, size.height - 30.0f});
-    title->setScale(0.8f);
-    m_contentArea->addChild(title);
+    m_contentContainer = CCNode::create();
+    m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
+    m_contentContainer->setPosition({15.0f, 10.0f});
+    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setLayout(
+        RowLayout::create()
+            ->setGap(25.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    m_contentArea->addChild(m_contentContainer);
     
-    // separator
-    auto separator = CCSprite::createWithSpriteFrameName("modernSeparatorHorizontal.png"_spr);
-    separator->setPosition({size.width / 2.0f, size.height - 50.0f});
-    separator->setScaleX(size.width / separator->getContentSize().width * 0.95f);
-    separator->setOpacity(80);
-    m_contentArea->addChild(separator);
-    
-    // main content
-    auto contentNode = CCNode::create();
-    contentNode->setContentSize({size.width, size.height - 70.0f});
-    contentNode->setPosition({0, 0});
-    m_contentArea->addChild(contentNode);
-    
-    auto menu = CCMenu::create();
-    menu->setContentSize(contentNode->getContentSize());
-    menu->setPosition({0, 0});
-    contentNode->addChild(menu);
-    
-    auto labels = CCNode::create();
-    labels->setContentSize(contentNode->getContentSize());
-    labels->setPosition({0, 0});
-    contentNode->addChild(labels);
-    
-    float currentY = contentNode->getContentSize().height - 20.0f;
-    const float midX = size.width / 2.0f;
-    const float colOffset = 135.0f;
-    const float colBtnGap = 18.0f;
-    
-    // player labels
-    auto p1Header = CCLabelBMFont::create("Player 1", "modernBold.fnt"_spr);
-    p1Header->setPosition({midX - colOffset, currentY});
-    p1Header->setScale(0.5f);
-    p1Header->setOpacity(220);
-    labels->addChild(p1Header);
-    
-    auto p2Header = CCLabelBMFont::create("Player 2", "modernBold.fnt"_spr);
-    p2Header->setPosition({midX + colOffset, currentY});
-    p2Header->setScale(0.5f);
-    p2Header->setOpacity(220);
-    labels->addChild(p2Header);
-    
-    currentY -= 45.0f;
-    
-    // main section
-    auto mainLabel1 = CCLabelBMFont::create("Main", "modernMain.fnt"_spr);
-    mainLabel1->setPosition({midX - colOffset, currentY});
-    mainLabel1->setScale(0.45f);
-    mainLabel1->setOpacity(200);
-    labels->addChild(mainLabel1);
-    
-    auto mainT1 = createToggler("tint-mainparticles-p1", {midX - colOffset + 35.0f, currentY});
-    mainT1->setScale(0.7f);
-    menu->addChild(mainT1);
-    
-    auto mainLabel2 = CCLabelBMFont::create("Main", "modernMain.fnt"_spr);
-    mainLabel2->setPosition({midX + colOffset, currentY});
-    mainLabel2->setScale(0.45f);
-    mainLabel2->setOpacity(200);
-    labels->addChild(mainLabel2);
-    
-    auto mainT2 = createToggler("tint-mainparticles-p2", {midX + colOffset + 35.0f, currentY});
-    mainT2->setScale(0.7f);
-    menu->addChild(mainT2);
-    
-    currentY -= 35.0f;
-    
-    // pickers
-    auto p1MainStart = createColorPickerButton("p1-main-particles-start", {midX - colOffset - colBtnGap, currentY}, true);
-    menu->addChild(p1MainStart);
-    
-    auto p1MainEnd = createColorPickerButton("p1-main-particles-end", {midX - colOffset + colBtnGap, currentY}, true);
-    menu->addChild(p1MainEnd);
-    
-    auto p2MainStart = createColorPickerButton("p2-main-particles-start", {midX + colOffset - colBtnGap, currentY}, true);
-    menu->addChild(p2MainStart);
-    
-    auto p2MainEnd = createColorPickerButton("p2-main-particles-end", {midX + colOffset + colBtnGap, currentY}, true);
-    menu->addChild(p2MainEnd);
-    
-    // indicator labels
-    auto s1 = CCLabelBMFont::create("S", "modernMain.fnt"_spr);
-    s1->setPosition({midX - colOffset - colBtnGap, currentY});
-    s1->setScale(0.45f);
-    s1->setOpacity(50);
-    labels->addChild(s1);
-    
-    auto e1 = CCLabelBMFont::create("E", "modernMain.fnt"_spr);
-    e1->setPosition({midX - colOffset + colBtnGap, currentY});
-    e1->setScale(0.45f);
-    e1->setOpacity(50);
-    labels->addChild(e1);
-    
-    auto s2 = CCLabelBMFont::create("S", "modernMain.fnt"_spr);
-    s2->setPosition({midX + colOffset - colBtnGap, currentY});
-    s2->setScale(0.45f);
-    s2->setOpacity(50);
-    labels->addChild(s2);
-    
-    auto e2 = CCLabelBMFont::create("E", "modernMain.fnt"_spr);
-    e2->setPosition({midX + colOffset + colBtnGap, currentY});
-    e2->setScale(0.45f);
-    e2->setOpacity(50);
-    labels->addChild(e2);
-    
-    currentY -= 55.0f;
-    
-    // UFO click section
-    auto ufoLabel1 = CCLabelBMFont::create("UFO Click", "modernMain.fnt"_spr);
-    ufoLabel1->setPosition({midX - colOffset, currentY});
-    ufoLabel1->setScale(0.45f);
-    ufoLabel1->setOpacity(200);
-    labels->addChild(ufoLabel1);
-    
-    auto ufoT1 = createToggler("tint-ufo-click-particles-p1", {midX - colOffset + 50.0f, currentY});
-    ufoT1->setScale(0.7f);
-    menu->addChild(ufoT1);
-    
-    auto ufoLabel2 = CCLabelBMFont::create("UFO Click", "modernMain.fnt"_spr);
-    ufoLabel2->setPosition({midX + colOffset, currentY});
-    ufoLabel2->setScale(0.45f);
-    ufoLabel2->setOpacity(200);
-    labels->addChild(ufoLabel2);
-    
-    auto ufoT2 = createToggler("tint-ufo-click-particles-p2", {midX + colOffset + 50.0f, currentY});
-    ufoT2->setScale(0.7f);
-    menu->addChild(ufoT2);
-    
-    currentY -= 35.0f;
-    
-    // UFO color buttons
-    auto p1UfoStart = createColorPickerButton("p1-ufo-click-particles-start", {midX - colOffset - colBtnGap, currentY}, true);
-    menu->addChild(p1UfoStart);
-    
-    auto p1UfoEnd = createColorPickerButton("p1-ufo-click-particles-end", {midX - colOffset + colBtnGap, currentY}, true);
-    menu->addChild(p1UfoEnd);
-    
-    auto p2UfoStart = createColorPickerButton("p2-ufo-click-particles-start", {midX + colOffset - colBtnGap, currentY}, true);
-    menu->addChild(p2UfoStart);
-    
-    auto p2UfoEnd = createColorPickerButton("p2-ufo-click-particles-end", {midX + colOffset + colBtnGap, currentY}, true);
-    menu->addChild(p2UfoEnd);
-    
-    // indicator labels
-    auto s3 = CCLabelBMFont::create("S", "modernMain.fnt"_spr);
-    s3->setPosition({midX - colOffset - colBtnGap, currentY});
-    s3->setScale(0.45f);
-    s3->setOpacity(50);
-    labels->addChild(s3);
-    
-    auto e3 = CCLabelBMFont::create("E", "modernMain.fnt"_spr);
-    e3->setPosition({midX - colOffset + colBtnGap, currentY});
-    e3->setScale(0.45f);
-    e3->setOpacity(50);
-    labels->addChild(e3);
-    
-    auto s4 = CCLabelBMFont::create("S", "modernMain.fnt"_spr);
-    s4->setPosition({midX + colOffset - colBtnGap, currentY});
-    s4->setScale(0.45f);
-    s4->setOpacity(50);
-    labels->addChild(s4);
-    
-    auto e4 = CCLabelBMFont::create("E", "modernMain.fnt"_spr);
-    e4->setPosition({midX + colOffset + colBtnGap, currentY});
-    e4->setScale(0.45f);
-    e4->setOpacity(50);
-    labels->addChild(e4);
-}
-
-CCMenuItemSpriteExtra* ModernSettingsPopup::createNavButton(const std::string& labelText) {
-    const float buttonWidth = 70.0f;
-    const float buttonHeight = 28.0f;
-    
-    // btn bg
-    auto buttonBG = CCScale9Sprite::create("modernButton01.png"_spr);
-    buttonBG->setContentSize({buttonWidth, buttonHeight});
-    
-    // label
-    auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
-    label->setPosition({buttonWidth / 2.0f, buttonHeight / 2.0f});
-    label->setScale(0.4f);
-    label->setOpacity(200);
-    buttonBG->addChild(label);
-    
-    // the button (real)
-    auto button = CCMenuItemSpriteExtra::create(
-        buttonBG,
-        this,
-        menu_selector(ModernSettingsPopup::onNavButton)
+    // === PLAYER 1 COLUMN ===
+    auto p1Column = CCNode::create();
+    p1Column->setContentSize({0, 0});
+    p1Column->setLayout(
+        ColumnLayout::create()
+            ->setGap(6.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
     );
     
-    return button;
+    auto p1Header = CCLabelBMFont::create("Player 1", "modernBold.fnt"_spr);
+    p1Header->setScale(0.42f);
+    p1Header->setOpacity(220);
+    p1Column->addChild(p1Header);
+    
+    // main particles
+    p1Column->addChild(createSectionTitle("Main Particles"));
+    p1Column->addChild(createParticleToggleRow("Enable", "tint-mainparticles-p1", 140.0f));
+    p1Column->addChild(createColorPairRow("p1-main-particles-start", "p1-main-particles-end", 140.0f));
+    
+    auto spacer1 = CCNode::create();
+    spacer1->setContentSize({1, 10});
+    p1Column->addChild(spacer1);
+    
+    // UFO click
+    p1Column->addChild(createSectionTitle("UFO Click"));
+    p1Column->addChild(createParticleToggleRow("Enable", "tint-ufo-click-particles-p1", 140.0f));
+    p1Column->addChild(createColorPairRow("p1-ufo-click-particles-start", "p1-ufo-click-particles-end", 140.0f));
+    
+    p1Column->updateLayout();
+    m_contentContainer->addChild(p1Column);
+    
+    // === PLAYER 2 COLUMN ===
+    auto p2Column = CCNode::create();
+    p2Column->setContentSize({0, 0});
+    p2Column->setLayout(
+        ColumnLayout::create()
+            ->setGap(6.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto p2Header = CCLabelBMFont::create("Player 2", "modernBold.fnt"_spr);
+    p2Header->setScale(0.42f);
+    p2Header->setOpacity(220);
+    p2Column->addChild(p2Header);
+    
+    // main particles
+    p2Column->addChild(createSectionTitle("Main Particles"));
+    p2Column->addChild(createParticleToggleRow("Enable", "tint-mainparticles-p2", 140.0f));
+    p2Column->addChild(createColorPairRow("p2-main-particles-start", "p2-main-particles-end", 140.0f));
+    
+    auto spacer2 = CCNode::create();
+    spacer2->setContentSize({1, 10});
+    p2Column->addChild(spacer2);
+    
+    // UFO click
+    p2Column->addChild(createSectionTitle("UFO Click"));
+    p2Column->addChild(createParticleToggleRow("Enable", "tint-ufo-click-particles-p2", 140.0f));
+    p2Column->addChild(createColorPairRow("p2-ufo-click-particles-start", "p2-ufo-click-particles-end", 140.0f));
+    
+    p2Column->updateLayout();
+    m_contentContainer->addChild(p2Column);
+    
+    m_contentContainer->updateLayout();
 }
 
-void ModernSettingsPopup::onNavButton(CCObject* sender) {
-    geode::log::info("Nav button clicked");
-    // still not sure abt this
+void ModernSettingsPopup::buildLegacyContent() {
+    auto size = m_contentArea->getContentSize();
+    
+    m_contentContainer = CCNode::create();
+    m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
+    m_contentContainer->setPosition({15.0f, 10.0f});
+    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setLayout(
+        RowLayout::create()
+            ->setGap(20.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    m_contentArea->addChild(m_contentContainer);
+    
+    // === LEFT COLUMN ===
+    auto leftColumn = CCNode::create();
+    leftColumn->setContentSize({0, 0});
+    leftColumn->setLayout(
+        ColumnLayout::create()
+            ->setGap(6.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    leftColumn->addChild(createSectionTitle("Legacy Trail"));
+    leftColumn->addChild(createLabelToggleRow("Enable", "use-legacytrail", 140.0f, 0.35f, 0.6f));
+    leftColumn->addChild(createLabelSliderRow("Max Points", "max-points", 140.0f, 0.32f));
+    leftColumn->addChild(createLabelSliderRow("Segment Tuner", "segment-tuner", 140.0f, 0.32f));
+    leftColumn->addChild(createLabelSliderRow("Pos Skip Rate", "pos-skip-rate", 140.0f, 0.32f));
+    
+    leftColumn->updateLayout();
+    m_contentContainer->addChild(leftColumn);
+    
+    // === RIGHT COLUMN ===
+    auto rightColumn = CCNode::create();
+    rightColumn->setContentSize({0, 0});
+    rightColumn->setLayout(
+        ColumnLayout::create()
+            ->setGap(6.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    rightColumn->addChild(createSectionTitle("Legacy Pulse"));
+    rightColumn->addChild(createLabelToggleRow("Enable", "legacy-pulse", 140.0f, 0.35f, 0.6f));
+    rightColumn->addChild(createLabelSliderRow("Pulse FPS", "pulse-fps", 140.0f, 0.32f));
+    
+    auto spacer1 = CCNode::create();
+    spacer1->setContentSize({1, 8});
+    rightColumn->addChild(spacer1);
+    
+    rightColumn->addChild(createSectionTitle("Misc"));
+    rightColumn->addChild(createLabelToggleRow("No Mirror", "nomirror", 140.0f, 0.32f, 0.55f));
+    rightColumn->addChild(createLabelToggleRow("Ball Rotation Bug", "ballrot-bug", 140.0f, 0.32f, 0.55f));
+    
+    rightColumn->updateLayout();
+    m_contentContainer->addChild(rightColumn);
+    
+    m_contentContainer->updateLayout();
 }
 
 CCNode* ModernSettingsPopup::createSectionTitle(const std::string& title) {
-    auto node = CCNode::create();
-    node->setContentSize({400.0f, 25.0f});
+    auto titleLabel = CCLabelBMFont::create(title.c_str(), "modernBold.fnt"_spr);
+    titleLabel->setScale(0.38f);
+    titleLabel->setOpacity(200);
+    titleLabel->setAnchorPoint({0, 0.5f});
+    return titleLabel;
+}
+
+CCNode* ModernSettingsPopup::createSectionTitleWithToggle(const std::string& title, const std::string& settingId, float width) {
+    auto container = CCNode::create();
+    container->setContentSize({width, 16.0f});
+    container->setLayout(
+        RowLayout::create()
+            ->setGap(5.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
     
-    auto label = CCLabelBMFont::create(title.c_str(), "modernBold.fnt"_spr);
-    label->setPosition({200.0f, 12.5f});
-    label->setScale(0.55f);
-    label->setOpacity(220);
-    node->addChild(label);
+    auto titleLabel = CCLabelBMFont::create(title.c_str(), "modernBold.fnt"_spr);
+    titleLabel->setScale(0.38f);
+    titleLabel->setOpacity(200);
+    titleLabel->setAnchorPoint({0, 0.5f});
+    container->addChild(titleLabel);
     
-    return node;
+    auto menu = CCMenu::create();
+    menu->setContentSize({20, 16});
+    menu->setLayout(AnchorLayout::create());
+    
+    auto toggler = createToggler(settingId, {0, 0});
+    toggler->setScale(0.55f);
+    toggler->setLayoutOptions(
+        AnchorLayoutOptions::create()
+            ->setAnchor(Anchor::Center)
+    );
+    menu->addChild(toggler);
+    menu->updateLayout();
+    
+    container->addChild(menu);
+    container->updateLayout();
+    
+    return container;
+}
+
+CCNode* ModernSettingsPopup::createSection(const std::string& title, float width) {
+    auto section = CCNode::create();
+    section->setContentSize({width, 0});
+    section->setLayout(
+        ColumnLayout::create()
+            ->setGap(5.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setCrossAxisAlignment(AxisAlignment::Start)
+            ->setGrowCrossAxis(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto titleLabel = CCLabelBMFont::create(title.c_str(), "modernBold.fnt"_spr);
+    titleLabel->setScale(0.4f);
+    titleLabel->setOpacity(200);
+    titleLabel->setAnchorPoint({0, 0.5f});
+    section->addChild(titleLabel);
+    
+    return section;
+}
+
+CCNode* ModernSettingsPopup::createLabelToggleRow(const std::string& labelText, const std::string& settingId, float width, float labelScale, float toggleScale) {
+    auto menu = CCMenu::create();
+    menu->setContentSize({width, 16.0f});
+    menu->setLayout(
+        RowLayout::create()
+            ->setAxisAlignment(AxisAlignment::Between)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    
+    auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
+    label->setScale(labelScale);
+    label->setOpacity(190);
+    label->setAnchorPoint({0, 0.5f});
+    menu->addChild(label);
+    
+    auto toggler = createToggler(settingId, {0, 0});
+    toggler->setScale(toggleScale);
+    menu->addChild(toggler);
+    
+    menu->updateLayout();
+    
+    return menu;
+}
+
+CCNode* ModernSettingsPopup::createLabelSliderRow(const std::string& labelText, const std::string& settingId, float width, float labelScale) {
+    auto row = CCNode::create();
+    row->setContentSize({width, 32.0f});
+    row->setAnchorPoint({0.5f, 0.5f});
+    row->setLayout(
+        RowLayout::create()
+            ->setGap(10.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(false)
+            ->setCrossAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
+    label->setScale(labelScale);
+    label->setOpacity(180);
+    label->setAnchorPoint({0, 0.5f});
+    row->addChild(label);
+    
+    auto menu = CCMenu::create();
+    menu->setContentSize({width, 18.0f});
+    menu->setPosition({0, 0});
+    menu->setScale(0.55f);
+    menu->setLayout(
+        AnchorLayout::create()
+    );
+    
+    auto slider = createSlider(settingId, {0, 0}, width - 5.0f);
+    slider->setAnchorPoint({0.5f, 0.5f});
+    slider->setLayoutOptions(
+        AnchorLayoutOptions::create()
+            ->setAnchor(Anchor::Center)
+    );
+
+    menu->addChild(slider);
+    
+    row->addChild(menu);
+    menu->updateLayout();
+    
+    auto valueLabel = CCLabelBMFont::create("0.0", "modernMain.fnt"_spr);
+    valueLabel->setScale(0.25f);
+    valueLabel->setOpacity(130);
+    valueLabel->setAnchorPoint({0, 0.5f});
+    row->addChild(valueLabel);
+    
+    m_valueLabels[slider->getTag()] = valueLabel;
+    
+    // update initial values
+    float value = 0;
+    if (settingId == "random-delay") {
+        float value = Mod::get()->getSettingValue<double>(settingId);
+        valueLabel->setString((std::to_string(value).substr(0, 4) + "s").c_str());
+    } else if (settingId == "max-points") {
+        int value = Mod::get()->getSettingValue<int64_t>(settingId);
+        valueLabel->setString(std::to_string(value).c_str());
+    } else if (settingId == "pos-skip-rate") {
+        int value = Mod::get()->getSettingValue<int64_t>(settingId);
+        valueLabel->setString(std::to_string(value).c_str());
+    } else if (settingId == "pulse-fps") {
+        int value = Mod::get()->getSettingValue<int64_t>(settingId);
+        valueLabel->setString(std::to_string(value).c_str());
+    } else {
+        float value = Mod::get()->getSettingValue<double>(settingId);
+        valueLabel->setString(std::to_string(value).substr(0, 4).c_str());
+    }
+    
+    row->updateLayout();
+    
+    return row;
+}
+
+CCNode* ModernSettingsPopup::createParticleToggleRow(const std::string& labelText, const std::string& settingId, float width) {
+    auto menu = CCMenu::create();
+    menu->setContentSize({width * 0.6f, 16.0f});
+    menu->setLayout(
+        RowLayout::create()
+            ->setAxisAlignment(AxisAlignment::Even)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    
+    auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
+    label->setScale(0.35f);
+    label->setOpacity(190);
+    label->setAnchorPoint({0, 0.5f});
+    menu->addChild(label);
+    
+    auto toggler = createToggler(settingId, {0, 0});
+    toggler->setScale(0.6f);
+    menu->addChild(toggler);
+    
+    menu->updateLayout();
+    
+    return menu;
+}
+
+CCNode* ModernSettingsPopup::createLabelColorRow(const std::string& labelText, const std::string& colorSettingId, float width, const std::string& toggleSettingId, float labelScale) {
+    auto menu = CCMenu::create();
+    menu->setContentSize({width, 18.0f});
+    menu->setLayout(
+        RowLayout::create()
+            ->setAxisAlignment(AxisAlignment::Between)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    
+    auto leftSide = CCNode::create();
+    leftSide->setContentSize({0, 18.0f});
+    leftSide->setLayout(
+        RowLayout::create()
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
+    label->setScale(labelScale);
+    label->setOpacity(170);
+    label->setAnchorPoint({0, 0.5f});
+    leftSide->addChild(label);
+    
+    auto colorBtn = createColorPickerButton(colorSettingId, {0, 0}, false);
+    colorBtn->setScale(0.45f);
+    leftSide->addChild(colorBtn);
+    
+    leftSide->updateLayout();
+    menu->addChild(leftSide);
+    
+    if (!toggleSettingId.empty()) {
+        auto toggler = createToggler(toggleSettingId, {0, 0});
+        toggler->setScale(0.5f);
+        menu->addChild(toggler);
+    } else {
+        auto spacer = CCNode::create();
+        spacer->setContentSize({15, 15});
+        menu->addChild(spacer);
+    }
+    
+    menu->updateLayout();
+    
+    return menu;
+}
+
+CCNode* ModernSettingsPopup::createParticleColorPair(const std::string& toggleSettingId, const std::string& startColorId, const std::string& endColorId, float width) {
+    auto container = CCNode::create();
+    container->setContentSize({width, 45.0f});
+    container->setLayout(
+        ColumnLayout::create()
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisReverse(true)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto toggleRow = createLabelToggleRow("Enable", toggleSettingId, width, 0.35f, 0.6f);
+    container->addChild(toggleRow);
+    
+    auto colorRow = createColorPairRow(startColorId, endColorId, width);
+    container->addChild(colorRow);
+    
+    container->updateLayout();
+    
+    return container;
+}
+
+CCNode* ModernSettingsPopup::createColorPairRow(const std::string& startColorId, const std::string& endColorId, float width) {
+    auto menu = CCMenu::create();
+    menu->setContentSize({width * 0.6f, 20.0f});
+    menu->setLayout(
+        RowLayout::create()
+            ->setGap(10.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    
+    auto startContainer = CCNode::create();
+    startContainer->setContentSize({0, 20});
+    startContainer->setLayout(
+        RowLayout::create()
+            ->setGap(3.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto sLabel = CCLabelBMFont::create("S", "modernMain.fnt"_spr);
+    sLabel->setScale(0.35f);
+    sLabel->setOpacity(160);
+    startContainer->addChild(sLabel);
+    
+    auto startBtn = createColorPickerButton(startColorId, {0, 0}, true);
+    startBtn->setScale(0.48f);
+    startContainer->addChild(startBtn);
+    
+    startContainer->updateLayout();
+    menu->addChild(startContainer);
+    
+    auto endContainer = CCNode::create();
+    endContainer->setContentSize({0, 20});
+    endContainer->setLayout(
+        RowLayout::create()
+            ->setGap(3.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    
+    auto eLabel = CCLabelBMFont::create("E", "modernMain.fnt"_spr);
+    eLabel->setScale(0.35f);
+    eLabel->setOpacity(160);
+    endContainer->addChild(eLabel);
+    
+    auto endBtn = createColorPickerButton(endColorId, {0, 0}, true);
+    endBtn->setScale(0.48f);
+    endContainer->addChild(endBtn);
+    
+    endContainer->updateLayout();
+    menu->addChild(endContainer);
+    
+    menu->updateLayout();
+    
+    return menu;
 }
 
 CCMenuItemToggler* ModernSettingsPopup::createToggler(std::string settingId, CCPoint position) {
@@ -1038,34 +1105,27 @@ CCMenuItemToggler* ModernSettingsPopup::createToggler(std::string settingId, CCP
     return toggler;
 }
 
-CCMenuItemSprite* ModernSettingsPopup::createRadioButton(std::string settingId, CCPoint position) {
-    auto offSprite = CCSprite::createWithSpriteFrameName("modernRadioOff.png"_spr);
-    auto onSprite = CCSprite::createWithSpriteFrameName("modernRadioOn.png"_spr);
-    
-    auto radio = CCMenuItemSprite::create(offSprite, onSprite, this, menu_selector(ModernSettingsPopup::onRadioButton));
-    radio->setPosition(position);
-    
-    int tag = static_cast<int>(std::hash<std::string>{}(settingId));
-    radio->setTag(tag);
-    this->m_tagToSetting[tag] = settingId;
-    
-    bool initial = Mod::get()->getSettingValue<bool>(settingId);
-    if (initial) {
-        radio->selected();
-    } else {
-        radio->unselected();
-    }
-    
-    radio->setUserObject(CCString::create(settingId));
-    
-    return radio;
-}
-
 Slider* ModernSettingsPopup::createSlider(std::string settingId, CCPoint position, float width) {
-    auto slider = Slider::create(this, menu_selector(ModernSettingsPopup::onSlider), 0.75f);
+    std::string grooveSprite = "modernSliderGroove.png"_spr;
+    std::string barSprite = "modernSliderBar.png"_spr;
+    std::string thumbSprite = "modernThumb.png"_spr;
+    std::string thumbSelSprite = "modernThumbSel.png"_spr;
+
+    auto okBroWhatever = CCSprite::create(barSprite.c_str());
+
+    auto slider = Slider::create(
+        this, 
+        menu_selector(ModernSettingsPopup::onSlider), 
+        barSprite.c_str(),
+        grooveSprite.c_str(),
+        thumbSprite.c_str(),
+        thumbSelSprite.c_str(),
+        0.75f
+    );
     auto m_thumb = slider->getThumb();
     slider->setPosition(position);
     slider->m_sliderBar->setContentSize({width, slider->m_sliderBar->getContentSize().height});
+    slider->m_sliderBar->setDisplayFrame(okBroWhatever->displayFrame());
     slider->setUserObject(CCString::create(settingId));
     
     int tag = static_cast<int>(std::hash<std::string>{}(settingId));
@@ -1093,12 +1153,24 @@ Slider* ModernSettingsPopup::createSlider(std::string settingId, CCPoint positio
     } else if (settingId == "p2-distance") {
         float value = Mod::get()->getSettingValue<double>(settingId);
         slider->setValue(value);
+    } else if (settingId == "max-points") {
+        int value = Mod::get()->getSettingValue<int64_t>(settingId);
+        slider->setValue((value - 2.0f) / (20.0f - 2.0f));
+    } else if (settingId == "segment-tuner") {
+        float value = Mod::get()->getSettingValue<double>(settingId);
+        slider->setValue((value - 0.1f) / (10.0f - 0.1f));
+    } else if (settingId == "pos-skip-rate") {
+        int value = Mod::get()->getSettingValue<int64_t>(settingId);
+        slider->setValue((value - 1.0f) / (50.0f - 1.0f));
+    } else if (settingId == "pulse-fps") {
+        int value = Mod::get()->getSettingValue<int64_t>(settingId);
+        slider->setValue((value - 60.0f) / (1080.0f - 60.0f));
     }
     
     return slider;
 }
 
-CCMenuItemSpriteExtra* ModernSettingsPopup::createColorPickerButton(const std::string& settingId, CCPoint position, bool is4B) {
+CCMenu* ModernSettingsPopup::createColorPickerButton(const std::string& settingId, CCPoint position, bool is4B) {
     auto colorSprite = CCSprite::createWithSpriteFrameName("GJ_colorBtn_001.png");
     
     if (is4B) {
@@ -1117,14 +1189,23 @@ CCMenuItemSpriteExtra* ModernSettingsPopup::createColorPickerButton(const std::s
         menu_selector(ModernSettingsPopup::onColorPicker)
     );
     
-    button->setPosition(position);
-    button->setUserObject(CCString::create(settingId));
+    button->setPosition({0, 0});
     
-    int tag = static_cast<int>(std::hash<std::string>{}(settingId));
-    if (is4B) tag |= (1 << 31);
-    button->setTag(tag);
+    button->setUserObject("setting-id"_spr, CCString::create(settingId));
+    button->setUserObject("is-4b"_spr, CCBool::create(is4B));
     
-    return button;
+    auto menu = CCMenu::create();
+    menu->setLayout(
+        RowLayout::create()
+            ->setAxisAlignment(AxisAlignment::Center)
+            ->setCrossAxisAlignment(AxisAlignment::Center)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+    );
+    menu->addChild(button);
+    menu->updateLayout();
+    
+    return menu;
 }
 
 void ModernSettingsPopup::onToggle(CCObject* sender) {
@@ -1155,45 +1236,7 @@ void ModernSettingsPopup::onToggle(CCObject* sender) {
         Mod::get()->setSettingValue<bool>("cond-ic-randomizer", false);
     }
 
-    geode::log::debug("ModernUI: toggled {} -> {}", settingIdStr, newValue ? "true" : "false");
-}
-
-void ModernSettingsPopup::onRadioButton(CCObject* sender) {
-    auto radio = static_cast<CCMenuItemSprite*>(sender);
-    if (!radio) return;
-    
-    std::string settingIdStr;
-    int tag = radio->getTag();
-    auto it = this->m_tagToSetting.find(tag);
-    if (it != this->m_tagToSetting.end()) {
-        settingIdStr = it->second;
-    } else {
-        auto obj = radio->getUserObject();
-        if (!obj) return;
-        if (auto cs = typeinfo_cast<CCString*>(obj)) {
-            settingIdStr = std::string(cs->getCString());
-        } else {
-            return;
-        }
-    }
-    
-    bool currentValue = Mod::get()->getSettingValue<bool>(settingIdStr);
-    bool newValue = !currentValue;
-    Mod::get()->setSettingValue<bool>(settingIdStr, newValue);
-    
-    if (newValue) {
-        radio->selected();
-    } else {
-        radio->unselected();
-    }
-    
-    if (settingIdStr == "rgb-col1" && newValue) {
-        Mod::get()->setSettingValue<bool>("rgb-col2", false);
-    } else if (settingIdStr == "rgb-col2" && newValue) {
-        Mod::get()->setSettingValue<bool>("rgb-col1", false);
-    }
-    
-    geode::log::debug("ModernUI: radio {} -> {}", settingIdStr, newValue ? "on" : "off");
+    log::info("ModernUI: toggled {} -> {}", settingIdStr, newValue ? "true" : "false");
 }
 
 void ModernSettingsPopup::onSlider(CCObject* sender) {
@@ -1263,6 +1306,31 @@ void ModernSettingsPopup::onSlider(CCObject* sender) {
             std::string t = std::to_string(value).substr(0,4);
             this->m_valueLabels[tag]->setString(t.c_str());
         }
+    } else if (settingIdStr == "max-points") {
+        int mapped = 2 + (int)(value * (20 - 2));
+        Mod::get()->setSettingValue<int64_t>(settingIdStr, mapped);
+        if (this->m_valueLabels.count(tag)) {
+            this->m_valueLabels[tag]->setString(std::to_string(mapped).c_str());
+        }
+    } else if (settingIdStr == "segment-tuner") {
+        float mapped = 0.1f + value * (10.0f - 0.1f);
+        Mod::get()->setSettingValue<double>(settingIdStr, mapped);
+        if (this->m_valueLabels.count(tag)) {
+            std::string t = std::to_string(mapped).substr(0,4);
+            this->m_valueLabels[tag]->setString(t.c_str());
+        }
+    } else if (settingIdStr == "pos-skip-rate") {
+        int mapped = 1 + (int)(value * (50 - 1));
+        Mod::get()->setSettingValue<int64_t>(settingIdStr, mapped);
+        if (this->m_valueLabels.count(tag)) {
+            this->m_valueLabels[tag]->setString(std::to_string(mapped).c_str());
+        }
+    } else if (settingIdStr == "pulse-fps") {
+        int mapped = 60 + (int)(value * (1080 - 60));
+        Mod::get()->setSettingValue<int64_t>(settingIdStr, mapped);
+        if (this->m_valueLabels.count(tag)) {
+            this->m_valueLabels[tag]->setString(std::to_string(mapped).c_str());
+        }
     }
 }
 
@@ -1270,29 +1338,32 @@ void ModernSettingsPopup::onColorPicker(CCObject* sender) {
     auto menuItem = static_cast<CCMenuItemSpriteExtra*>(sender);
     if (!menuItem) return;
     
-    auto userObj = menuItem->getUserObject();
-    if (!userObj) return;
+    auto settingIdObj = typeinfo_cast<CCString*>(menuItem->getUserObject("setting-id"_spr));
+    if (!settingIdObj) return;
     
-    auto settingIdStr = typeinfo_cast<CCString*>(userObj);
-    if (!settingIdStr) return;
+    auto is4BObj = typeinfo_cast<CCBool*>(menuItem->getUserObject("is-4b"_spr));
+    if (!is4BObj) return;
     
-    m_currentColorSettingId = std::string(settingIdStr->getCString());
+    m_currentColorSettingId = std::string(settingIdObj->getCString());
+    m_isColor4B = is4BObj->getValue();
     m_currentButtonSprite = typeinfo_cast<CCSprite*>(menuItem->getNormalImage());
     
-    int tag = menuItem->getTag();
-    m_isColor4B = (tag & (1 << 31)) != 0;
+    log::info("Opening color picker for: {} (is4B: {})", m_currentColorSettingId, m_isColor4B);
     
-    cocos2d::ccColor4B currentColor;
+    geode::ColorPickPopup* colorPopup = nullptr;
+    
     if (m_isColor4B) {
-        currentColor = Mod::get()->getSettingValue<cocos2d::ccColor4B>(m_currentColorSettingId);
+        auto currentColor = Mod::get()->getSettingValue<cocos2d::ccColor4B>(m_currentColorSettingId);
+        colorPopup = geode::ColorPickPopup::create(currentColor);
     } else {
-        auto color3B = Mod::get()->getSettingValue<cocos2d::ccColor3B>(m_currentColorSettingId);
-        currentColor = {color3B.r, color3B.g, color3B.b, 255};
+        auto currentColor = Mod::get()->getSettingValue<cocos2d::ccColor3B>(m_currentColorSettingId);
+        colorPopup = geode::ColorPickPopup::create(currentColor);
     }
     
-    auto colorPopup = geode::ColorPickPopup::create(currentColor);
-    colorPopup->setDelegate(this);
-    colorPopup->show();
+    if (colorPopup) {
+        colorPopup->setDelegate(this);
+        colorPopup->show();
+    }
 }
 
 void ModernSettingsPopup::updateColor(cocos2d::ccColor4B const& color) {
@@ -1300,15 +1371,20 @@ void ModernSettingsPopup::updateColor(cocos2d::ccColor4B const& color) {
     
     if (m_isColor4B) {
         Mod::get()->setSettingValue<cocos2d::ccColor4B>(m_currentColorSettingId, color);
+        log::info("Saved 4B color {} to ({}, {}, {}, {})", 
+            m_currentColorSettingId, color.r, color.g, color.b, color.a);
     } else {
         cocos2d::ccColor3B color3B = {color.r, color.g, color.b};
         Mod::get()->setSettingValue<cocos2d::ccColor3B>(m_currentColorSettingId, color3B);
+        log::info("Saved 3B color {} to ({}, {}, {})", 
+            m_currentColorSettingId, color.r, color.g, color.b);
     }
     
     if (m_currentButtonSprite) {
         m_currentButtonSprite->setColor({color.r, color.g, color.b});
     }
-    
-    geode::log::debug("ModernUI: Updated {} to ({}, {}, {}, {})", 
-        m_currentColorSettingId, color.r, color.g, color.b, color.a);
+}
+
+void ModernSettingsPopup::onModSettings(CCObject*) {
+    geode::openSettingsPopup(Mod::get());
 }
