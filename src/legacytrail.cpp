@@ -21,7 +21,7 @@ $on_mod(Loaded){
 class $modify(LegacyTrailCCMSHook, cocos2d::CCMotionStreak) {
 	struct Fields {
 		int positionUpdateCounter = 0;
-		CCPoint lastSetPosition = {0, 0};
+		CCPoint lastAcceptedPosition = {0, 0};
 		bool hasStoredPosition = false;
 	};
 
@@ -72,32 +72,29 @@ class $modify(LegacyTrailCCMSHook, cocos2d::CCMotionStreak) {
 
 		return true;
 	}
-	
-	/*
-	void update(float delta) {
-		if (!isLegacyTrailEnabled || Mod::get()->getSettingValue<int>("pos-skip-rate") <= 1.0f) {
-			CCMotionStreak::update(delta);
+
+	void setPosition(const CCPoint& position) {
+		if (!isLegacyTrailEnabled || Mod::get()->getSettingValue<int64_t>("pos-skip-rate") <= 1.0f) {
+			CCMotionStreak::setPosition(position);
 			return;
 		}
 
 		auto fld = m_fields.self();
-		auto pl = PlayLayer::get();
-		if (!pl) return;
 		
 		fld->positionUpdateCounter++;
-		int skipRate = Mod::get()->getSettingValue<int>("pos-skip-rate");
+		int skipRate = Mod::get()->getSettingValue<int64_t>("pos-skip-rate");
 		
-		if (fld->positionUpdateCounter % skipRate != 0 && fld->hasStoredPosition) {
-			CCPoint parent = this->getParent()->getPosition();
-			this->getParent()->setPosition(fld->lastSetPosition);
-			CCMotionStreak::update(delta);
-			this->getParent()->setPosition(parent);
-		} else {
-			fld->lastSetPosition = this->getParent()->getPosition();
+		// Only accept new positions every Nth call
+		if (fld->positionUpdateCounter % skipRate == 0) {
+			fld->lastAcceptedPosition = position;
 			fld->hasStoredPosition = true;
-			CCMotionStreak::update(delta);
+			CCMotionStreak::setPosition(position);
+			log::info("updating with normal pos");
+		} else if (fld->hasStoredPosition) {
+			// Keep feeding the trail the old position
+			CCMotionStreak::setPosition(fld->lastAcceptedPosition);
+			log::info("updating with OLD pos");
 		}
 	}
-	*/
 	
 };
