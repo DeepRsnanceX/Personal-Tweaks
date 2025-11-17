@@ -81,10 +81,7 @@ std::string getIconTypeName(IconType type) {
 
 std::string getCurrentTimeString() {
     auto now = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time_t), "%Y%m%d_%H%M%S");
-    return ss.str();
+    return fmt::format("{:%Y%m%d_%H%M%S}", now);
 }
 
 CCImage* getIconImage(SimplePlayer* player) {

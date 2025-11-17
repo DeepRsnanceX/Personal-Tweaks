@@ -1,4 +1,5 @@
 #include "BlurLayer.hpp"
+#include <Geode/modify/CCEGLView.hpp>
 
 // Sarah cuando le preguntan si ella hizo todo esto:
 //          no             xdxdxd   xd
@@ -191,7 +192,6 @@ void BlurLayer::setupShaders() {
     ccGLUseProgram(s_program);
     glUniform1i(glGetUniformLocation(s_program, "screen"), 0);
     glUniform2f(glGetUniformLocation(s_program, "screenSize"), size.width, size.height);
-    s_uniformFast = glGetUniformLocation(s_program, "fast");
     s_uniformFirst = glGetUniformLocation(s_program, "first");
     s_uniformRadius = glGetUniformLocation(s_program, "radius");
     
@@ -262,7 +262,6 @@ void BlurLayer::cleanupShaders() {
     s_vao = 0;
     s_vbo = 0;
     s_program = 0;
-    s_uniformFast = 0;
     s_uniformFirst = 0;
     s_uniformRadius = 0;
 }
@@ -284,3 +283,28 @@ void BlurLayer::cleanupRenderTextures() {
 BlurLayer::~BlurLayer() {
     // si
 }
+
+
+class $modify(BlurCCEGLView, CCEGLView) {
+    void setFrameSize(float width, float height) {
+        CCEGLView::setFrameSize(width, height);
+        
+        // Recreate render textures with new size
+        if (BlurLayer::s_initialized) {
+            Loader::get()->queueInMainThread([] {
+                BlurLayer::cleanupRenderTextures();
+                
+                auto size = CCDirector::get()->getOpenGLView()->getFrameSize();
+                BlurLayer::setupRenderTextures((GLsizei)size.width, (GLsizei)size.height);
+                
+                // Update screen size uniform
+                ccGLUseProgram(BlurLayer::s_program);
+                glUniform2f(glGetUniformLocation(BlurLayer::s_program, "screenSize"), 
+                           size.width, size.height);
+                
+                log::info("Blur textures recreated for new window size: {}x{}", 
+                         size.width, size.height);
+            });
+        }
+    }
+};
