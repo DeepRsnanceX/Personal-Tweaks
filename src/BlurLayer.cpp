@@ -57,6 +57,7 @@ void main() {
 }
 )";
 
+#ifndef GEODE_IS_ANDROID
 BlurLayer* BlurLayer::create() {
     auto ret = new BlurLayer();
     if (ret && ret->init()) {
@@ -304,3 +305,4 @@ class $modify(BlurCCEGLView, CCEGLView) {
         }
     }
 };
+#endif

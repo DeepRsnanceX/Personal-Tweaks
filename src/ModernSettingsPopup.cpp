@@ -51,7 +51,7 @@ bool ModernSettingsPopup::setup() {
     
     optMenu->addChild(optBtn);
     optMenu->setScale(0.8f);
-    optMenu->setPosition({10.f, 10.f});
+    optMenu->setPosition({5.f, 5.f});
     this->m_mainLayer->addChild(optMenu);
     
     return true;
@@ -122,6 +122,7 @@ void ModernSettingsPopup::setupSidebar() {
         normalIcon->setScale(0.7f);
         normalContent->addChild(normalIcon);
         
+        // @geode-ignore(unknown-resource)
         auto normalLabel = CCLabelBMFont::create(labelText.c_str(), "modernBold.fnt"_spr);
         normalLabel->setScale(0.35f);
         normalLabel->setAnchorPoint({0.5f, 0.45f});
@@ -145,6 +146,7 @@ void ModernSettingsPopup::setupSidebar() {
         selectedIcon->setScale(0.7f);
         selectedContent->addChild(selectedIcon);
         
+        // @geode-ignore(unknown-resource)
         auto selectedLabel = CCLabelBMFont::create(labelText.c_str(), "modernBold.fnt"_spr);
         selectedLabel->setScale(0.35f);
         selectedLabel->setAnchorPoint({0.5f, 0.45f});
@@ -203,7 +205,7 @@ void ModernSettingsPopup::setupSidebar() {
             menu_selector(ModernSettingsPopup::onCategoryButton)
         );
         button->setTag(static_cast<int>(data.category));
-        button->setID((data.iconName + "-btn").c_str());
+        button->setID((data.labelText + "-btn").c_str());
         button->setScale(0.8f);
         
         menu->addChild(button);
@@ -235,6 +237,7 @@ void ModernSettingsPopup::setupContentArea() {
     m_contentArea->setID("content-area");
     this->m_mainLayer->addChild(m_contentArea);
     
+    // @geode-ignore(unknown-resource)
     m_titleLabel = CCLabelBMFont::create("Randomizer", "modernBold.fnt"_spr);
     m_titleLabel->setPosition({10.f, contentHeight - 20.0f});
     m_titleLabel->setScale(0.6f);
@@ -308,8 +311,8 @@ void ModernSettingsPopup::buildRandomizerContent() {
     
     m_contentContainer = CCNode::create();
     m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
-    m_contentContainer->setPosition({15.0f, 10.0f});
-    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setPosition({m_titleLabel->getPositionX(), m_titleLabel->getPositionY() - 30.f});
+    m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
         RowLayout::create()
             ->setGap(15.0f)
@@ -409,8 +412,8 @@ void ModernSettingsPopup::buildRGBContent() {
     
     m_contentContainer = CCNode::create();
     m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
-    m_contentContainer->setPosition({15.0f, 10.0f});
-    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setPosition({m_titleLabel->getPositionX(), m_titleLabel->getPositionY() - 30.f});
+    m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
         RowLayout::create()
             ->setGap(20.0f)
@@ -498,8 +501,8 @@ void ModernSettingsPopup::buildColorsContent() {
     
     m_contentContainer = CCNode::create();
     m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
-    m_contentContainer->setPosition({15.0f, 10.0f});
-    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setPosition({m_titleLabel->getPositionX(), m_titleLabel->getPositionY() - 30.f});
+    m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
         ColumnLayout::create()
             ->setGap(10.0f)
@@ -507,6 +510,7 @@ void ModernSettingsPopup::buildColorsContent() {
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setGrowCrossAxis(true)
+            ->setAutoGrowAxis(true)
     );
     m_contentArea->addChild(m_contentContainer);
     
@@ -534,6 +538,7 @@ void ModernSettingsPopup::buildColorsContent() {
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto p1Header = CCLabelBMFont::create("Player 1", "modernBold.fnt"_spr);
     p1Header->setScale(0.4f);
     p1Header->setOpacity(200);
@@ -575,6 +580,7 @@ void ModernSettingsPopup::buildColorsContent() {
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto p2Header = CCLabelBMFont::create("Player 2", "modernBold.fnt"_spr);
     p2Header->setScale(0.4f);
     p2Header->setOpacity(200);
@@ -611,8 +617,8 @@ void ModernSettingsPopup::buildParticlesContent() {
     
     m_contentContainer = CCNode::create();
     m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
-    m_contentContainer->setPosition({15.0f, 10.0f});
-    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setPosition({m_titleLabel->getPositionX(), m_titleLabel->getPositionY() - 30.f});
+    m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
         RowLayout::create()
             ->setGap(25.0f)
@@ -634,6 +640,7 @@ void ModernSettingsPopup::buildParticlesContent() {
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto p1Header = CCLabelBMFont::create("Player 1", "modernBold.fnt"_spr);
     p1Header->setScale(0.42f);
     p1Header->setOpacity(220);
@@ -668,6 +675,7 @@ void ModernSettingsPopup::buildParticlesContent() {
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto p2Header = CCLabelBMFont::create("Player 2", "modernBold.fnt"_spr);
     p2Header->setScale(0.42f);
     p2Header->setOpacity(220);
@@ -698,14 +706,15 @@ void ModernSettingsPopup::buildLegacyContent() {
     
     m_contentContainer = CCNode::create();
     m_contentContainer->setContentSize({size.width - 30.0f, size.height - 50.0f});
-    m_contentContainer->setPosition({15.0f, 10.0f});
-    m_contentContainer->setAnchorPoint({0.0f, 0.0f});
+    m_contentContainer->setPosition({m_titleLabel->getPositionX(), m_titleLabel->getPositionY() - 30.f});
+    m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
         RowLayout::create()
             ->setGap(20.0f)
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAutoScale(false)
             ->setGrowCrossAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::End)
     );
     m_contentArea->addChild(m_contentContainer);
     
@@ -715,10 +724,11 @@ void ModernSettingsPopup::buildLegacyContent() {
     leftColumn->setLayout(
         ColumnLayout::create()
             ->setGap(6.0f)
-            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisAlignment(AxisAlignment::Even)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     
     leftColumn->addChild(createSectionTitle("Legacy Trail"));
@@ -736,10 +746,11 @@ void ModernSettingsPopup::buildLegacyContent() {
     rightColumn->setLayout(
         ColumnLayout::create()
             ->setGap(6.0f)
-            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAxisAlignment(AxisAlignment::Even)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     
     rightColumn->addChild(createSectionTitle("Legacy Pulse"));
@@ -761,6 +772,7 @@ void ModernSettingsPopup::buildLegacyContent() {
 }
 
 CCNode* ModernSettingsPopup::createSectionTitle(const std::string& title) {
+    // @geode-ignore(unknown-resource)
     auto titleLabel = CCLabelBMFont::create(title.c_str(), "modernBold.fnt"_spr);
     titleLabel->setScale(0.38f);
     titleLabel->setOpacity(200);
@@ -780,6 +792,7 @@ CCNode* ModernSettingsPopup::createSectionTitleWithToggle(const std::string& tit
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto titleLabel = CCLabelBMFont::create(title.c_str(), "modernBold.fnt"_spr);
     titleLabel->setScale(0.38f);
     titleLabel->setOpacity(200);
@@ -819,6 +832,7 @@ CCNode* ModernSettingsPopup::createSection(const std::string& title, float width
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto titleLabel = CCLabelBMFont::create(title.c_str(), "modernBold.fnt"_spr);
     titleLabel->setScale(0.4f);
     titleLabel->setOpacity(200);
@@ -839,6 +853,7 @@ CCNode* ModernSettingsPopup::createLabelToggleRow(const std::string& labelText, 
             ->setGrowCrossAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
     label->setScale(labelScale);
     label->setOpacity(190);
@@ -868,6 +883,7 @@ CCNode* ModernSettingsPopup::createLabelSliderRow(const std::string& labelText, 
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
     label->setScale(labelScale);
     label->setOpacity(180);
@@ -894,6 +910,7 @@ CCNode* ModernSettingsPopup::createLabelSliderRow(const std::string& labelText, 
     row->addChild(menu);
     menu->updateLayout();
     
+    // @geode-ignore(unknown-resource)
     auto valueLabel = CCLabelBMFont::create("0.0", "modernMain.fnt"_spr);
     valueLabel->setScale(0.25f);
     valueLabel->setOpacity(130);
@@ -937,6 +954,7 @@ CCNode* ModernSettingsPopup::createParticleToggleRow(const std::string& labelTex
             ->setGrowCrossAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
     label->setScale(0.35f);
     label->setOpacity(190);
@@ -974,6 +992,7 @@ CCNode* ModernSettingsPopup::createLabelColorRow(const std::string& labelText, c
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto label = CCLabelBMFont::create(labelText.c_str(), "modernMain.fnt"_spr);
     label->setScale(labelScale);
     label->setOpacity(170);
@@ -1048,6 +1067,7 @@ CCNode* ModernSettingsPopup::createColorPairRow(const std::string& startColorId,
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto sLabel = CCLabelBMFont::create("S", "modernMain.fnt"_spr);
     sLabel->setScale(0.35f);
     sLabel->setOpacity(160);
@@ -1070,6 +1090,7 @@ CCNode* ModernSettingsPopup::createColorPairRow(const std::string& startColorId,
             ->setAutoGrowAxis(true)
     );
     
+    // @geode-ignore(unknown-resource)
     auto eLabel = CCLabelBMFont::create("E", "modernMain.fnt"_spr);
     eLabel->setScale(0.35f);
     eLabel->setOpacity(160);
