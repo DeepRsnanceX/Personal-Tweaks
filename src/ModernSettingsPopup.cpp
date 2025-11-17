@@ -1,5 +1,6 @@
 #include "ModernSettingsPopup.hpp"
 #include "ShaderCache.h"
+#include <Geode/ui/GeodeUI.hpp>
 
 ModernSettingsPopup* ModernSettingsPopup::create() {
     auto ret = new ModernSettingsPopup();
