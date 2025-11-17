@@ -29,6 +29,7 @@ bool ModernSettingsPopup::setup() {
 
     if (this->m_title) this->m_title->setVisible(false);
 
+    #ifndef GEODE_IS_ANDROID
     m_blurLayer = BlurLayer::create();
     m_blurLayer->setID("modern-popup-blur");
     m_blurLayer->setZOrder(-100);
@@ -36,6 +37,7 @@ bool ModernSettingsPopup::setup() {
     this->addChild(m_blurLayer);
     
     m_blurLayer->runAction(CCFadeTo::create(0.2f, 200));
+    #endif
     
     setupSidebar();
     setupContentArea();
