@@ -289,7 +289,6 @@ class $modify(BlurCCEGLView, CCEGLView) {
     void setFrameSize(float width, float height) {
         CCEGLView::setFrameSize(width, height);
         
-        // Recreate render textures with new size
         if (BlurLayer::s_initialized) {
             Loader::get()->queueInMainThread([] {
                 BlurLayer::cleanupRenderTextures();
@@ -297,13 +296,10 @@ class $modify(BlurCCEGLView, CCEGLView) {
                 auto size = CCDirector::get()->getOpenGLView()->getFrameSize();
                 BlurLayer::setupRenderTextures((GLsizei)size.width, (GLsizei)size.height);
                 
-                // Update screen size uniform
                 ccGLUseProgram(BlurLayer::s_program);
                 glUniform2f(glGetUniformLocation(BlurLayer::s_program, "screenSize"), 
                            size.width, size.height);
                 
-                log::info("Blur textures recreated for new window size: {}x{}", 
-                         size.width, size.height);
             });
         }
     }
