@@ -18,7 +18,6 @@ bool ModernSettingsPopup::setup() {
     auto size = this->m_mainLayer->getContentSize();
     this->setTitle("SEXO");
     this->m_noElasticity = true;
-    this->setOpacity(0);
     
     if (this->m_closeBtn) {
         this->m_closeBtn->setSprite(CCSprite::createWithSpriteFrameName("closeBtn.png"_spr));
@@ -30,6 +29,8 @@ bool ModernSettingsPopup::setup() {
     if (this->m_title) this->m_title->setVisible(false);
 
     #ifndef GEODE_IS_ANDROID
+    this->setOpacity(0);
+
     m_blurLayer = BlurLayer::create();
     m_blurLayer->setID("modern-popup-blur");
     m_blurLayer->setZOrder(-100);
@@ -422,6 +423,7 @@ void ModernSettingsPopup::buildRGBContent() {
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAutoScale(false)
             ->setGrowCrossAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::End)
     );
     m_contentArea->addChild(m_contentContainer);
     
@@ -430,13 +432,15 @@ void ModernSettingsPopup::buildRGBContent() {
     leftColumn->setContentSize({0, 0});
     leftColumn->setLayout(
         ColumnLayout::create()
-            ->setGap(6.0f)
-            ->setAxisAlignment(AxisAlignment::Start)
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     
+    leftColumn->addChild(createSectionTitle("Main"));
     leftColumn->addChild(createLabelSliderRow("Speed", "rgb-speed", 140.0f, 0.35f));
     
     auto spacer1 = CCNode::create();
@@ -456,6 +460,15 @@ void ModernSettingsPopup::buildRGBContent() {
     leftColumn->addChild(createSectionTitleWithToggle("Color 2", "rgb-col2", 140.0f));
     leftColumn->addChild(createLabelSliderRow("Brightness", "rgb-brightness2", 140.0f, 0.32f));
     leftColumn->addChild(createLabelSliderRow("Saturation", "rgb-saturation2", 140.0f, 0.32f));
+
+    auto spacer3 = CCNode::create();
+    spacer3->setContentSize({1, 8});
+    leftColumn->addChild(spacer3);
+    
+    // glow stuff
+    leftColumn->addChild(createSectionTitleWithToggle("Glow", "rgb-glow", 140.0f));
+    leftColumn->addChild(createLabelSliderRow("Brightness", "rgb-glow-brightness", 140.0f, 0.32f));
+    leftColumn->addChild(createLabelSliderRow("Saturation", "rgb-glow-saturation", 140.0f, 0.32f));
     
     leftColumn->updateLayout();
     m_contentContainer->addChild(leftColumn);
@@ -465,11 +478,12 @@ void ModernSettingsPopup::buildRGBContent() {
     rightColumn->setContentSize({0, 0});
     rightColumn->setLayout(
         ColumnLayout::create()
-            ->setGap(6.0f)
-            ->setAxisAlignment(AxisAlignment::Start)
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     
     rightColumn->addChild(createSectionTitle("Extras"));
@@ -486,11 +500,8 @@ void ModernSettingsPopup::buildRGBContent() {
         rightColumn->addChild(createLabelToggleRow(name, settingId, 140.0f, 0.32f, 0.55f));
     }
     
-    auto spacer3 = CCNode::create();
-    spacer3->setContentSize({1, 8});
-    rightColumn->addChild(spacer3);
-    
     rightColumn->addChild(createLabelSliderRow("Col2 Distance", "p2-distance", 140.0f, 0.32f));
+    rightColumn->addChild(createLabelSliderRow("Glow Distance", "glow-distance", 140.0f, 0.32f));
     
     rightColumn->updateLayout();
     m_contentContainer->addChild(rightColumn);
@@ -507,16 +518,17 @@ void ModernSettingsPopup::buildColorsContent() {
     m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
         ColumnLayout::create()
-            ->setGap(10.0f)
+            ->setGap(10.f)
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setGrowCrossAxis(true)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     m_contentArea->addChild(m_contentContainer);
     
-    m_contentContainer->addChild(createLabelToggleRow("Enable", "enable-customcolors", size.width - 30.0f, 0.38f, 0.65f));
+    m_contentContainer->addChild(createLabelToggleRow("Enable", "enable-customcolors", 100.f, 0.38f, 0.65f));
     
     auto playersRow = CCNode::create();
     playersRow->setContentSize({0, 0});
@@ -533,11 +545,12 @@ void ModernSettingsPopup::buildColorsContent() {
     p1Column->setContentSize({0, 0});
     p1Column->setLayout(
         ColumnLayout::create()
-            ->setGap(5.0f)
-            ->setAxisAlignment(AxisAlignment::Start)
+            ->setGap(1.f)
+            ->setAxisAlignment(AxisAlignment::Even)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     
     // @geode-ignore(unknown-resource)
@@ -575,7 +588,7 @@ void ModernSettingsPopup::buildColorsContent() {
     p2Column->setContentSize({0, 0});
     p2Column->setLayout(
         ColumnLayout::create()
-            ->setGap(5.0f)
+            ->setGap(1.f)
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAxisReverse(true)
             ->setAutoScale(false)
@@ -623,10 +636,11 @@ void ModernSettingsPopup::buildParticlesContent() {
     m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
         RowLayout::create()
-            ->setGap(25.0f)
+            ->setGap(20.0f)
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAutoScale(false)
             ->setGrowCrossAxis(true)
+            ->setAutoGrowAxis(true)
     );
     m_contentArea->addChild(m_contentContainer);
     
@@ -635,11 +649,12 @@ void ModernSettingsPopup::buildParticlesContent() {
     p1Column->setContentSize({0, 0});
     p1Column->setLayout(
         ColumnLayout::create()
-            ->setGap(6.0f)
-            ->setAxisAlignment(AxisAlignment::Start)
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     
     // @geode-ignore(unknown-resource)
@@ -670,11 +685,12 @@ void ModernSettingsPopup::buildParticlesContent() {
     p2Column->setContentSize({0, 0});
     p2Column->setLayout(
         ColumnLayout::create()
-            ->setGap(6.0f)
-            ->setAxisAlignment(AxisAlignment::Start)
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
             ->setAxisReverse(true)
             ->setAutoScale(false)
             ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     
     // @geode-ignore(unknown-resource)
@@ -947,7 +963,7 @@ CCNode* ModernSettingsPopup::createLabelSliderRow(const std::string& labelText, 
 
 CCNode* ModernSettingsPopup::createParticleToggleRow(const std::string& labelText, const std::string& settingId, float width) {
     auto menu = CCMenu::create();
-    menu->setContentSize({width * 0.6f, 16.0f});
+    menu->setContentSize({width * 0.45f, 16.0f});
     menu->setLayout(
         RowLayout::create()
             ->setAxisAlignment(AxisAlignment::Even)
@@ -1049,7 +1065,7 @@ CCNode* ModernSettingsPopup::createParticleColorPair(const std::string& toggleSe
 
 CCNode* ModernSettingsPopup::createColorPairRow(const std::string& startColorId, const std::string& endColorId, float width) {
     auto menu = CCMenu::create();
-    menu->setContentSize({width * 0.6f, 20.0f});
+    menu->setContentSize({width * 0.45f, 20.0f});
     menu->setLayout(
         RowLayout::create()
             ->setGap(10.0f)
@@ -1168,13 +1184,13 @@ Slider* ModernSettingsPopup::createSlider(std::string settingId, CCPoint positio
     } else if (settingId == "rgb-speed") {
         float value = Mod::get()->getSettingValue<double>(settingId);
         slider->setValue(value / 10.0f);
-    } else if (settingId == "rgb-saturation" || settingId == "rgb-saturation2") {
+    } else if (settingId == "rgb-saturation" || settingId == "rgb-saturation2" || settingId == "rgb-glow-saturation") {
         float value = Mod::get()->getSettingValue<double>(settingId);
         slider->setValue(value);
-    } else if (settingId == "rgb-brightness1" || settingId == "rgb-brightness2") {
+    } else if (settingId == "rgb-brightness1" || settingId == "rgb-brightness2" || settingId == "rgb-glow-brightness") {
         float value = Mod::get()->getSettingValue<double>(settingId);
         slider->setValue(value);
-    } else if (settingId == "p2-distance") {
+    } else if (settingId == "p2-distance" || settingId == "glow-distance") {
         float value = Mod::get()->getSettingValue<double>(settingId);
         slider->setValue(value);
     } else if (settingId == "max-points") {

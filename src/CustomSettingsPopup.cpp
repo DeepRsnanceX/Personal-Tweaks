@@ -11,7 +11,6 @@ using namespace geode::prelude;
 using namespace keybinds;
 
 // ===== MAIN POPUP =====
-
 CustomSettingsPopup* CustomSettingsPopup::create() {
     auto ret = new CustomSettingsPopup();
     if (ret->initAnchored(420.0f, 280.0f, "SquareThing01.png"_spr)) {
@@ -816,7 +815,11 @@ class $modify(ModernGarageLayer, GJGarageLayer) {
 };
 
 void openPersonalTweaksPopupGlobal() {
-    CustomSettingsPopup::create()->show();
+    if (Mod::get()->getSettingValue<bool>("use-modern-ui")) {
+        ModernSettingsPopup::create()->show();
+    } else {
+        CustomSettingsPopup::create()->show();
+    }
 }
 
 // ===== MODES POPUP =====
@@ -1890,4 +1893,26 @@ void ParticlesPopup::updateColor(cocos2d::ccColor4B const& color) {
     }
     
     geode::log::debug("Particles: Updated {} to ({}, {}, {}, {})", m_currentSettingId, color.r, color.g, color.b, color.a);
+}
+
+$on_mod(Loaded) {
+    BindManager::get()->registerBindable({
+        // ID, should be prefixed with mod ID
+        "open-ptmenu"_spr,
+        // Name
+        "Open Custom 'Mod Menu'",
+        // Description, leave empty for none
+        "Opens the Mod's Custom Popup for easier configuration.",
+        // Default binds
+        { Keybind::create(KEY_Q, Modifier::None) },
+        // Category; use slashes for specifying subcategories. See the
+        // Category class for default categories
+        "PersonalTweaks"
+    });
+
+    new EventListener(+[](InvokeBindEvent* event) {
+        if (!event->isDown()) return ListenerResult::Propagate;
+        openPersonalTweaksPopupGlobal();
+        return ListenerResult::Propagate;
+    }, InvokeBindFilter(nullptr, "open-ptmenu"_spr));
 }

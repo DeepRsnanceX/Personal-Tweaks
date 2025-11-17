@@ -53,6 +53,28 @@ class $modify(StupidPlayerObject, PlayerObject) {
         return true;
     }
 
+    ccColor3B getColorToUse() {
+        ccColor3B ret;
+
+        if (m_isShip) {
+            ret = cocos2d::ccColor3B({ 255, 0, 255 });
+        } else if (m_isBall) {
+            ret = cocos2d::ccColor3B({255, 0, 0});
+        } else if (m_isBird) {
+            ret = cocos2d::ccColor3B({ 255, 145, 0 });
+        } else if (m_isDart) {
+            ret = cocos2d::ccColor3B({ 0, 255, 255 });
+        } else if (m_isRobot) {
+            ret = cocos2d::ccColor3B({255, 255, 255});
+        } else if (m_isSpider) {
+            ret = cocos2d::ccColor3B({ 140, 0, 255 });
+        } else {
+            ret = cocos2d::ccColor3B({0, 255, 0});
+        }
+
+        return ret;
+    }
+
     void update(float p0) {
         PlayerObject::update(p0);
 
@@ -71,8 +93,9 @@ class $modify(StupidPlayerObject, PlayerObject) {
         }
 
         this->setRotation(0);
-        fields->p_soulSpr->setColor(m_playerColor1);
+        fields->p_soulSpr->setColor(getColorToUse());
         fields->p_soulSpr->setScale(targetScale);
+        fields->p_soulSpr->setFlipY(m_isUpsideDown);
 
         if (m_ghostTrail) m_ghostTrail->m_iconSprite = fields->p_soulSpr;
     }

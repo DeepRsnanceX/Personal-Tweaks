@@ -306,6 +306,12 @@
 			"description": "Enables RGB for Color 2.",
 			"default": false
 		},
+		"rgb-glow": {
+			"type": "bool",
+			"name": "Color 2 - RGB",
+			"description": "Enables RGB for Color 2.",
+			"default": false
+		},
 		"rgb-speed": {
 			"type": "float",
 			"name": "RGB Cycle Speed",
@@ -359,6 +365,23 @@
 			"enable-if": "rgb-col2",
 			"enable-if-description": "Enable RGB for color 2!"
 		},
+		"rgb-glow-saturation": {
+			"type": "float",
+			"name": "Saturation - Glow Color",
+			"description": "Saturation setting for Glow Color's RGB mode.",
+			"default": 1.0,
+			"min": 0,
+			"max": 1.0,
+			"control": {
+				"input": false,
+				"arrows": true,
+				"slider": true,
+				"slider-step": 0.1,
+				"arrow-step": 0.1
+			},
+			"enable-if": "rgb-col2",
+			"enable-if-description": "Enable RGB for color 2!"
+		},
 		"rgb-brightness1": {
 			"type": "float",
 			"name": "Brightness - Color 1",
@@ -380,6 +403,23 @@
 			"type": "float",
 			"name": "Brightness - Color 2",
 			"description": "Brightness setting for Color 2's RGB mode.",
+			"default": 1.0,
+			"min": 0,
+			"max": 1.0,
+			"control": {
+				"input": false,
+				"arrows": true,
+				"slider": true,
+				"slider-step": 0.1,
+				"arrow-step": 0.1
+			},
+			"enable-if": "rgb-col2",
+			"enable-if-description": "Enable RGB for color 2!"
+		},
+		"rgb-glow-brightness": {
+			"type": "float",
+			"name": "Brightness - Glow Color",
+			"description": "Brightness setting for Glow Color's RGB mode.",
 			"default": 1.0,
 			"min": 0,
 			"max": 1.0,
@@ -425,6 +465,22 @@
 			"default": false
 		},
 		"p2-distance": {
+			"type": "float",
+			"name": "Player 2 Distance",
+			"description": "The HUE difference between Color 1 and Color 2. Higher values mean more distance.",
+			"default": 0.5,
+			"min": 0,
+			"max": 1.0,
+			"control": {
+				"input": false,
+				"arrows": true,
+				"slider": true,
+				"slider-step": 0.05,
+				"arrow-step": 0.01
+			},
+			"enable-if": "rgb-col2"
+		},
+		"glow-distance": {
 			"type": "float",
 			"name": "Player 2 Distance",
 			"description": "The HUE difference between Color 1 and Color 2. Higher values mean more distance.",
