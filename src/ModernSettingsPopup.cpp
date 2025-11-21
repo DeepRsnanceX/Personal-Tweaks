@@ -18,11 +18,13 @@ bool ModernSettingsPopup::setup() {
     auto size = this->m_mainLayer->getContentSize();
     this->setTitle("SEXO");
     this->m_noElasticity = true;
+
+    float uiScale = Mod::get()->getSettingValue<double>("modern-ui-scale");
+    this->m_mainLayer->setScale(uiScale);
     
     if (this->m_closeBtn) {
         this->m_closeBtn->setSprite(CCSprite::createWithSpriteFrameName("closeBtn.png"_spr));
         this->m_closeBtn->updateSprite();
-
         this->m_closeBtn->setPosition({size.width - 10.f, size.height - 10.f});
     }
 
@@ -30,21 +32,20 @@ bool ModernSettingsPopup::setup() {
 
     #ifndef GEODE_IS_ANDROID
     this->setOpacity(0);
-
     m_blurLayer = BlurLayer::create();
     m_blurLayer->setID("modern-popup-blur");
     m_blurLayer->setZOrder(-100);
     m_blurLayer->setOpacity(0);
     this->addChild(m_blurLayer);
     
-    m_blurLayer->runAction(CCFadeTo::create(0.2f, 200));
+    m_blurLayer->runAction(CCFadeTo::create(0.25f, 200));
     #endif
     
     setupSidebar();
     setupContentArea();
     switchCategory(SettingsCategory::Randomizer);
 
-    // open settings btn
+    // settings btn
     auto optSpr = CCSprite::createWithSpriteFrameName("settingsBtn.png"_spr);
     auto optBtn = CCMenuItemSpriteExtra::create(optSpr, this, menu_selector(ModernSettingsPopup::onModSettings));
     auto optMenu = CCMenu::create();
@@ -57,7 +58,71 @@ bool ModernSettingsPopup::setup() {
     optMenu->setPosition({5.f, 5.f});
     this->m_mainLayer->addChild(optMenu);
     
+    // === OPENING ANIMATION WITH RENDER TEXTURE ===
+    // Queue the animation for next frame (after everything is laid out)
+    Loader::get()->queueInMainThread([this]() {
+        if (!this->m_mainLayer) return;
+        
+        auto layerSize = CCDirector::sharedDirector()->getWinSize();
+        float fuck = Mod::get()->getSettingValue<double>("modern-ui-scale");
+        
+        // Create render texture
+        auto renderTex = CCRenderTexture::create(
+            (int)layerSize.width, 
+            (int)layerSize.height,
+            kCCTexture2DPixelFormat_RGBA8888
+        );
+        
+        if (!renderTex) {
+            log::warn("Failed to create render texture for popup animation");
+            return;
+        }
+        
+        // Capture the popup
+        renderTex->begin();
+        this->m_mainLayer->visit();
+        renderTex->end();
+        
+        // Create sprite from the capture
+        m_animSprite = CCSprite::createWithTexture(renderTex->getSprite()->getTexture());
+        m_animSprite->setFlipY(true);  // RenderTexture is flipped
+        m_animSprite->setPosition(this->m_mainLayer->getPosition());
+        m_animSprite->setAnchorPoint(this->m_mainLayer->getAnchorPoint());
+        m_animSprite->setScale(fuck - 0.2f);
+        m_animSprite->setOpacity(0);
+        m_animSprite->setZOrder(this->m_mainLayer->getZOrder());
+        
+        // Hide the real popup
+        this->m_mainLayer->setVisible(false);
+        
+        // Add sprite to same parent as m_mainLayer
+        this->addChild(m_animSprite);
+        
+        // Animate the sprite
+        auto fadeIn = CCEaseExponentialOut::create(CCFadeIn::create(0.28f));
+        auto scaleUp = CCEaseExponentialOut::create(CCScaleTo::create(0.3f, fuck));
+        auto spawn = CCSpawn::create(fadeIn, scaleUp, nullptr);
+        
+        auto showReal = CCCallFunc::create(this, callfunc_selector(ModernSettingsPopup::onAnimationComplete));
+        auto sequence = CCSequence::create(spawn, showReal, nullptr);
+        
+        m_animSprite->runAction(sequence);
+    });
+    
     return true;
+}
+
+void ModernSettingsPopup::onAnimationComplete() {
+    // Show the real popup
+    if (this->m_mainLayer) {
+        this->m_mainLayer->setVisible(true);
+    }
+    
+    // Remove and cleanup the animation sprite
+    if (m_animSprite) {
+        m_animSprite->removeFromParent();
+        m_animSprite = nullptr;
+    }
 }
 
 void ModernSettingsPopup::setupSidebar() {
@@ -517,18 +582,28 @@ void ModernSettingsPopup::buildColorsContent() {
     m_contentContainer->setPosition({m_titleLabel->getPositionX(), m_titleLabel->getPositionY() - 30.f});
     m_contentContainer->setAnchorPoint({0.f, 1.f});
     m_contentContainer->setLayout(
+        RowLayout::create()
+            ->setGap(15.0f)  // Gap between the two main columns
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+    );
+    m_contentArea->addChild(m_contentContainer);
+    
+    // === LEFT SIDE: Icon Colors ===
+    auto colorsColumn = CCNode::create();
+    colorsColumn->setContentSize({0, 0});
+    colorsColumn->setLayout(
         ColumnLayout::create()
             ->setGap(10.f)
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAxisReverse(true)
             ->setAutoScale(false)
-            ->setGrowCrossAxis(true)
             ->setAutoGrowAxis(true)
             ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
-    m_contentArea->addChild(m_contentContainer);
     
-    m_contentContainer->addChild(createLabelToggleRow("Enable", "enable-customcolors", 100.f, 0.38f, 0.65f));
+    colorsColumn->addChild(createLabelToggleRow("Enable", "enable-customcolors", 100.f, 0.38f, 0.65f));
     
     auto playersRow = CCNode::create();
     playersRow->setContentSize({0, 0});
@@ -622,7 +697,93 @@ void ModernSettingsPopup::buildColorsContent() {
     playersRow->addChild(p2Column);
     
     playersRow->updateLayout();
-    m_contentContainer->addChild(playersRow);
+    colorsColumn->addChild(playersRow);
+    colorsColumn->updateLayout();
+    
+    m_contentContainer->addChild(colorsColumn);
+    
+    // === RIGHT SIDE: Particles (same as buildParticlesContent) ===
+    auto particlesContainer = CCNode::create();
+    particlesContainer->setContentSize({0, 0});
+    particlesContainer->setLayout(
+        RowLayout::create()
+            ->setGap(20.0f)
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoScale(false)
+            ->setGrowCrossAxis(true)
+            ->setAutoGrowAxis(true)
+    );
+    
+    // === PARTICLES PLAYER 1 COLUMN ===
+    auto particlesP1Column = CCNode::create();
+    particlesP1Column->setContentSize({0, 0});
+    particlesP1Column->setLayout(
+        ColumnLayout::create()
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
+    );
+    
+    // @geode-ignore(unknown-resource)
+    auto particlesP1Header = CCLabelBMFont::create("Player 1", "modernBold.fnt"_spr);
+    particlesP1Header->setScale(0.42f);
+    particlesP1Header->setOpacity(220);
+    particlesP1Column->addChild(particlesP1Header);
+    
+    particlesP1Column->addChild(createSectionTitle("Main Particles"));
+    particlesP1Column->addChild(createParticleToggleRow("Enable", "tint-mainparticles-p1", 140.0f));
+    particlesP1Column->addChild(createColorPairRow("p1-main-particles-start", "p1-main-particles-end", 140.0f));
+    
+    auto spacer1 = CCNode::create();
+    spacer1->setContentSize({1, 10});
+    particlesP1Column->addChild(spacer1);
+    
+    particlesP1Column->addChild(createSectionTitle("UFO Click"));
+    particlesP1Column->addChild(createParticleToggleRow("Enable", "tint-ufo-click-particles-p1", 140.0f));
+    particlesP1Column->addChild(createColorPairRow("p1-ufo-click-particles-start", "p1-ufo-click-particles-end", 140.0f));
+    
+    particlesP1Column->updateLayout();
+    particlesContainer->addChild(particlesP1Column);
+    
+    // === PARTICLES PLAYER 2 COLUMN ===
+    auto particlesP2Column = CCNode::create();
+    particlesP2Column->setContentSize({0, 0});
+    particlesP2Column->setLayout(
+        ColumnLayout::create()
+            ->setGap(4.0f)
+            ->setAxisAlignment(AxisAlignment::Even)
+            ->setAxisReverse(true)
+            ->setAutoScale(false)
+            ->setAutoGrowAxis(true)
+            ->setCrossAxisLineAlignment(AxisAlignment::Start)
+    );
+    
+    // @geode-ignore(unknown-resource)
+    auto particlesP2Header = CCLabelBMFont::create("Player 2", "modernBold.fnt"_spr);
+    particlesP2Header->setScale(0.42f);
+    particlesP2Header->setOpacity(220);
+    particlesP2Column->addChild(particlesP2Header);
+    
+    particlesP2Column->addChild(createSectionTitle("Main Particles"));
+    particlesP2Column->addChild(createParticleToggleRow("Enable", "tint-mainparticles-p2", 140.0f));
+    particlesP2Column->addChild(createColorPairRow("p2-main-particles-start", "p2-main-particles-end", 140.0f));
+    
+    auto spacer2 = CCNode::create();
+    spacer2->setContentSize({1, 10});
+    particlesP2Column->addChild(spacer2);
+    
+    particlesP2Column->addChild(createSectionTitle("UFO Click"));
+    particlesP2Column->addChild(createParticleToggleRow("Enable", "tint-ufo-click-particles-p2", 140.0f));
+    particlesP2Column->addChild(createColorPairRow("p2-ufo-click-particles-start", "p2-ufo-click-particles-end", 140.0f));
+    
+    particlesP2Column->updateLayout();
+    particlesContainer->addChild(particlesP2Column);
+    
+    particlesContainer->updateLayout();
+    m_contentContainer->addChild(particlesContainer);
     
     m_contentContainer->updateLayout();
 }

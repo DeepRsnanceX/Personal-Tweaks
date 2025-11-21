@@ -11,8 +11,25 @@
             "type": "bool",
             "default": false,
             "name": "Use Modern UI",
-            "description": "Enable the new modern UI design (requires restart)"
+            "description": "Enable the new modern UI design for the custom popup."
         },
+		"modern-ui-scale": {
+			"type": "float",
+			"name": "Modern UI Scale",
+			"description": "UI Scale for the Modern UI design.",
+			"default": 1.0,
+			"max": 1.0,
+			"min": 0.3,
+			"control": {
+				"input": true,
+				"slider": true,
+				"arrows": true,
+				"big-arrows": true,
+				"slider-step": 0.1,
+				"arrow-step": 0.05,
+				"big-arrow-step": 0.5
+			}
+		},
 		"hichat": {
 			"type": "title",
 			"name": "Settings not in 'mod menu' yet",

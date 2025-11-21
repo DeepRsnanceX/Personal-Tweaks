@@ -25,6 +25,7 @@ protected:
     CCSprite* m_separator = nullptr;
     CCSprite* m_areaSeparator = nullptr;
     BlurLayer* m_blurLayer = nullptr;
+    CCSprite* m_animSprite = nullptr;
     std::unordered_map<SettingsCategory, CCMenuItemSprite*> m_categoryButtons;
     
     std::unordered_map<int, std::string> m_tagToSetting;
@@ -70,6 +71,7 @@ protected:
     void onColorPicker(CCObject* sender);
     void onModSettings(CCObject* sender);
     void updateColor(cocos2d::ccColor4B const& color) override;
+    void onAnimationComplete();
     
 public:
     static ModernSettingsPopup* create();

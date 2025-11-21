@@ -1,5 +1,6 @@
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/GameManager.hpp>
 
 using namespace geode::prelude;
 
@@ -434,5 +435,30 @@ class $modify(ColorsPlayLayer, PlayLayer) {
     void resumeAndRestart(bool p0) {
         PlayLayer::resumeAndRestart(p0);
         loadAllSettings();
+    }
+};
+
+class $modify(ColorsGameManager, GameManager) {
+    ccColor3B colorForIdx(int index) {
+        ccColor3B ret = GameManager::colorForIdx(index);
+
+        loadAllSettings();
+        auto settings = g_colorSettings;
+        if (!settings.useCustomColors) return ret;
+        
+        PlayerColors colors = settings.p1;
+        int col1Id = this->getPlayerColor();
+        int col2Id = this->getPlayerColor2();
+        int glowId = this->getPlayerGlowColor();
+
+        if (index == col1Id) {
+            ret = colors.primary;
+        } else if (index == col2Id) {
+            ret = colors.secondary;
+        } else if (index == glowId) {
+            ret = colors.glow;
+        }
+
+        return ret;
     }
 };
